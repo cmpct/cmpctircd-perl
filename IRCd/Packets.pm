@@ -1,0 +1,180 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use diagnostics;
+use feature 'postderef';
+use IRCd::Channel;
+
+package IRCd::Packets;
+
+sub nick {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask();
+
+    my @splitPacket = split(" ", $msg);
+    if(scalar(@splitPacket) < 2) {
+        $socket->write(":$config->{host} 461 * NICK :Not enough parameters\r\n");
+        return;
+    }
+
+    # NICK already in use?
+    foreach(keys($ircd->{clientMap}->%*)) {
+        last if($ircd->{clientMap}->{$_}->{client} eq $client);
+        if($ircd->{clientMap}->{$_}->{client}->{nick} eq $splitPacket[1]) {
+            print "NICK in use!\r\n";
+            $socket->write(":$config->{host} 433 * NICK :Nickname is already in use\r\n");
+            last;
+        }
+    }
+    # Check for invalid nick...
+
+    $client->{nick} = $splitPacket[1];
+    $socket->write(":$mask NICK :$client->{nick}\r\n");
+    print "NICK: $client->{nick}", "\r\n";
+    $client->sendWelcome() if($client->{ident} and !$client->{sentWelcome});
+}
+sub user {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask();
+
+    my @splitPacket = split(" ", $msg);
+
+    if(scalar(@splitPacket) < 4) {
+        $socket->write(":$config->{host} 461 * USER :Not enough parameters\r\n");
+        return;
+    }
+    $client->{ident}    = $splitPacket[1];
+    my @splitPacket = split(":", $msg);
+    $client->{realname} = $splitPacket[1];
+
+    print "IDENT: $client->{ident}", "\r\n";
+    print "REAL:  $client->{realname}", "\r\n";
+
+    $client->sendWelcome() if($client->{nick} and !$client->{sentWelcome});
+}
+sub join {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask();
+
+    my @splitPacket = split(" ", $msg);
+    if(scalar(@splitPacket) < 2) {
+        $socket->write(":$config->{host} 461 * JOIN :Not enough parameters\r\n");
+        return;
+    }
+    my $channelInput = $splitPacket[1];
+    my $foundChannel = 0;
+
+    # Need a list of server channels
+    if($client->{config}->{channels}->{$channelInput}) {
+        print "Channel already exists.\r\n";
+        # Have them "JOIN", announce to other users
+        $client->{config}->{channels}->{$channelInput}->addClient($client);
+        $foundChannel = 1
+    } else {
+        print "Creating channel..\r\n";
+        my $channel = IRCd::Channel->new($channelInput);
+        $channel->addClient($client);
+        $client->{config}->{channels}->{$channelInput} = $channel;
+    }
+
+}
+sub who {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask();
+
+    print "Horton heard a WHO!\r\n";
+    # XXX: We need to parse ',' and the rest of that
+    # XXX: But forget it for now.
+    # XXX: Don't reveal +i users on the network.
+    my @splitPacket = split(" ", $msg);
+    my $target      = $splitPacket[1];
+
+    # Get the channel obj
+    my $channel = $client->{config}->{channels}->{$target};
+    if(!$channel) {
+        # error out
+    }
+
+    # (13:22:34) irc: Got a WHO response for user, which doesn't exist
+    # (13:22:34) irc: Got a WHO response for tuser, which doesn't exist
+    # XXX: Check the WHO response vs libpurple
+    # https://bitbucket.org/pidgin/main/src/1cf07b94c6ca44814ad456de985947be66a391c8/libpurple/protocols/irc/msgs.c?at=default&fileviewer=file-view-default#msgs.c-942
+    foreach($channel->{clients}->@*) {
+        my $user = $_->{ident};
+        my $host = $_->{ip};
+        my $nick = $_->{nick};
+        my $real = $_->{realname};
+        $socket->write(":$config->{host} 352 $channel $user $host $config->{host} $nick H :0 $real\r\n");
+    }
+    $socket->write(":$config->{host} 315 $client->{nick} :End of /WHO list.\r\n");
+}
+sub whois {
+    # TODO
+}
+sub quit {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask();
+
+    my @splitPacket = split(" ", $msg);
+    my $quitReason  = $splitPacket[1];
+
+    foreach my $chan (keys($client->{config}->{channels}->%*)) {
+        $chan->quit($client, "Goodbye!");
+    }
+    # XXX: Let anyone who we're PMIng know? is that a thing?
+}
+sub part {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask();
+
+    my @splitPacket = split(" ", $msg);
+    my $quitReason  = $splitPacket[1];
+
+    foreach my $chan (keys($client->{config}->{channels}->%*)) {
+        $chan->part($client, $splitPacket[1]);
+    }
+}
+
+sub privmsg {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask();
+
+    my @splitPacket = split(" ", $msg);
+    my $target = $splitPacket[1];
+    my @splitPacket = split(":", $msg);
+    my $realmsg = $splitPacket[1];
+
+    my $channel = $client->{config}->{channels}->{$target};
+    $channel->sendToRoom($client, ":$client->{nick} PRIVMSG $channel->{name} :$realmsg", 0);
+}
+
+# :card.freenode.net 451 * :You have not registered
+1;

@@ -1,0 +1,31 @@
+TODO
+----
+
+* Fixup WHO
+* Implement privileges
+* MODE validation, MODE params (we're going to end up with a MODE object...)
+* Fix NICK/auth
+* Add multiple targets
+* Check for bans and *lines
+* Use IRCd::Constants
+* Split IRCd::Config vs IRCd::Run
+
+Specific handlers:
+----------------
+NICK:
+-> Add validation for characters
+
+QUIT:
+-> Filter QUIT msg (????)
+-> 0 param ok, or 1. nothing else.
+
+JOIN:
+-> "JOIN 0" needs to be implemented
+
+WHO:
+-> Lots of parameters to implement
+
+Bit further ahead (in relative time):
+----
+* Multiple sock providers
+* SSL/TLS
