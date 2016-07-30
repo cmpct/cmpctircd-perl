@@ -36,7 +36,6 @@ sub setup {
         ReuseAddr => 1,
     ) or die $!;
     $self->{epoll} = IRCd::Epoll->new($self->{listener});
-    # fix
     $self->{clientMap} = ();
 }
 

@@ -152,10 +152,12 @@ sub part {
     my $mask   = $client->getMask();
 
     my @splitPacket = split(" ", $msg);
-    my $quitReason  = $splitPacket[1];
+    my $partChannel  = $splitPacket[1];
 
-    foreach my $chan (keys($client->{config}->{channels}->%*)) {
-        $chan->part($client, $splitPacket[1]);
+    if($client->{config}->{channels}->{$partChannel}) {
+        $client->{config}->{channels}->{$partChannel}->part($client, $splitPacket[1]);
+    } else {
+        $socket->write(":$client->{config}->{host} 442 $client->{nick} $partChannel :You're not on that channel\r\n");
     }
 }
 

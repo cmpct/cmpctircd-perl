@@ -63,7 +63,7 @@ sub quit {
     my $client = shift;
     my $mask   = $client->getMask();
     my $msg    = shift;
-    foreach(@{$this->clients}) {
+    foreach(@{$self->{clients}}) {
         # We should be in the room b/c of the caller but let's be safe.
         if($_ eq $client) {
             print "Removed (QUIT) a client from channel $self->{name}\r\n";
@@ -79,7 +79,7 @@ sub part {
     my $client = shift;
     my $mask   = $client->getMask();
     my $msg    = shift;
-    foreach(@{$this->clients}) {
+    foreach(@{$self->{clients}}) {
         # We should be in the room b/c of the caller but let's be safe.
         if($_ eq $client) {
             @{$self->{clients}} = grep { $_ != $client } @{$self->{clients}};
