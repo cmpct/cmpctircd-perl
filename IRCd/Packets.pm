@@ -77,16 +77,16 @@ sub join {
     my $foundChannel = 0;
 
     # Need a list of server channels
-    if($client->{config}->{channels}->{$channelInput}) {
+    if($ircd->{channels}->{$channelInput}) {
         print "Channel already exists.\r\n";
         # Have them "JOIN", announce to other users
-        $client->{config}->{channels}->{$channelInput}->addClient($client);
+        $ircd->{channels}->{$channelInput}->addClient($client);
         $foundChannel = 1
     } else {
         print "Creating channel..\r\n";
         my $channel = IRCd::Channel->new($channelInput);
         $channel->addClient($client);
-        $client->{config}->{channels}->{$channelInput} = $channel;
+        $ircd->{channels}->{$channelInput} = $channel;
     }
 
 }
@@ -106,7 +106,7 @@ sub who {
     my $target      = $splitPacket[1];
 
     # Get the channel obj
-    my $channel = $client->{config}->{channels}->{$target};
+    my $channel = $ircd->{$target};
     if(!$channel) {
         # error out
     }
@@ -120,9 +120,9 @@ sub who {
         my $host = $_->{ip};
         my $nick = $_->{nick};
         my $real = $_->{realname};
-        $socket->write(":$config->{host} 352 $channel $user $host $config->{host} $nick H :0 $real\r\n");
+        $socket->write(":$ircd->{host} 352 $channel $user $host $config->{host} $nick H :0 $real\r\n");
     }
-    $socket->write(":$config->{host} 315 $client->{nick} :End of /WHO list.\r\n");
+    $socket->write(":$ircd->{host} 315 $client->{nick} :End of /WHO list.\r\n");
 }
 sub whois {
     # TODO
@@ -138,7 +138,7 @@ sub quit {
     my @splitPacket = split(" ", $msg);
     my $quitReason  = $splitPacket[1];
 
-    foreach my $chan (keys($client->{config}->{channels}->%*)) {
+    foreach my $chan (keys($ircd->{channels}->%*)) {
         $chan->quit($client, "Goodbye!");
     }
     # XXX: Let anyone who we're PMIng know? is that a thing?
@@ -154,10 +154,10 @@ sub part {
     my @splitPacket = split(" ", $msg);
     my $partChannel  = $splitPacket[1];
 
-    if($client->{config}->{channels}->{$partChannel}) {
-        $client->{config}->{channels}->{$partChannel}->part($client, $splitPacket[1]);
+    if($ircd->{channels}->{$partChannel}) {
+        $ircd->{channels}->{$partChannel}->part($client, $splitPacket[1]);
     } else {
-        $socket->write(":$client->{config}->{host} 442 $client->{nick} $partChannel :You're not on that channel\r\n");
+        $socket->write(":$ircd->{host} 442 $client->{nick} $partChannel :You're not on that channel\r\n");
     }
 }
 
@@ -174,7 +174,7 @@ sub privmsg {
     my @splitPacket = split(":", $msg);
     my $realmsg = $splitPacket[1];
 
-    my $channel = $client->{config}->{channels}->{$target};
+    my $channel = $ircd->{channels}->{$target};
     $channel->sendToRoom($client, ":$client->{nick} PRIVMSG $channel->{name} :$realmsg", 0);
 }
 

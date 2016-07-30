@@ -21,6 +21,14 @@ sub new {
         'listener'  => undef,
         'epoll'     => undef,
         'clientMap' => undef,
+
+        # ircd internals used across the codebase
+        'channels'  => {},
+        'host'      => undef,
+        'network'   => undef,
+        'ip'        => undef,
+        'port'      => undef,
+        'version'   => 0.1,
     };
     bless $self, $class;
     return $self;
@@ -37,6 +45,11 @@ sub setup {
     ) or die $!;
     $self->{epoll} = IRCd::Epoll->new($self->{listener});
     $self->{clientMap} = ();
+
+    $self->{host}    = $self->{config}->{host};
+    $self->{network} = $self->{config}->{network};
+    $self->{ip}      = $self->{config}->{ip};
+    $self->{port}    = $self->{config}->{port};
 }
 
 sub run {

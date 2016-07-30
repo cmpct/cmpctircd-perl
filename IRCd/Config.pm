@@ -8,12 +8,10 @@ sub new {
     my $class = shift;
     my $self = {
         'filename' => shift,
-        'ip' => undef,
-        'port' => undef,
-        'version' => 0.1,
-
-        # ircd obj
-        'channels' => {},
+        'ip'       => undef,
+        'port'     => undef,
+        'host'     => undef,
+        'network'  => undef,
     };
     bless $self, $class;
     return $self;
@@ -34,6 +32,7 @@ sub parse {
 }
 
 sub getClientByNick {
+    # TODO
     my $self = shift;
 
 }

@@ -28,15 +28,16 @@ sub setMode {
 sub addClient {
     my $self   = shift;
     my $client = shift;
-    my $mask  = $client->getMask();
-    my $modes = "";
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask();
+    my $modes  = "";
 
     if($self->resides($client)) {
         # Already in the channel
         print "They're already in the channel!\r\n";
         return;
     }
-    # $client->{socket}->{sock}->write(":$client->{config}->{host} 443 $client->{nick} $self->{name} :is already on channel\r\n");
+    # $client->{socket}->{sock}->write(":$ircd->{host} 443 $client->{nick} $self->{name} :is already on channel\r\n");
 
     push @{$self->{clients}}, $client;
     print "Added client to channel $self->{name}\r\n";
@@ -46,21 +47,22 @@ sub addClient {
         print "Adding mode: $_\r\n";
         $modes = $modes . $_;
     }
-    $client->{socket}->{sock}->write(":$client->{config}->{host} MODE $self->{name} +$modes\r\n");
+    $client->{socket}->{sock}->write(":$ircd->{host} MODE $self->{name} +$modes\r\n");
     foreach($self->{clients}->@*) {
         # RPL_NAMEREPLY
-        $client->{socket}->{sock}->write(":$client->{config}->{host} 353 $client->{nick} \@ $self->{name} :\@$_->{nick}\r\n");
+        $client->{socket}->{sock}->write(":$ircd->{host} 353 $client->{nick} \@ $self->{name} :\@$_->{nick}\r\n");
     }
     # RPL_ENDOFNAMES
-    $client->{socket}->{sock}->write(":$client->{config}->{host} 366 $client->{nick} $self->{name} :End of /NAMES list.\r\n");
+    $client->{socket}->{sock}->write(":$ircd->{host} 366 $client->{nick} $self->{name} :End of /NAMES list.\r\n");
     # RPL_TOPIC
-    $client->{socket}->{sock}->write(":$client->{config}->{host} 332 $client->{nick} $self->{name} :This is a topic.\r\n");
-    $client->{socket}->{sock}->write(":$client->{config}->{host} 324 $client->{nick} $self->{name} +$modes\r\n");
-    #$client->{socket}->{sock}->write(":$client->{config}->{host} 329 $client->{nick} $self->{name} " . time() . "\r\n");
+    $client->{socket}->{sock}->write(":$ircd->{host} 332 $client->{nick} $self->{name} :This is a topic.\r\n");
+    $client->{socket}->{sock}->write(":$ircd->{host} 324 $client->{nick} $self->{name} +$modes\r\n");
+    #$client->{socket}->{sock}->write(":$ircd->{host} 329 $client->{nick} $self->{name} " . time() . "\r\n");
 }
 sub quit {
     my $self   = shift;
     my $client = shift;
+    my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
     my $msg    = shift;
     foreach(@{$self->{clients}}) {
@@ -77,6 +79,7 @@ sub quit {
 sub part {
     my $self   = shift;
     my $client = shift;
+    my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
     my $msg    = shift;
     foreach(@{$self->{clients}}) {
@@ -90,7 +93,7 @@ sub part {
     }
     # If we get here, they weren't in the room.
     # XXX: Is this right?
-    $client->{socket}->{sock}->write(":$client->{config}->{host} 442 $self->{name} :You're not on that channel\r\n");
+    $client->{socket}->{sock}->write(":$ircd->{host} 442 $self->{name} :You're not on that channel\r\n");
 }
 sub resides {
     my $self   = shift;
