@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use diagnostics;
-
+use IRCd::Constants;
 package IRCd::Channel;
 
 sub new {
@@ -37,7 +37,7 @@ sub addClient {
         print "They're already in the channel!\r\n";
         return;
     }
-    # $client->{socket}->{sock}->write(":$ircd->{host} 443 $client->{nick} $self->{name} :is already on channel\r\n");
+    # $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_USERONCHANNEL . " $client->{nick} $self->{name} :is already on channel\r\n");
 
     push @{$self->{clients}}, $client;
     print "Added client to channel $self->{name}\r\n";
@@ -48,16 +48,11 @@ sub addClient {
         $modes = $modes . $_;
     }
     $client->{socket}->{sock}->write(":$ircd->{host} MODE $self->{name} +$modes\r\n");
-    foreach($self->{clients}->@*) {
-        # RPL_NAMEREPLY
-        $client->{socket}->{sock}->write(":$ircd->{host} 353 $client->{nick} \@ $self->{name} :\@$_->{nick}\r\n");
-    }
-    # RPL_ENDOFNAMES
-    $client->{socket}->{sock}->write(":$ircd->{host} 366 $client->{nick} $self->{name} :End of /NAMES list.\r\n");
-    # RPL_TOPIC
-    $client->{socket}->{sock}->write(":$ircd->{host} 332 $client->{nick} $self->{name} :This is a topic.\r\n");
-    $client->{socket}->{sock}->write(":$ircd->{host} 324 $client->{nick} $self->{name} +$modes\r\n");
-    #$client->{socket}->{sock}->write(":$ircd->{host} 329 $client->{nick} $self->{name} " . time() . "\r\n");
+    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_NAMREPLY      . " $client->{nick} \@ $self->{name} :\@$_->{nick}\r\n") foreach($self->{clients}->@*);
+    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_ENDOFNAMES    . " $client->{nick} $self->{name} :End of /NAMES list.\r\n");
+    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :This is a topic.\r\n");
+    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $self->{name} +$modes\r\n");
+    #$client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CREATIONTIME  . " $client->{nick} $self->{name} " . time() . "\r\n");
 }
 sub quit {
     my $self   = shift;
@@ -93,7 +88,7 @@ sub part {
     }
     # If we get here, they weren't in the room.
     # XXX: Is this right?
-    $client->{socket}->{sock}->write(":$ircd->{host} 442 $self->{name} :You're not on that channel\r\n");
+    $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $self->{name} :You're not on that channel\r\n");
 }
 sub resides {
     my $self   = shift;

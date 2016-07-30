@@ -101,9 +101,10 @@ sub run {
 sub getClientByNick {
     my $self = shift;
     my $nick = shift;
+    # Replace with linked hash
+    # $self->{clients} = {ids => {}, usernames => {}}
+    # $clients->{ids}->{$client->{id} = $client
     foreach(values($self->{clientMap}->%*)) {
-        #use Data::Dumper;
-        #print Dumper($_->{client});
         return $_->{client} if($_->{client}->{nick} eq $nick);
     }
     return 0;

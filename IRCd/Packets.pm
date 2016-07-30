@@ -4,7 +4,7 @@ use warnings;
 use diagnostics;
 use feature 'postderef';
 use IRCd::Channel;
-
+use IRCd::Constants;
 package IRCd::Packets;
 
 sub nick {
@@ -17,7 +17,7 @@ sub nick {
 
     my @splitPacket = split(" ", $msg);
     if(scalar(@splitPacket) < 2) {
-        $socket->write(":$config->{host} 461 * NICK :Not enough parameters\r\n");
+        $socket->write(":$config->{host} " . IRCd::Constants::ERR_NEEDMOREPARAMS . " * NICK :Not enough parameters\r\n");
         return;
     }
 
@@ -26,7 +26,7 @@ sub nick {
         last if($ircd->{clientMap}->{$_}->{client} eq $client);
         if($ircd->{clientMap}->{$_}->{client}->{nick} eq $splitPacket[1]) {
             print "NICK in use!\r\n";
-            $socket->write(":$config->{host} 433 * NICK :Nickname is already in use\r\n");
+            $socket->write(":$config->{host} " . IRCd::Constants::ERR_NICKNAMEINUSE . " * NICK :Nickname is already in use\r\n");
             last;
         }
     }
@@ -48,11 +48,11 @@ sub user {
     my @splitPacket = split(" ", $msg);
 
     if(scalar(@splitPacket) < 4) {
-        $socket->write(":$config->{host} 461 * USER :Not enough parameters\r\n");
+        $socket->write(":$config->{host} " . IRCd::Constants::ERR_NEEDMOREPARAMS . " * USER :Not enough parameters\r\n");
         return;
     }
     $client->{ident}    = $splitPacket[1];
-    my @splitPacket = split(":", $msg);
+    @splitPacket = split(":", $msg);
     $client->{realname} = $splitPacket[1];
 
     print "IDENT: $client->{ident}", "\r\n";
@@ -74,7 +74,7 @@ sub join {
     if($recurs == 0) {
         @splitPacket = split(" ", $msg);
         if(scalar(@splitPacket) < 2) {
-            $socket->write(":$config->{host} 461 * JOIN :Not enough parameters\r\n");
+            $socket->write(":$config->{host} " . IRCd::Constants::ERR_NEEDMOREPARAMS . " * JOIN :Not enough parameters\r\n");
             return;
         }
         $channelInput = $splitPacket[1];
@@ -134,9 +134,9 @@ sub who {
         my $host = $_->{ip};
         my $nick = $_->{nick};
         my $real = $_->{realname};
-        $socket->write(":$ircd->{host} 352 $channel $user $host $config->{host} $nick H :0 $real\r\n");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOREPLY . " $channel $user $host $config->{host} $nick H :0 $real\r\n");
     }
-    $socket->write(":$ircd->{host} 315 $client->{nick} :End of /WHO list.\r\n");
+    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHO . " $client->{nick} :End of /WHO list.\r\n");
 }
 sub whois {
     # TODO
@@ -178,7 +178,7 @@ sub part {
     if($ircd->{channels}->{$partChannel}) {
         $ircd->{channels}->{$partChannel}->part($client, $partReason);
     } else {
-        $socket->write(":$ircd->{host} 442 $client->{nick} $partChannel :You're not on that channel\r\n");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $partChannel :You're not on that channel\r\n");
     }
 }
 
@@ -192,7 +192,7 @@ sub privmsg {
 
     my @splitPacket = split(" ", $msg);
     my $target = $splitPacket[1];
-    my @splitPacket = split(":", $msg);
+    @splitPacket = split(":", $msg);
     my $realmsg = $splitPacket[1];
 
     if($target =~ /^#/) {
@@ -202,7 +202,7 @@ sub privmsg {
     } else {
         my $user = $ircd->getClientByNick($target);
         if($user == 0) {
-            $socket->write(":$ircd->{host} 401 $client->{nick} $target :No such nick/channel\r\n");
+            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $client->{nick} $target :No such nick/channel\r\n");
             return;
         }
         # Send the message to the target user

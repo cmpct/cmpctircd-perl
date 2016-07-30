@@ -8,6 +8,7 @@ TODO
 * Max lengths for PART/QUIT etc (all commands?)
 * Add multiple targets (done for JOIN)
 * Check for bans and *lines
+* Use hashes instead of arrays (remove the greps!)
 * Use IRCd::Constants
 
 Specific handlers:
@@ -27,4 +28,5 @@ WHO:
 Bit further ahead (in relative time):
 ----
 * Multiple sock providers
+-> http://search.cpan.org/~pevans/IO-Async-0.70/lib/IO/Async.pm#SEE_ALSO
 * SSL/TLS
