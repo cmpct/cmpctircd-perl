@@ -85,9 +85,9 @@ sub part {
     foreach(@{$self->{clients}}) {
         # We should be in the room b/c of the caller but let's be safe.
         if($_ eq $client) {
-            @{$self->{clients}} = grep { $_ != $client } @{$self->{clients}};
             print "Removed (PART) a client from channel $self->{name}\r\n";
             $self->sendToRoom($client, ":$mask PART $self->{name} :$msg");
+            @{$self->{clients}} = grep { $_ != $client } @{$self->{clients}};
             return;
         }
     }

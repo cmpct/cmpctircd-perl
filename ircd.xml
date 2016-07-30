@@ -11,4 +11,7 @@
         <!-- Can be one of: epoll -->
         <provider>epoll</provider>
     </sockets>
+    <advanced>
+        <targets>200</targets>
+    </advanced>
 </config>

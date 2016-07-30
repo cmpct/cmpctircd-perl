@@ -5,7 +5,8 @@ TODO
 * Implement privileges
 * MODE validation, MODE params (we're going to end up with a MODE object...)
 * Fix NICK/auth
-* Add multiple targets
+* Max lengths for PART/QUIT etc (all commands?)
+* Add multiple targets (done for JOIN)
 * Check for bans and *lines
 * Use IRCd::Constants
 
@@ -15,7 +16,6 @@ NICK:
 -> Add validation for characters
 
 QUIT:
--> Filter QUIT msg (????)
 -> 0 param ok, or 1. nothing else.
 
 JOIN:

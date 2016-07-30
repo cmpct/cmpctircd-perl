@@ -67,21 +67,35 @@ sub join {
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
+    my $recurs = shift // 0;
+    my @splitPacket;
 
-    my @splitPacket = split(" ", $msg);
-    if(scalar(@splitPacket) < 2) {
-        $socket->write(":$config->{host} 461 * JOIN :Not enough parameters\r\n");
-        return;
+    my $channelInput = $msg;
+    if($recurs == 0) {
+        @splitPacket = split(" ", $msg);
+        if(scalar(@splitPacket) < 2) {
+            $socket->write(":$config->{host} 461 * JOIN :Not enough parameters\r\n");
+            return;
+        }
+        $channelInput = $splitPacket[1];
+        if($channelInput =~ /,/) {
+            # Multiple targets
+            my @splitPacket = split(",", $channelInput);
+            my $i = 0;
+            foreach(@splitPacket) {
+                IRCd::Packets::join($client, $_, 1);
+                $i++;
+                last if($i > $ircd->{maxTargets});
+            }
+            return;
+        }
     }
-    my $channelInput = $splitPacket[1];
-    my $foundChannel = 0;
 
     # Need a list of server channels
     if($ircd->{channels}->{$channelInput}) {
         print "Channel already exists.\r\n";
         # Have them "JOIN", announce to other users
         $ircd->{channels}->{$channelInput}->addClient($client);
-        $foundChannel = 1
     } else {
         print "Creating channel..\r\n";
         my $channel = IRCd::Channel->new($channelInput);
@@ -137,9 +151,12 @@ sub quit {
 
     my @splitPacket = split(" ", $msg);
     my $quitReason  = $splitPacket[1];
+    @splitPacket = split(":", $quitReason);
+    $quitReason = $splitPacket[1];
 
+    # TODO: Max length
     foreach my $chan (keys($ircd->{channels}->%*)) {
-        $chan->quit($client, "Goodbye!");
+        $ircd->{channels}->{$chan}->quit($client, $quitReason);
     }
     # XXX: Let anyone who we're PMIng know? is that a thing?
 }
@@ -151,11 +168,15 @@ sub part {
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
 
+    # TODO: Need target support (recursion) here
     my @splitPacket = split(" ", $msg);
-    my $partChannel  = $splitPacket[1];
+    my $partChannel = $splitPacket[1];
+    my $partReason  = $splitPacket[2];
+    @splitPacket = split(":", $partReason);
+    $partReason = $splitPacket[1];
 
     if($ircd->{channels}->{$partChannel}) {
-        $ircd->{channels}->{$partChannel}->part($client, $splitPacket[1]);
+        $ircd->{channels}->{$partChannel}->part($client, $partReason);
     } else {
         $socket->write(":$ircd->{host} 442 $client->{nick} $partChannel :You're not on that channel\r\n");
     }

@@ -29,6 +29,9 @@ sub new {
         'ip'        => undef,
         'port'      => undef,
         'version'   => 0.1,
+
+        # advanced config options
+        'maxtargets' => undef,
     };
     bless $self, $class;
     return $self;
@@ -46,10 +49,11 @@ sub setup {
     $self->{epoll} = IRCd::Epoll->new($self->{listener});
     $self->{clientMap} = ();
 
-    $self->{host}    = $self->{config}->{host};
-    $self->{network} = $self->{config}->{network};
-    $self->{ip}      = $self->{config}->{ip};
-    $self->{port}    = $self->{config}->{port};
+    $self->{host}       = $self->{config}->{host};
+    $self->{network}    = $self->{config}->{network};
+    $self->{ip}         = $self->{config}->{ip};
+    $self->{port}       = $self->{config}->{port};
+    $self->{maxtargets} = $self->{config}->{maxtargets};
 }
 
 sub run {
