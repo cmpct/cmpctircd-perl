@@ -195,8 +195,19 @@ sub privmsg {
     my @splitPacket = split(":", $msg);
     my $realmsg = $splitPacket[1];
 
-    my $channel = $ircd->{channels}->{$target};
-    $channel->sendToRoom($client, ":$client->{nick} PRIVMSG $channel->{name} :$realmsg", 0);
+    if($target =~ /^#/) {
+        # Target was a channel
+        my $channel = $ircd->{channels}->{$target};
+        $channel->sendToRoom($client, ":$client->{nick} PRIVMSG $channel->{name} :$realmsg", 0);
+    } else {
+        my $user = $ircd->getClientByNick($target);
+        if($user == 0) {
+            $socket->write(":$ircd->{host} 401 $client->{nick} $target :No such nick/channel\r\n");
+            return;
+        }
+        # Send the message to the target user
+        $user->{socket}->{sock}->write(":$mask PRIVMSG $user->{nick} :$realmsg\r\n");
+    }
 }
 
 # :card.freenode.net 451 * :You have not registered

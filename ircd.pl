@@ -98,6 +98,17 @@ sub run {
         }
     }
 }
+sub getClientByNick {
+    my $self = shift;
+    my $nick = shift;
+    foreach(values($self->{clientMap}->%*)) {
+        #use Data::Dumper;
+        #print Dumper($_->{client});
+        return $_->{client} if($_->{client}->{nick} eq $nick);
+    }
+    return 0;
+}
+
 
 if(!caller) {
     my $ircd = IRCd::Run->new("ircd.xml");

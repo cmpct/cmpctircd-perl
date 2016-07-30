@@ -36,10 +36,4 @@ sub parse {
     }
 }
 
-sub getClientByNick {
-    # TODO
-    my $self = shift;
-
-}
-
 1;
