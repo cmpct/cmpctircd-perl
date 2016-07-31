@@ -8,7 +8,6 @@ TODO
 * Max lengths for PART/QUIT etc (all commands?)
 * Add multiple targets (done for JOIN)
 * Check for bans and *lines
-* Use hashes instead of arrays (remove the greps!)
 * Use IRCd::Constants
 
 Specific handlers:

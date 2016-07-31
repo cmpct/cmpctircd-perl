@@ -20,7 +20,7 @@ sub new {
         'config'    => IRCd::Config->new(shift),
         'listener'  => undef,
         'epoll'     => undef,
-        'clientMap' => undef,
+        'clients'   => undef,
 
         # ircd internals used across the codebase
         'channels'  => {},
@@ -47,8 +47,10 @@ sub setup {
         ReuseAddr => 1,
     ) or die $!;
     $self->{epoll} = IRCd::Epoll->new($self->{listener});
-    $self->{clientMap} = ();
-
+    $self->{clients} = {
+        id       => {},
+        nick     => {}
+    };
     $self->{host}       = $self->{config}->{host};
     $self->{network}    = $self->{config}->{network};
     $self->{ip}         = $self->{config}->{ip};
@@ -66,12 +68,12 @@ sub run {
                 my $newSock = $self->{listener}->accept;
                 my $newfd   = fileno($newSock);
                 my $sockObj = IRCd::Socket->new(sock => $newSock, fd => $newfd);
-                $self->{clientMap}->{$newfd} = $sockObj;
+                $self->{clients}->{id}->{$newfd} = $sockObj;
                 $self->{epoll}->addSock($newSock);
             } else {
                 # Read from an existing client
                 my $buffer  = "";
-                my $socket   = $self->{clientMap}->{$event->[0]};
+                my $socket   = $self->{clients}->{id}->{$event->[0]};
                 $socket->{sock}->recv($buffer, 1024);
                 if($buffer eq "") {
                     print "Removing a client...\r\n";
@@ -101,12 +103,7 @@ sub run {
 sub getClientByNick {
     my $self = shift;
     my $nick = shift;
-    # Replace with linked hash
-    # $self->{clients} = {ids => {}, usernames => {}}
-    # $clients->{ids}->{$client->{id} = $client
-    foreach(values($self->{clientMap}->%*)) {
-        return $_->{client} if($_->{client}->{nick} eq $nick);
-    }
+    return $self->{clients}->{nick}->{$nick} if($self->{clients}->{nick}->{$nick});
     return 0;
 }
 

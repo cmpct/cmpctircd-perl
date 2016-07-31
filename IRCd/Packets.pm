@@ -22,19 +22,20 @@ sub nick {
     }
 
     # NICK already in use?
-    foreach(keys($ircd->{clientMap}->%*)) {
-        last if($ircd->{clientMap}->{$_}->{client} eq $client);
-        if($ircd->{clientMap}->{$_}->{client}->{nick} eq $splitPacket[1]) {
+    if($client->{nick} ne $splitPacket[1]) {
+        if($ircd->{clients}->{nick}->{$splitPacket[1]}) {
             print "NICK in use!\r\n";
             $socket->write(":$config->{host} " . IRCd::Constants::ERR_NICKNAMEINUSE . " * NICK :Nickname is already in use\r\n");
-            last;
+            return;
         }
     }
-    # Check for invalid nick...
-
+    delete $ircd->{clients}->{nick}->{$client->{nick}} if $client->{nick} ne "";
+    # TODO: Check for invalid nick...
     $client->{nick} = $splitPacket[1];
     $socket->write(":$mask NICK :$client->{nick}\r\n");
     print "NICK: $client->{nick}", "\r\n";
+
+    $ircd->{clients}->{nick}->{$client->{nick}} = $client;
     $client->sendWelcome() if($client->{ident} and !$client->{sentWelcome});
 }
 sub user {

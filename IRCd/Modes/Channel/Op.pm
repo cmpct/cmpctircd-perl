@@ -9,7 +9,7 @@ sub new {
         'name'     => 'op'
         'provides' => 'o',
         'desc'     => 'Provides the +o (op) mode for moderating a channel.',
-        affects    => [],
+        affects    => (),
         channel    => shift,
     };
     bless $self, $class;
@@ -21,13 +21,13 @@ sub new {
 
 sub grant {
     my $self   = shift;
-    my $client = shift
-    push $self->{affects}->@*, $client;
+    my $client = shift;
+    $self->{affects}->{$client} = 1;
 }
 sub deop {
     my $self   = shift;
     my $client  = shift;
-    @{$self->{affects}} = grep { $_ != $client } @{$self->{affects}};
+    delete $self->{affects}->{$client};
 }
 
 
