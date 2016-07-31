@@ -8,21 +8,20 @@ package IRCd::Constants;
 # http://www.valinor.sorcery.net/docs/rfc1459/6.1-error-replies.html
 # This file interestingly serves as a list of the implemented numerics.
 use constant {
-    RPL_WELCOME  => 001,
-    RPL_YOURHOST => 002,
-    RPL_CREATED  => 003,
+    RPL_WELCOME  => '001',
+    RPL_YOURHOST => '002',
+    RPL_CREATED  => '003',
 
-    RPL_WHOREPLY => 352,
-    RPL_ENDOFWHO => 315,
-
+    RPL_ENDOFWHO      => 315,
     RPL_CHANNELMODEIS => 324,
-    RPL_CREATIONTIME => 329,
-    RPL_TOPIC    => 332,
-    RPL_NAMREPLY => 353,
-    RPL_ENDOFNAMES => 366,
-    RPL_MOTD      => 372,
-    RPL_MOTDSTART => 375,
-    RPL_ENDOFMOTD => 376,
+    RPL_CREATIONTIME  => 329,
+    RPL_TOPIC         => 332,
+    RPL_WHOREPLY      => 352,
+    RPL_NAMREPLY      => 353,
+    RPL_ENDOFNAMES    => 366,
+    RPL_MOTD          => 372,
+    RPL_MOTDSTART     => 375,
+    RPL_ENDOFMOTD     => 376,
     # ...
     # Errors
     ERR_NOSUCHNICK     => 401,
