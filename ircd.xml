@@ -2,6 +2,7 @@
     <ircd>
         <host>irc.cmpct.info</host>
         <network>cmpct</network>
+        <desc>the perl irc server</desc>
     </ircd>
     <server>
         <ip>127.0.0.1</ip>

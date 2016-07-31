@@ -26,6 +26,7 @@ sub new {
         'channels'  => {},
         'host'      => undef,
         'network'   => undef,
+        'desc'      => undef,
         'ip'        => undef,
         'port'      => undef,
         'version'   => 0.1,
@@ -53,6 +54,7 @@ sub setup {
     };
     $self->{host}       = $self->{config}->{host};
     $self->{network}    = $self->{config}->{network};
+    $self->{desc}       = $self->{config}->{desc};
     $self->{ip}         = $self->{config}->{ip};
     $self->{port}       = $self->{config}->{port};
     $self->{maxtargets} = $self->{config}->{maxtargets};
@@ -89,6 +91,7 @@ sub run {
                     if(!defined $socket->{client}) {
                         # XXX: config could go away?
                         $socket->{client} = IRCd::Client->new($socket, $self, $self->{config});
+                        $socket->{client}->{server} = $self->{host};
                     }
                     $socket->{client}->{ip} = $socket->{sock}->peerhost();
                     my @splitBuffer = split("\r\n", $buffer);

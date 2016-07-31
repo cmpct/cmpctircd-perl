@@ -15,6 +15,9 @@ sub new {
         'config'   => shift,
         # ...
         'sentWelcome' => 0,
+        'idle'        => 0,
+        'server'      => undef,
+
     };
     bless $self, $class;
     return $self;

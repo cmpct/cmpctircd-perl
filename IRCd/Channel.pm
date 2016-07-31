@@ -38,7 +38,6 @@ sub addClient {
         return;
     }
     # $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_USERONCHANNEL . " $client->{nick} $self->{name} :is already on channel\r\n");
-
     $self->{clients}->{$client->{nick}} = $client;
     print "Added client to channel $self->{name}\r\n";
 

@@ -73,10 +73,15 @@ sub join {
 
     $client->{idle} = time();
     my $channelInput = $msg;
+
     if($recurs == 0) {
         @splitPacket = split(" ", $msg);
         if(scalar(@splitPacket) < 2) {
             $socket->write(":$config->{host} " . IRCd::Constants::ERR_NEEDMOREPARAMS . " * JOIN :Not enough parameters\r\n");
+            return;
+        }
+        if($splitPacket[1] !~ /^#/){
+            print "JOIN param didn't begin w/ a #\r\n";
             return;
         }
         $channelInput = $splitPacket[1];
@@ -140,7 +145,37 @@ sub who {
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHO . " $client->{nick} :End of /WHO list.\r\n");
 }
 sub whois {
-    # TODO
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask();
+    my @splitMessage = split(" ", $msg);
+    my $target = $splitMessage[1];
+    my $targetNick    = $splitMessage[1];
+    my $targetClient  = $ircd->getClientByNick($targetNick);
+    if($targetClient == 0) {
+        # error out
+        return;
+    }
+    my $targetIdent    = $targetClient->{ident};
+    my $targetRealName = $targetClient->{realname};
+    my $targetHost     = $targetClient->{ip};
+    # XXX: Claims to be online since 1970.
+    my $targetIdle     = time() - $client->{idle};
+    # TODO: RPL_WHOISOPERATOR => 313,
+    my @presentChannels = ();
+    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISUSER     . " $client->{nick} $targetNick $targetIdent $targetHost * :$targetRealName\r\n");
+    foreach(values($ircd->{channels}->%*)) {
+        if($_->{clients}->{$targetNick}) {
+            push @presentChannels, $_->{name};
+        }
+    }
+    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISCHANNELS . " $client->{nick} $targetNick :" . join(' ', @presentChannels) . "\r\n") if @presentChannels >= 1;
+    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISSERVER   . " $client->{nick} $targetNick $client->{server} :$ircd->{desc}\r\n");
+    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISIDLE     . " $client->{nick} $targetNick $targetIdle :seconds idle\r\n");
+    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHOIS    . " $client->{nick} $targetNick :End of /WHOIS list\r\n");
 }
 sub quit {
     my $client = shift;

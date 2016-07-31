@@ -1,14 +1,14 @@
 TODO
 ----
 
-* Fixup WHO
 * Implement privileges
 * MODE validation, MODE params (we're going to end up with a MODE object...)
 * Fix NICK/auth
 * Max lengths for PART/QUIT etc (all commands?)
 * Add multiple targets (done for JOIN)
 * Check for bans and *lines
-* Use IRCd::Constants
+* Add name resolution
+* Logging
 
 Specific handlers:
 ----------------
@@ -29,3 +29,4 @@ Bit further ahead (in relative time):
 * Multiple sock providers
 -> http://search.cpan.org/~pevans/IO-Async-0.70/lib/IO/Async.pm#SEE_ALSO
 * SSL/TLS
+* TS6 and other link protocols? (TS6 first?)

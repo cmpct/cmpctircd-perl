@@ -32,6 +32,7 @@ sub parse {
         $self->{port}       = $xmlRef->{'server'}->{'port'};
         $self->{host}       = $xmlRef->{'ircd'}->{'host'};
         $self->{network}    = $xmlRef->{'ircd'}->{'network'};
+        $self->{desc}       = $xmlRef->{'ircd'}->{'desc'};
         $self->{maxtargets} = $xmlRef->{'advanced'}->{'maxtargets'};
     }
 }
