@@ -14,6 +14,7 @@ use constant {
 
     RPL_WHOREPLY => 352,
     RPL_ENDOFWHO => 315,
+
     RPL_CHANNELMODEIS => 324,
     RPL_CREATIONTIME => 329,
     RPL_TOPIC    => 332,
@@ -25,6 +26,7 @@ use constant {
     # ...
     # Errors
     ERR_NOSUCHNICK     => 401,
+    ERR_NOSUCHCHANNEL  => 403,
     ERR_NICKNAMEINUSE  => 433,
     ERR_NOTONCHANNEL   => 442,
     ERR_USERONCHANNEL  => 443,

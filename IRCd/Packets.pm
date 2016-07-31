@@ -71,6 +71,7 @@ sub join {
     my $recurs = shift // 0;
     my @splitPacket;
 
+    $client->{idle} = time();
     my $channelInput = $msg;
     if($recurs == 0) {
         @splitPacket = split(" ", $msg);
@@ -121,21 +122,20 @@ sub who {
     my $target      = $splitPacket[1];
 
     # Get the channel obj
-    my $channel = $ircd->{$target};
+    my $channel = $ircd->{channels}->{$target};
     if(!$channel) {
-        # error out
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $channel->{name} :No such nick/channel\r\n");
+        return;
     }
 
-    # (13:22:34) irc: Got a WHO response for user, which doesn't exist
-    # (13:22:34) irc: Got a WHO response for tuser, which doesn't exist
-    # XXX: Check the WHO response vs libpurple
+    # TODO: Check the WHO response vs libpurple
     # https://bitbucket.org/pidgin/main/src/1cf07b94c6ca44814ad456de985947be66a391c8/libpurple/protocols/irc/msgs.c?at=default&fileviewer=file-view-default#msgs.c-942
-    foreach($channel->{clients}->@*) {
+    foreach(values($channel->{clients}->%*)) {
         my $user = $_->{ident};
         my $host = $_->{ip};
         my $nick = $_->{nick};
         my $real = $_->{realname};
-        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOREPLY . " $channel $user $host $config->{host} $nick H :0 $real\r\n");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOREPLY . " $client->{nick} $channel->{name} $user $host $config->{host} $nick H :0 $real\r\n");
     }
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHO . " $client->{nick} :End of /WHO list.\r\n");
 }
@@ -169,6 +169,7 @@ sub part {
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
 
+    $client->{idle} = time();
     # TODO: Need target support (recursion) here
     my @splitPacket = split(" ", $msg);
     my $partChannel = $splitPacket[1];
@@ -191,6 +192,7 @@ sub privmsg {
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
 
+    $client->{idle} = time();
     my @splitPacket = split(" ", $msg);
     my $target = $splitPacket[1];
     @splitPacket = split(":", $msg);
