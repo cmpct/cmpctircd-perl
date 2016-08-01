@@ -84,13 +84,43 @@ sub part {
     if($self->{clients}->{$client->{nick}}) {
         print "Removed (PART) a client from channel $self->{name}\r\n";
         $self->sendToRoom($client, ":$mask PART $self->{name} :$msg");
+        $self->stripModes($client);
         delete $self->{clients}->{$client->{nick}};
         return;
     }
     # If we get here, they weren't in the room.
     # XXX: Is this right?
-    $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $self->{name} :You're not on that channel\r\n");
+    $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
 }
+
+sub kick {
+    my $self        = shift;
+    my $client      = shift;
+    my $ircd        = $client->{ircd};
+    my $mask        = $client->getMask();
+    my $targetUser  = shift;
+    my $kickReason  = shift;
+
+    if($self->{clients}->{$client->{nick}}) {
+        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
+        return;
+    }
+    if($self->getStatus($client) eq '@') {
+        if($self->{clients}->{$targetUser}) {
+            $self->sendToRoom($client, ":$mask KICK $self->{name} $targetUser :$kickReason\r\n");
+            $self->stripModes($client);
+            delete $self->{clients}->{$targetUser};
+        } else {
+            $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_USERNOTINCHANNEL . " $client->{nick} $self->{name} :They aren't on that channel\r\n");
+            return;
+        }
+    } else {
+        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
+        return;
+    }
+}
+
+
 sub resides {
     my $self   = shift;
     my $client = shift;

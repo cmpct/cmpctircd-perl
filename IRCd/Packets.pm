@@ -245,6 +245,31 @@ sub privmsg {
         $user->{socket}->{sock}->write(":$mask PRIVMSG $user->{nick} :$realmsg\r\n");
     }
 }
+##                          ##
+##  Operator (+o) Commands  ##
+##                          ##
+sub kick {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask();
+
+    # Validation of various sorts
+    my @splitPacket   = split(" ", $msg);
+    my $targetChannel = $ircd->{channels}->{$splitPacket[1]};
+    if(!$targetChannel) {
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $channel->{name} :No such nick/channel\r\n");
+        return;
+    }
+
+    my $targetUser    = $splitPacket[2];
+    my @kickSplit     = split(":", $msg);
+    my $kickReason    = $kickSplit[1] // "Kicked.";
+    $targetChannel->kick($client, $targetUser, $kickReason);
+}
+
 
 # :card.freenode.net 451 * :You have not registered
 1;

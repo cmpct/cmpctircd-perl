@@ -29,15 +29,16 @@ use constant {
     RPL_MOTD          => 372,
     RPL_MOTDSTART     => 375,
     RPL_ENDOFMOTD     => 376,
-    # ...
-    # Errors
-    ERR_NOSUCHNICK     => 401,
-    ERR_NOSUCHCHANNEL  => 403,
-    ERR_NICKNAMEINUSE  => 433,
-    ERR_NOTONCHANNEL   => 442,
-    ERR_USERONCHANNEL  => 443,
-    ERR_NEEDMOREPARAMS => 461,
 
+    # Errors
+    ERR_NOSUCHNICK       => 401,
+    ERR_NOSUCHCHANNEL    => 403,
+    ERR_NICKNAMEINUSE    => 433,
+    ERR_USERNOTINCHANNEL => 441,
+    ERR_NOTONCHANNEL     => 442,
+    ERR_USERONCHANNEL    => 443,
+    ERR_NEEDMOREPARAMS   => 461,
+    ERR_CHANOPRIVSNEEDED => 482,
 };
 
 1;
