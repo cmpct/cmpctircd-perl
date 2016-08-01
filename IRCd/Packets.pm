@@ -21,7 +21,7 @@ sub nick {
         return;
     }
 
-    # NICK already in use?
+    # NICK already in use
     if($client->{nick} ne $splitPacket[1]) {
         if($ircd->{clients}->{nick}->{$splitPacket[1]}) {
             print "NICK in use!\r\n";
@@ -265,7 +265,7 @@ sub kick {
     my @splitPacket   = split(" ", $msg);
     my $targetChannel = $ircd->{channels}->{$splitPacket[1]};
     if(!$targetChannel) {
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $channel->{name} :No such nick/channel\r\n");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $splitPacket[1] :No such nick/channel\r\n");
         return;
     }
 
