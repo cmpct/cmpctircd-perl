@@ -208,8 +208,13 @@ sub part {
     my @splitPacket = split(" ", $msg);
     my $partChannel = $splitPacket[1];
     my $partReason  = $splitPacket[2];
-    @splitPacket = split(":", $partReason);
-    $partReason = $splitPacket[1];
+
+    if($partReason // 0) {
+        @splitPacket = split(":", $partReason);
+        $partReason = $splitPacket[1];
+    } else {
+        $partReason = "";
+    }
 
     if($ircd->{channels}->{$partChannel}) {
         $ircd->{channels}->{$partChannel}->part($client, $partReason);
