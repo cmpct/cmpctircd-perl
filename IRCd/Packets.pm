@@ -119,7 +119,6 @@ sub who {
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
 
-    print "Horton heard a WHO!\r\n";
     # XXX: We need to parse ',' and the rest of that
     # XXX: But forget it for now.
     # XXX: Don't reveal +i users on the network.
@@ -156,7 +155,7 @@ sub whois {
     my $targetNick    = $splitMessage[1];
     my $targetClient  = $ircd->getClientByNick($targetNick);
     if($targetClient == 0) {
-        # error out
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $client->{nick} $target :No such nick/channel\r\n");
         return;
     }
     my $targetIdent    = $targetClient->{ident};
@@ -172,7 +171,7 @@ sub whois {
             push @presentChannels, $_->{name};
         }
     }
-    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISCHANNELS . " $client->{nick} $targetNick :" . join(' ', @presentChannels) . "\r\n") if @presentChannels >= 1;
+    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISCHANNELS . " $client->{nick} $targetNick :" . CORE::join(' ', @presentChannels) . "\r\n") if @presentChannels >= 1;
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISSERVER   . " $client->{nick} $targetNick $client->{server} :$ircd->{desc}\r\n");
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISIDLE     . " $client->{nick} $targetNick $targetIdle :seconds idle\r\n");
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHOIS    . " $client->{nick} $targetNick :End of /WHOIS list\r\n");
@@ -218,7 +217,6 @@ sub part {
         $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $partChannel :You're not on that channel\r\n");
     }
 }
-
 sub privmsg {
     my $client = shift;
     my $msg    = shift;

@@ -3,14 +3,16 @@ use strict;
 use warnings;
 use diagnostics;
 
+package IRCd::Modes::Channel::Op;
+
 sub new {
     my $class = shift;
     my $self  = {
-        'name'     => 'op'
+        'name'     => 'op',
         'provides' => 'o',
         'desc'     => 'Provides the +o (op) mode for moderating a channel.',
-        affects    => (),
-        channel    => shift,
+        'affects'  => {},
+        'channel'  => shift,
     };
     bless $self, $class;
     return $self;
@@ -24,10 +26,16 @@ sub grant {
     my $client = shift;
     $self->{affects}->{$client} = 1;
 }
-sub deop {
+sub revoke {
     my $self   = shift;
-    my $client  = shift;
+    my $client = shift;
     delete $self->{affects}->{$client};
+}
+sub has {
+    my $self   = shift;
+    my $client = shift;
+    return 1 if($self->{affects}->{$client});
+    return 0;
 }
 
 

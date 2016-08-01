@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use diagnostics;
 use IRCd::Constants;
+use IRCd::Modes::Channel::Op;
 package IRCd::Channel;
 
 sub new {
@@ -10,11 +11,12 @@ sub new {
     my $self  = {
         'name'    => shift,
         'clients' => {},
-        'modes'   => ['n', 's'],
+        #'modes'   => ['n', 's'],
+        'modes'   => {},
         # topic
-        # -> ...
     };
     bless $self, $class;
+    $self->{modes}->{op} = IRCd::Modes::Channel::Op->new($self->{name});
     return $self;
 }
 
@@ -32,22 +34,26 @@ sub addClient {
     my $mask   = $client->getMask();
     my $modes  = "";
 
-    if($self->resides($client)) {
-        # Already in the channel
-        print "They're already in the channel!\r\n";
-        return;
-    }
-    # $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_USERONCHANNEL . " $client->{nick} $self->{name} :is already on channel\r\n");
+    return if($self->resides($client));
     $self->{clients}->{$client->{nick}} = $client;
+    my $chanSize = keys($self->{clients}->%*);
+    if($chanSize == 1) {
+        # Grant the founding user op
+        $self->{modes}->{op}->grant($client);
+    }
     print "Added client to channel $self->{name}\r\n";
 
     $self->sendToRoom($client, ":$mask JOIN :$self->{name}");
-    foreach(@{$self->{modes}}) {
-        print "Adding mode: $_\r\n";
-        $modes = $modes . $_;
+    #foreach(@{$self->{modes}}) {
+    #    print "Adding mode: $_\r\n";
+    #    $modes = $modes . $_;
+    #}
+    #$client->{socket}->{sock}->write(":$ircd->{host} MODE $self->{name} +$modes\r\n");
+    my $userModes = "";
+    foreach(values($self->{clients}->%*)) {
+        my $userStatus = $self->getStatus($_);
+        $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_NAMREPLY      . " $client->{nick} \@ $self->{name} :$userStatus$_->{nick}\r\n")
     }
-    $client->{socket}->{sock}->write(":$ircd->{host} MODE $self->{name} +$modes\r\n");
-    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_NAMREPLY      . " $client->{nick} \@ $self->{name} :\@$_->{nick}\r\n") foreach(values($self->{clients}->%*));
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_ENDOFNAMES    . " $client->{nick} $self->{name} :End of /NAMES list.\r\n");
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :This is a topic.\r\n");
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $self->{name} +$modes\r\n");
@@ -63,6 +69,7 @@ sub quit {
         # We should be in the room b/c of the caller but let's be safe.
         print "Removed (QUIT) a client from channel $self->{name}\r\n";
         $self->sendToRoom($client, ":$mask QUIT :$msg");
+        $self->stripModes($client);
         delete $self->{clients}->{$client->{nick}};
         return;
     }
@@ -103,6 +110,27 @@ sub sendToRoom {
         next if(($_ eq $client) and !$sendToSelf);
         $_->{socket}->{sock}->write($msg . "\r\n");
     }
+}
+
+###                 ###
+### Mode operations ###
+###                 ###
+sub getStatus {
+    # TODO: level equivalent
+    my $self   = shift;
+    my $client = shift;
+    my $mask   = $client->getMask();
+
+    my $highestRank = '';
+    if($self->{modes}->{op}->has($client)) {
+        $highestRank = '@';
+    }
+    return $highestRank;
+}
+sub stripModes {
+    my $self   = shift;
+    my $client = shift;
+    $self->{modes}->{op}->revoke($client);
 }
 
 1;
