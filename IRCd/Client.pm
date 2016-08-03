@@ -35,6 +35,7 @@ sub parse {
 
     my @splitPacket = split(" ", $msg);
 
+    # TODO: Modular system
     # Check if function exists, and if so, call it
     if (my $handlerRef = IRCd::Packets->can(lc($splitPacket[0]))) {
         $handlerRef->($self, $msg);
@@ -54,6 +55,7 @@ sub sendWelcome {
     my $motd;
     open($motd, "<", "ircd.motd");
     my @motd = <$motd>;
+    # TODO: Strip out blank lines?
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTDSTART . " $self->{nick} :- $ircd->{host} Message of the Day -\r\n");
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTD      . " $self->{nick} :- " . $_ . "\r\n") foreach(@motd);
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFMOTD . " $self->{nick} :End of /MOTD command.\r\n");

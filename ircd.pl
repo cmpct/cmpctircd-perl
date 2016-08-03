@@ -52,25 +52,31 @@ sub setup {
         id       => {},
         nick     => {}
     };
-    $self->{host}       = $self->{config}->{host};
-    $self->{network}    = $self->{config}->{network};
-    $self->{desc}       = $self->{config}->{desc};
-    $self->{ip}         = $self->{config}->{ip};
-    $self->{port}       = $self->{config}->{port};
-    $self->{maxtargets} = $self->{config}->{maxtargets};
+    $self->{host}        = $self->{config}->{host};
+    $self->{network}     = $self->{config}->{network};
+    $self->{desc}        = $self->{config}->{desc};
+    $self->{ip}          = $self->{config}->{ip};
+    $self->{port}        = $self->{config}->{port};
+    $self->{pingtimeout} = $self->{config}->{pingtimeout};
+    $self->{maxtargets}  = $self->{config}->{maxtargets};
 }
 
 sub run {
     my $self = shift;
     while(1) {
-        my $readable = $self->{epoll}->getReadable(-1);
+        my $readable = $self->{epoll}->getReadable(1000);
         foreach my $event (@$readable) {
             if($event->[0] == fileno($self->{listener})) {
                 # Accept a new client
                 my $newSock = $self->{listener}->accept;
                 my $newfd   = fileno($newSock);
-                my $sockObj = IRCd::Socket->new(sock => $newSock, fd => $newfd);
+                my $sockObj = IRCd::Socket->new($newfd, $newSock);
                 $self->{clients}->{id}->{$newfd} = $sockObj;
+                my $socket  = $self->{clients}->{id}->{$newfd};
+
+                $socket->{client} = IRCd::Client->new($socket, $self, $self->{config});
+                $socket->{client}->{ip} = $socket->{sock}->peerhost();
+                $socket->{client}->{server} = $self->{host};
                 $self->{epoll}->addSock($newSock);
             } else {
                 # Read from an existing client
@@ -112,6 +118,9 @@ sub getClientByNick {
 
 
 if(!caller) {
+    $SIG{PIPE} = sub {
+        print STDERR "SIGPIPE @_\n";
+    };
     my $ircd = IRCd::Run->new("ircd.xml");
     $ircd->setup;
     $ircd->run;

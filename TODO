@@ -2,13 +2,18 @@ TODO
 ----
 
 * Implement privileges
-* MODE validation, MODE params (we're going to end up with a MODE object...)
+* MODE validation
 * Fix NICK/auth
 * Max lengths for PART/QUIT etc (all commands?)
 * Add multiple targets (done for JOIN)
 * Check for bans and *lines
 * Add name resolution
 * Logging
+* Make sure that we tell people when they JOIN an already used room
+* Ensure everything's errorified (especially before commits, if we can)
+* Are QUITs being announced properly?
+* Have a hash for parameters to Modes because it's a mess otherwise
+* Let's have a IRCd::Socket wrapper for the write and (recv) functions...
 
 Specific handlers:
 ----------------
