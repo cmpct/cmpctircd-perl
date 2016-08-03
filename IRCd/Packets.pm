@@ -186,13 +186,11 @@ sub quit {
 
     my @splitPacket = split(" ", $msg);
     my $quitReason  = $splitPacket[1];
-    @splitPacket = split(":", $quitReason);
-    $quitReason = $splitPacket[1];
+    @splitPacket    = split(":", $quitReason);
+    $quitReason     = $splitPacket[1];
 
     # TODO: Max length
-    foreach my $chan (keys($ircd->{channels}->%*)) {
-        $ircd->{channels}->{$chan}->quit($client, $quitReason);
-    }
+    $client->disconnect(1, $quitReason);
     # XXX: Let anyone who we're PMIng know? is that a thing?
 }
 sub part {

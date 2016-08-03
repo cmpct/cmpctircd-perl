@@ -14,6 +14,7 @@ TODO
 * Are QUITs being announced properly?
 * Have a hash for parameters to Modes because it's a mess otherwise
 * Let's have a IRCd::Socket wrapper for the write and (recv) functions...
+* Make argmodes in MODE configurable/dynamic
 
 Specific handlers:
 ----------------

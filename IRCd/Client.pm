@@ -63,4 +63,23 @@ sub sendWelcome {
     $self->{sentWelcome} = 1;
 }
 
+sub disconnect {
+    my $self     = shift;
+    my $ircd     = $self->{ircd};
+    my $mask     = $self->getMask();
+    my $graceful = shift // 0;
+    my $reason   = shift // "Leaving.";
+    # Callers are expected to handle the graceful QUIT, or any other
+    # parting messages.
+    if($graceful) {
+        foreach my $chan (keys($ircd->{channels}->%*)) {
+            $ircd->{channels}->{$chan}->quit($self, $reason);
+        }
+        $self->{socket}->{sock}->write(":$mask QUIT :$reason\r\n");
+    }
+    $self->{socket}->{sock}->close();
+    delete $ircd->{clients}->{id}->{$self->{socket}->{fd}};
+    delete $ircd->{clients}->{nick}->{$self->{nick}};
+}
+
 1;

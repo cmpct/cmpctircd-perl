@@ -147,6 +147,10 @@ sub sendToRoom {
 
     foreach(values($self->{clients}->%*)) {
         next if(($_ eq $client) and !$sendToSelf);
+        if($msg =~ /\r\n/) {
+            warn caller . " is misbehaving and sending a newline!";
+            $msg =~ s/\r\n//;
+        }
         $_->{socket}->{sock}->write($msg . "\r\n");
     }
 }
