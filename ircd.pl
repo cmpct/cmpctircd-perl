@@ -9,7 +9,7 @@ use Data::Dumper;
 # ircd modules
 use IRCd::Config;
 use IRCd::Client;
-use IRCd::Epoll;
+use IRCd::Sockets::Epoll;
 use IRCd::Socket;
 
 package IRCd::Run;
@@ -48,7 +48,7 @@ sub setup {
         Listen    => 5,
         ReuseAddr => 1,
     ) or die $!;
-    $self->{epoll} = IRCd::Epoll->new($self->{listener});
+    $self->{epoll} = IRCd::Sockets::Epoll->new($self->{listener});
     $self->{clients} = {
         id       => {},
         nick     => {}
@@ -65,7 +65,7 @@ sub setup {
 sub run {
     my $self = shift;
     while(1) {
-        my $readable = $self->{epoll}->getReadable(1000);
+        my $readable = $self->{epoll}->readable(1000);
         foreach my $event (@$readable) {
             if($event->[0] == fileno($self->{listener})) {
                 # Accept a new client
@@ -78,14 +78,14 @@ sub run {
                 $socket->{client} = IRCd::Client->new($socket, $self, $self->{config});
                 $socket->{client}->{ip}     = $socket->{sock}->peerhost();
                 $socket->{client}->{server} = $self->{host};
-                $self->{epoll}->addSock($newSock);
+                $self->{epoll}->add($newSock);
             } else {
                 # Read from an existing client
                 my $buffer  = "";
                 my $socket   = $self->{clients}->{id}->{$event->[0]};
                 $socket->{sock}->recv($buffer, 1024);
                 if($buffer eq "") {
-                    $self->{epoll}->delSock($socket->{sock});
+                    $self->{epoll}->del($socket->{sock});
                 } else {
                     if($buffer =~ /\r\n/) {
                         print "RECV: " . $buffer;
