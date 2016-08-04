@@ -38,6 +38,7 @@ use constant {
     ERR_NOTONCHANNEL     => 442,
     ERR_USERONCHANNEL    => 443,
     ERR_NEEDMOREPARAMS   => 461,
+    ERR_CHANNELISFULL    => 471,
     ERR_CHANOPRIVSNEEDED => 482,
 };
 

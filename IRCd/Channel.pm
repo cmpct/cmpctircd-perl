@@ -5,6 +5,7 @@ use diagnostics;
 use IRCd::Constants;
 
 use IRCd::Modes::Channel::Op;
+use IRCd::Modes::Channel::Limit;
 
 package IRCd::Channel;
 
@@ -19,6 +20,7 @@ sub new {
     };
     bless $self, $class;
     $self->{modes}->{o} = IRCd::Modes::Channel::Op->new($self);
+    $self->{modes}->{l} = IRCd::Modes::Channel::Limit->new($self);
     foreach(keys($self->{modes}->%*)) {
         my $level  = $self->{modes}->{$_}->level();
         my $symbol = $self->{modes}->{$_}->symbol();
@@ -35,13 +37,21 @@ sub setMode {
     push @{$self->{modes}}, $modes;
 }
 sub addClient {
-    my $self   = shift;
-    my $client = shift;
-    my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
-    my $modes  = "";
+    my $self     = shift;
+    my $client   = shift;
+    my $ircd     = $client->{ircd};
+    my $mask     = $client->getMask();
+    my $modes    = "";
+    my $chanSize = keys($self->{clients}->%*);
 
     return if($self->resides($client));
+    if($chanSize >= $self->{modes}->{l}->get()) {
+        # Channel is full
+        # XXX: Does Pidgin recognise this?
+        print "Channel is full\r\n";
+        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANNELISFULL . " $client->{nick} $self->{name} :Cannot join channel (+l)\r\n");
+        return;
+    }
     $self->{clients}->{$client->{nick}} = $client;
     $self->sendToRoom($client, ":$mask JOIN :$self->{name}");
     my $chanSize = keys($self->{clients}->%*);
@@ -102,22 +112,22 @@ sub part {
 }
 
 sub kick {
-    my $self        = shift;
-    my $client      = shift;
-    my $ircd        = $client->{ircd};
-    my $mask        = $client->getMask();
-    my $targetUser  = shift;
-    my $kickReason  = shift;
+    my $self         = shift;
+    my $client       = shift;
+    my $ircd         = $client->{ircd};
+    my $mask         = $client->getMask();
+    my $targetUser   = shift;
+    my $targetClient = shift;
+    my $kickReason   = shift;
 
-    if($self->{clients}->{$client->{nick}}) {
+    if(!$self->{clients}->{$client->{nick}}) {
         $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
         return;
     }
-    # XXX: !!! PRIVILEGEIFY THIS !!!
-    if($self->getStatus($client) eq '@') {
-        if($self->{clients}->{$targetUser}) {
-            $self->stripModes($client, 0);
-            $self->sendToRoom($client, ":$mask KICK $self->{name} $targetUser :$kickReason\r\n");
+    if($self->getStatus($client) >= 3) {
+        if(($targetClient = $self->{clients}->{$targetUser})) {
+            $self->stripModes($targetClient, 0);
+            $self->sendToRoom($client, ":$mask KICK $self->{name} $targetUser :$kickReason");
             delete $self->{clients}->{$targetUser};
         } else {
             $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_USERNOTINCHANNEL . " $client->{nick} $self->{name} :They aren't on that channel\r\n");

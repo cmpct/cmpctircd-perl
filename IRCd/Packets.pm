@@ -141,7 +141,7 @@ sub who {
         my $real = $_->{realname};
         $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOREPLY . " $client->{nick} $channel->{name} $user $host $config->{host} $nick H :0 $real\r\n");
     }
-    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHO . " $client->{nick} :End of /WHO list.\r\n");
+    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHO . " $client->{nick} $channel->{name} :End of /WHO list.\r\n");
 }
 sub whois {
     my $client = shift;
