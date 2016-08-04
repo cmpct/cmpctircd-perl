@@ -42,10 +42,9 @@ sub addClient {
     my $ircd     = $client->{ircd};
     my $mask     = $client->getMask();
     my $modes    = "";
-    my $chanSize = keys($self->{clients}->%*);
 
     return if($self->resides($client));
-    if($chanSize >= $self->{modes}->{l}->get()) {
+    if($self->size() >= $self->{modes}->{l}->get()) {
         # Channel is full
         # XXX: Does Pidgin recognise this?
         print "Channel is full\r\n";
@@ -54,8 +53,7 @@ sub addClient {
     }
     $self->{clients}->{$client->{nick}} = $client;
     $self->sendToRoom($client, ":$mask JOIN :$self->{name}");
-    my $chanSize = keys($self->{clients}->%*);
-    if($chanSize == 1) {
+    if($self->size() == 1) {
         # Grant the founding user op
         $self->{modes}->{o}->grant($client, "+", "o", $client->{nick}, 1);
     }
@@ -78,7 +76,7 @@ sub quit {
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
     my $msg    = shift // "Leaving.";
-    if($self->{clients}->{$client->{nick}}) {
+    if($self->{clients}->{$client->{nick}} // "") {
         # We should be in the room b/c of the caller but let's be safe.
         print "Removed (QUIT) a client from channel $self->{name}\r\n";
         $self->stripModes($client, 0);
@@ -188,6 +186,14 @@ sub stripModes {
     foreach(keys($self->{modes}->%*)) {
         $self->{modes}->{$_}->revoke($client, undef, undef, undef, 1, $announce) if($self->{modes}->{$_}->has($client));
     }
+}
+
+###        ###
+###  Misc  ###
+###        ###
+sub size {
+    my $self = shift;
+    return keys($self->{clients}->%*);
 }
 
 1;

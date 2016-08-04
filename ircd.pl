@@ -76,7 +76,7 @@ sub run {
                 my $socket  = $self->{clients}->{id}->{$newfd};
 
                 $socket->{client} = IRCd::Client->new($socket, $self, $self->{config});
-                $socket->{client}->{ip} = $socket->{sock}->peerhost();
+                $socket->{client}->{ip}     = $socket->{sock}->peerhost();
                 $socket->{client}->{server} = $self->{host};
                 $self->{epoll}->addSock($newSock);
             } else {
@@ -85,7 +85,6 @@ sub run {
                 my $socket   = $self->{clients}->{id}->{$event->[0]};
                 $socket->{sock}->recv($buffer, 1024);
                 if($buffer eq "") {
-                    print "Removing a client...\r\n";
                     $self->{epoll}->delSock($socket->{sock});
                 } else {
                     if($buffer =~ /\r\n/) {
@@ -108,7 +107,7 @@ sub run {
                 }
             }
         }
-        foreach(values($self->{clients}->{id}->%*)) {;
+        foreach(values($self->{clients}->{id}->%*)) {
             next if(!defined $_->{client});
             $_->{client}->checkTimeout();
         }

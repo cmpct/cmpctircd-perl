@@ -25,6 +25,9 @@ sub new {
 sub grant {
     my $self     = shift;
     my $client   = shift;
+    my $socket   = $client->{socket}->{sock};
+    my $config   = $client->{config};
+    my $ircd     = $client->{ircd};
     my $modifier = shift // "+";
     my $mode     = shift // "l";
     my $args     = shift // $self->{limit};
@@ -32,7 +35,7 @@ sub grant {
 
     if(!$self->{channel}->{clients}->{$client->{nick}}) {
         print "They're not in the room!\r\n";
-        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
         return;
     }
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
@@ -54,6 +57,9 @@ sub grant {
 sub revoke {
     my $self     = shift;
     my $client   = shift;
+    my $socket   = $client->{socket}->{sock};
+    my $config   = $client->{config};
+    my $ircd     = $client->{ircd};
     my $modifier = shift // "-";
     my $mode     = shift // "l";
     my $args     = shift // $self->{limit};

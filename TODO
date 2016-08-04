@@ -5,6 +5,7 @@ TODO
 * MODE validation
 * Fix NICK/auth
 * Max lengths for PART/QUIT etc (all commands?)
+* Max lengths packets
 * Add multiple targets (done for JOIN)
 * Check for bans and *lines
 * Add name resolution
@@ -15,6 +16,8 @@ TODO
 * Have a hash for parameters to Modes because it's a mess otherwise
 * Let's have a IRCd::Socket wrapper for the write and (recv) functions...
 * Make argmodes in MODE configurable/dynamic
+* Check JOIN target support
+* Logging
 
 Specific handlers:
 ----------------
