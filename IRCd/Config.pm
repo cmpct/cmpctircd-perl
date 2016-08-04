@@ -15,7 +15,8 @@ sub new {
         'ip'       => undef,
         'port'     => undef,
         # advanced
-        'maxtargets' => undef,
+        'pingtimeout' => undef,
+        'maxtargets'  => undef,
     };
     bless $self, $class;
     return $self;
@@ -28,12 +29,13 @@ sub parse {
         my $parse  = XML::Simple->new();
         my $xmlRef = $parse->XMLin("ircd.xml");
 
-        $self->{ip}         = $xmlRef->{'server'}->{'ip'};
-        $self->{port}       = $xmlRef->{'server'}->{'port'};
-        $self->{host}       = $xmlRef->{'ircd'}->{'host'};
-        $self->{network}    = $xmlRef->{'ircd'}->{'network'};
-        $self->{desc}       = $xmlRef->{'ircd'}->{'desc'};
-        $self->{maxtargets} = $xmlRef->{'advanced'}->{'maxtargets'};
+        $self->{ip}          = $xmlRef->{'server'}->{'ip'};
+        $self->{port}        = $xmlRef->{'server'}->{'port'};
+        $self->{host}        = $xmlRef->{'ircd'}->{'host'};
+        $self->{network}     = $xmlRef->{'ircd'}->{'network'};
+        $self->{desc}        = $xmlRef->{'ircd'}->{'desc'};
+        $self->{pingtimeout} = $xmlRef->{'advanced'}->{'pingtimeout'};
+        $self->{maxtargets}  = $xmlRef->{'advanced'}->{'maxtargets'};
     }
 }
 

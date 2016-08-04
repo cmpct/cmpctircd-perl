@@ -13,10 +13,12 @@ sub new {
         'socket'   => shift,
         'ircd'     => shift,
         'config'   => shift,
-        # ...
-        'sentWelcome' => 0,
-        'idle'        => 0,
-        'server'      => undef,
+
+        'sentWelcome'    => 0,
+        'idle'           => 0,
+        'lastPong'       => time(),
+        'waitingForPong' => 0,
+        'server'         => undef,
 
     };
     bless $self, $class;
@@ -61,6 +63,24 @@ sub sendWelcome {
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFMOTD . " $self->{nick} :End of /MOTD command.\r\n");
     close($motd);
     $self->{sentWelcome} = 1;
+}
+
+sub checkTimeout {
+    my $self   = shift;
+    my $ircd   = $self->{ircd};
+    my $mask   = $self->getMask();
+    my $period = $self->{lastPong} + $ircd->{pingtimeout};
+    if(time() > $period and !$self->{waitingForPong}) {
+        # XXX: Send a proper cookie
+        $self->{socket}->{sock}->write("PING :cookie\r\n");
+        $self->{waitingForPong} = 1;
+    }
+    # XXX: What if  need to PONG straight away?
+    if(time() > ($self->{lastPong} + ($ircd->{pingtimeout} * 2)) and $self->{waitingForPong}) {
+        $self->disconnect(1, "Ping timeout");
+    } else {
+        return if(time() > $period);
+    }
 }
 
 sub disconnect {

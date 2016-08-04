@@ -13,6 +13,7 @@
         <provider>epoll</provider>
     </sockets>
     <advanced>
+        <pingtimeout>120</pingtimeout>
         <targets>200</targets>
     </advanced>
 </config>

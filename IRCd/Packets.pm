@@ -308,6 +308,31 @@ sub mode {
         }
     }
 }
+sub ping {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask();
+    # XXX: Is this right?
+    $socket->write("PONG " . time() . "\r\n");
+}
+sub pong {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask();
+
+    # if cookie matches...
+    $client->{waitingForPong} = 0;
+    $client->{lastPong} = time();
+}
+
+
+
 ##                          ##
 ##  Operator (+o) Commands  ##
 ##                          ##

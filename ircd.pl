@@ -32,7 +32,8 @@ sub new {
         'version'   => 0.1,
 
         # advanced config options
-        'maxtargets' => undef,
+        'pingtimeout' => undef,
+        'maxtargets'  => undef,
     };
     bless $self, $class;
     return $self;
@@ -106,6 +107,10 @@ sub run {
                     }
                 }
             }
+        }
+        foreach(values($self->{clients}->{id}->%*)) {;
+            next if(!defined $_->{client});
+            $_->{client}->checkTimeout();
         }
     }
 }
