@@ -70,16 +70,21 @@ sub checkTimeout {
     my $ircd   = $self->{ircd};
     my $mask   = $self->getMask();
     my $period = $self->{lastPong} + $ircd->{pingtimeout};
+    my $socket = $self->{socket}->{sock};
+
     if(time() > $period and !$self->{waitingForPong}) {
-        # XXX: Send a proper cookie
-        $self->{socket}->{sock}->write("PING :cookie\r\n");
+        $self->{pingcookie} = $self->createCookie();
+        $socket->write("PING :$self->{pingcookie}\r\n");
         $self->{waitingForPong} = 1;
+    } else {
+        #print "[$self->{nick}] " . time() . " !> " . $period . "\r\n" if(!$self->{waitingForPong});
     }
     # XXX: What if  need to PONG straight away?
     if(time() > ($self->{lastPong} + ($ircd->{pingtimeout} * 2)) and $self->{waitingForPong}) {
         $self->disconnect(1, "Ping timeout");
     } else {
         return if(time() > $period);
+        #print "[$self->{nick}] " . time() . " !> " . ($self->{lastPong} + ($ircd->{pingtimeout} * 2)) . "\r\n" if($self->{waitingForPong});
     }
 }
 
@@ -101,5 +106,18 @@ sub disconnect {
     delete $ircd->{clients}->{id}->{$self->{socket}->{fd}};
     delete $ircd->{clients}->{nick}->{$self->{nick}};
 }
+
+###                    ###
+### Utility functions  ###
+###                    ###
+sub createCookie {
+    my $cookie     = "";
+    my @characters = ("A" .. "Z", "a" .. "z", 0.. 9);
+    for(my $i = 0; $i < 5; $i++) {
+        $cookie .= $characters[rand @characters];
+    }
+    return $cookie;
+}
+
 
 1;

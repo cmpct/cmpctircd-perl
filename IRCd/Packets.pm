@@ -324,9 +324,13 @@ sub pong {
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
 
-    # if cookie matches...
-    $client->{waitingForPong} = 0;
-    $client->{lastPong} = time();
+    my @splitPacket = split(" ", $msg, 2);
+    $splitPacket[1] =~ s/://;
+    if($splitPacket[1] eq $client->{pingcookie}) {
+        print "Resetting PING clock\r\n";
+        $client->{waitingForPong} = 0;
+        $client->{lastPong} = time();
+    }
 }
 
 
