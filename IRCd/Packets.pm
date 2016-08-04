@@ -92,7 +92,7 @@ sub join {
             foreach(@splitPacket) {
                 IRCd::Packets::join($client, $_, 1);
                 $i++;
-                last if($i > $ircd->{maxTargets});
+                last if($i > $ircd->{maxtargets});
             }
             return;
         }
@@ -263,8 +263,6 @@ sub mode {
         'o' => 1,
         'l' => 1,
     );
-    #my $string          = "MODE #cmpct +slo-o 5 sam bonnie";
-    #my $string          = "MODE #cmpct +oo sam calvin";
     my @split           = split(" ", $msg, 4);
 
     if($split[1] !~ /^#/) {
