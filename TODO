@@ -17,6 +17,8 @@ TODO
 * Let's have a IRCd::Socket wrapper for the write and (recv) functions...
 * Make argmodes in MODE configurable/dynamic
 * Logging
+* TOPIC
+* RPL_ISUPPORT
 
 Specific handlers:
 ----------------

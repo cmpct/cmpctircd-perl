@@ -4,6 +4,7 @@ use warnings;
 use diagnostics;
 use IRCd::Constants;
 
+use IRCd::Channel::Topic;
 use IRCd::Modes::Channel::Op;
 use IRCd::Modes::Channel::Limit;
 
@@ -16,7 +17,7 @@ sub new {
         'clients'   => {},
         'modes'     => {},
         'privilege' => {},
-        # topic
+        'topic'     => undef,
     };
     bless $self, $class;
     $self->{modes}->{o} = IRCd::Modes::Channel::Op->new($self);
@@ -26,6 +27,7 @@ sub new {
         my $symbol = $self->{modes}->{$_}->symbol();
         $self->{privilege}->{$level} = $self->{modes}->{$_}->symbol() if($level ne "" and $symbol ne "");
     }
+    $self->{topic} = IRCd::Channel::Topic->new("", $self);
     return $self;
 }
 
@@ -68,6 +70,7 @@ sub addClient {
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_ENDOFNAMES    . " $client->{nick} $self->{name} :End of /NAMES list.\r\n");
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :This is a topic.\r\n");
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $self->{name} +$modes\r\n");
+    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :" . $self->{topic}->get() . "\r\n") if($self->{topic}->get() ne "");
     #$client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CREATIONTIME  . " $client->{nick} $self->{name} " . time() . "\r\n");
 }
 sub quit {
@@ -137,29 +140,36 @@ sub kick {
     }
 }
 
-
-sub resides {
+sub topic {
     my $self   = shift;
     my $client = shift;
+    my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
-    my $msg    = shift;
+    my $topic  = shift;
 
-    return 1 if ($self->{clients}->{$client->{nick}});
-    return 0;
-}
-sub sendToRoom {
-    my $self   = shift;
-    my $client = shift;
-    my $msg    = shift;
-    my $sendToSelf = shift // 1;
-
-    foreach(values($self->{clients}->%*)) {
-        next if(($_ eq $client) and !$sendToSelf);
-        if($msg =~ /\r\n/) {
-            warn caller . " is misbehaving and sending a newline!";
-            $msg =~ s/\r\n//;
+    if(!$self->{clients}->{$client->{nick}}) {
+        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
+        return;
+    }
+    if($self->getStatus($client) < 3) {
+        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
+        return;
+    }
+    # XXX: +t/-t
+    # XXX: RPL_NOTOPIC is a thing too
+    # XXX: I think we may need to tell the clients differently?
+    if($topic eq "") {
+        my $topicText = $self->{topic}->get();
+        my $topicMask = $self->{topic}->metadata()->{who};
+        my $topicTime = $self->{topic}->metadata()->{time};
+        if($topicText ne "") {
+            $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_TOPIC        . " $client->{nick} $self->{name} :$topicText\r\n");
+            $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_TOPICWHOTIME . " $client->{nick} $self->{name} $topicMask $topicTime\r\n");
+        } else {
+            $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_NOTOPIC      . " $client->{nick} $self->{name} :No topic is set\r\n");
         }
-        $_->{socket}->{sock}->write($msg . "\r\n");
+    } else {
+        $self->{topic}->set($client, $topic, 0, 1);
     }
 }
 
@@ -194,6 +204,32 @@ sub stripModes {
 sub size {
     my $self = shift;
     return keys($self->{clients}->%*);
+}
+
+sub resides {
+    my $self   = shift;
+    my $client = shift;
+    my $mask   = $client->getMask();
+    my $msg    = shift;
+
+    return 1 if ($self->{clients}->{$client->{nick}});
+    return 0;
+}
+sub sendToRoom {
+    my $self   = shift;
+    my $client = shift;
+    my $msg    = shift;
+    my $sendToSelf = shift // 1;
+
+    foreach(values($self->{clients}->%*)) {
+        next if(($_ eq $client) and !$sendToSelf);
+        if($msg =~ /\r\n/) {
+            # TODO: carp
+            warn caller . " is misbehaving and sending a newline!";
+            $msg =~ s/\r\n//;
+        }
+        $_->{socket}->{sock}->write($msg . "\r\n");
+    }
 }
 
 1;

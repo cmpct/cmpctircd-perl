@@ -327,12 +327,37 @@ sub pong {
     my @splitPacket = split(" ", $msg, 2);
     $splitPacket[1] =~ s/://;
     if($splitPacket[1] eq $client->{pingcookie}) {
-        print "Resetting PING clock\r\n";
+        $client->{log}->info("[$client->{nick}] Resetting PING clock\r\n");
         $client->{waitingForPong} = 0;
         $client->{lastPong} = time();
     }
 }
 
+sub topic {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask();
+
+    my @splitPacket  = split(" ", $msg);
+    my $topicChannel = $splitPacket[1];
+    my $topicText    = $splitPacket[2] // "";
+
+    if($topicText) {
+        @splitPacket = split(":", $msg);
+        $topicText   = $splitPacket[1];
+    }
+
+    if($ircd->{channels}->{$topicChannel}) {
+        $ircd->{channels}->{$topicChannel}->topic($client, $topicText);
+    } else {
+        # XXX: This should actually be 'no such channel'?
+        # XXX: Fix the PART handler too
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $topicChannel :No such nick/channel\r\n");
+    }
+}
 
 
 ##                          ##
