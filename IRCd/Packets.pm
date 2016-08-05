@@ -24,7 +24,7 @@ sub nick {
     # NICK already in use
     if($client->{nick} ne $splitPacket[1]) {
         if($ircd->{clients}->{nick}->{$splitPacket[1]}) {
-            print "NICK in use!\r\n";
+            $client->{log}->info("[$client->{nick}] NICK in use!");
             $socket->write(":$config->{host} " . IRCd::Constants::ERR_NICKNAMEINUSE . " * NICK :Nickname is already in use\r\n");
             return;
         }
@@ -33,7 +33,7 @@ sub nick {
     # TODO: Check for invalid nick...
     $client->{nick} = $splitPacket[1];
     $socket->write(":$mask NICK :$client->{nick}\r\n");
-    print "NICK: $client->{nick}", "\r\n";
+    $client->{log}->debug("NICK: $client->{nick}");
 
     $ircd->{clients}->{nick}->{$client->{nick}} = $client;
     $client->sendWelcome() if($client->{ident} and !$client->{sentWelcome});
@@ -56,8 +56,8 @@ sub user {
     @splitPacket = split(":", $msg);
     $client->{realname} = $splitPacket[1];
 
-    print "IDENT: $client->{ident}", "\r\n";
-    print "REAL:  $client->{realname}", "\r\n";
+    $client->{log}->debug("IDENT: $client->{ident}");
+    $client->{log}->debug("REAL:  $client->{realname}");
 
     $client->sendWelcome() if($client->{nick} and !$client->{sentWelcome});
 }
@@ -81,7 +81,7 @@ sub join {
             return;
         }
         if($splitPacket[1] !~ /^#/){
-            print "JOIN param didn't begin w/ a #\r\n";
+            $client->{log}->debug("JOIN param didn't begin w/ a #\r\n");
             return;
         }
         $channelInput = $splitPacket[1];
@@ -100,11 +100,11 @@ sub join {
 
     # Need a list of server channels
     if($ircd->{channels}->{$channelInput}) {
-        print "Channel already exists.\r\n";
+        $client->{log}->info("[$channelInput] Channel already exists.\r\n");
         # Have them "JOIN", announce to other users
         $ircd->{channels}->{$channelInput}->addClient($client);
     } else {
-        print "Creating channel..\r\n";
+        $client->{log}->info("[$channelInput] Creating channel..\r\n");
         my $channel = IRCd::Channel->new($channelInput);
         $channel->addClient($client);
         $ircd->{channels}->{$channelInput} = $channel;
@@ -217,7 +217,7 @@ sub part {
     if($ircd->{channels}->{$partChannel}) {
         $ircd->{channels}->{$partChannel}->part($client, $partReason);
     } else {
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $partChannel :You're not on that channel\r\n");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $partChannel :No such nick/channel\r\n");
     }
 }
 sub privmsg {
@@ -267,12 +267,12 @@ sub mode {
 
     if($split[1] !~ /^#/) {
         # TODO: This is for a usermode!
-        print "MODE not for a channel, not yet supported.\r\n";
+        $client->{log}->warn("[$client->{nick}] MODE not for a channel, not yet supported.\r\n");
         return;
     }
     if(@split < 3) {
         # TODO: People can request modes too, e.g. MODE #cmpct!
-        print "MODE request for a channel, not yet supported.\r\n";
+        $client->{log}->warn("[$client->{nick}] MODE request for a channel, not yet supported.\r\n");
         return;
     }
     my @modes      = split('', $split[2]);
@@ -293,15 +293,15 @@ sub mode {
             $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $split[1] :No such nick/channel\r\n");
             return;
         }
-        print "MODE: $currentModifier$_", "\r\n";
+        $client->{log}->debug("[$client->{nick}] MODE: $currentModifier$_");
         if($channel->{modes}->{$_}) {
             $channel->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, 0, 1)  if $currentModifier eq "+";
             $channel->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, 0, 1)  if $currentModifier eq "-";
             if($argmodes{$_}) {
-                print "Need to find a handler for: MODE $currentModifier$_ $parameters[$const]\r\n";
+                $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_ $parameters[$const]");
                 $const++ if $argmodes{$_};
             } else {
-                print "Need to find a handler for: MODE $currentModifier$_\r\n";
+                $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_");
             }
         }
     }

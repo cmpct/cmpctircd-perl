@@ -9,6 +9,7 @@ use Data::Dumper;
 # ircd modules
 use IRCd::Config;
 use IRCd::Client;
+use IRCd::Log;
 use IRCd::Sockets::Epoll;
 use IRCd::Socket;
 
@@ -41,6 +42,7 @@ sub new {
 
 sub setup {
     my $self = shift;
+    $self->{log} = IRCd::Log->new();
     $self->{config}->parse();
     $self->{listener} = IO::Socket::INET->new(
         LocalHost => $self->{config}->{ip},
@@ -60,6 +62,10 @@ sub setup {
     $self->{port}        = $self->{config}->{port};
     $self->{pingtimeout} = $self->{config}->{pingtimeout};
     $self->{maxtargets}  = $self->{config}->{maxtargets};
+
+    $self->{log}->info("Starting cmpctircd");
+    $self->{log}->info("==> Host: $self->{host}");
+    $self->{log}->info("==> Listening on: $self->{ip}:$self->{port}");
 }
 
 sub run {
@@ -87,11 +93,6 @@ sub run {
                 if($buffer eq "") {
                     $self->{epoll}->del($socket->{sock});
                 } else {
-                    if($buffer =~ /\r\n/) {
-                        print "RECV: " . $buffer;
-                    } else {
-                        print "RECV: " . $buffer . "\r\n";
-                    }
                     # Depending on the port, maybe not a Client.
                     # But they're a client for now.
                     if(!defined $socket->{client}) {
@@ -102,6 +103,7 @@ sub run {
                     $socket->{client}->{ip} = $socket->{sock}->peerhost();
                     my @splitBuffer = split("\r\n", $buffer);
                     foreach(@splitBuffer) {
+                        $self->{log}->debug("RECV: " . $_);
                         $socket->{client}->parse($_);
                     }
                 }

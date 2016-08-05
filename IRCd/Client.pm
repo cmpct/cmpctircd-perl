@@ -20,14 +20,22 @@ sub new {
         'waitingForPong' => 0,
         'server'         => undef,
 
+        'nick'           => "",
+        'ident'          => "",
+        'ip'             => 0,
+
     };
+    $self->{log} = $self->{ircd}->{log};
     bless $self, $class;
     return $self;
 }
 
 sub getMask {
-    my $self = shift;
-    return $self->{nick} . '!' . $self->{ident} . '@' . $self->{ip};
+    my $self  = shift;
+    my $nick  = $self->{nick}  // "";
+    my $ident = $self->{ident} // "";
+    my $ip    = $self->{ip}    // "";
+    return $nick . '!' . $ident . '@' . $ip;
 }
 
 sub parse {
@@ -42,7 +50,7 @@ sub parse {
     if (my $handlerRef = IRCd::Packets->can(lc($splitPacket[0]))) {
         $handlerRef->($self, $msg);
     } else {
-        print "UNHANDLED PACKET: " . $splitPacket[0] . "\r\n";
+        $self->{log}->warn("UNHANDLED PACKET: " . $splitPacket[0]);
     }
 }
 
@@ -77,14 +85,14 @@ sub checkTimeout {
         $socket->write("PING :$self->{pingcookie}\r\n");
         $self->{waitingForPong} = 1;
     } else {
-        #print "[$self->{nick}] " . time() . " !> " . $period . "\r\n" if(!$self->{waitingForPong});
+        $self->{log}->debug("[$self->{nick}] " . time() . " !> " . $period) if(!$self->{waitingForPong});
     }
     # XXX: What if  need to PONG straight away?
     if(time() > ($self->{lastPong} + ($ircd->{pingtimeout} * 2)) and $self->{waitingForPong}) {
         $self->disconnect(1, "Ping timeout");
     } else {
         return if(time() > $period);
-        #print "[$self->{nick}] " . time() . " !> " . ($self->{lastPong} + ($ircd->{pingtimeout} * 2)) . "\r\n" if($self->{waitingForPong});
+        $self->{log}->debug("[$self->{nick}] " . time() . " !> " . ($self->{lastPong} + ($ircd->{pingtimeout} * 2))) if($self->{waitingForPong});
     }
 }
 

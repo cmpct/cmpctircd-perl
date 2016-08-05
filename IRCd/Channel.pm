@@ -31,25 +31,17 @@ sub new {
     return $self;
 }
 
-sub setMode {
-    my $self  = shift;
-    my $modes = shift;
-    # Check how valid the modes are
-    # Another issue is keys.. and other params
-    push @{$self->{modes}}, $modes;
-}
 sub addClient {
     my $self     = shift;
     my $client   = shift;
     my $ircd     = $client->{ircd};
     my $mask     = $client->getMask();
-    my $modes    = "";
 
     return if($self->resides($client));
     if($self->size() >= $self->{modes}->{l}->get()) {
         # Channel is full
         # XXX: Does Pidgin recognise this?
-        print "Channel is full\r\n";
+        $client->{log}->info("[$self->{name}] Channel is full");
         $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANNELISFULL . " $client->{nick} $self->{name} :Cannot join channel (+l)\r\n");
         return;
     }
@@ -57,20 +49,37 @@ sub addClient {
     $self->sendToRoom($client, ":$mask JOIN :$self->{name}");
     if($self->size() == 1) {
         # Grant the founding user op
-        $self->{modes}->{o}->grant($client, "+", "o", $client->{nick}, 1);
+        $self->{modes}->{o}->grant($client, "+", "o", $client->{nick}, 1, 0);
     }
-    print "Added client to channel $self->{name}\r\n";
+    $client->{log}->info("[$self->{name}] Added client (nick: $client->{nick}) to channel");
 
     # TODO: Default modes?
     my $userModes = "";
     foreach(values($self->{clients}->%*)) {
-        my $userSymbol = $self->{privilege}->{$self->getStatus($_)};
+        my $userSymbol = $self->{privilege}->{$self->getStatus($_)} // "";
         $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_NAMREPLY      . " $client->{nick} \@ $self->{name} :$userSymbol$_->{nick}\r\n");
     }
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_ENDOFNAMES    . " $client->{nick} $self->{name} :End of /NAMES list.\r\n");
-    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :This is a topic.\r\n");
-    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $self->{name} +$modes\r\n");
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :" . $self->{topic}->get() . "\r\n") if($self->{topic}->get() ne "");
+    # XXX: Need a way of knowing if MODEs are MODEable (on join)
+
+    my $modes       = "";
+    my $characters  = "+";
+    my $args        = "";
+    my $provides    = "";
+    my $value       = "";
+    # XXX: Port this to a function so we can do /MODE #chan
+    foreach(keys($self->{modes}->%*)) {
+        my $chanwide  = $self->{modes}->{$_}->{chanwide};
+        if($chanwide) {
+            $provides = $self->{modes}->{$_}->{provides};
+            $value    = $self->{modes}->{$_}->get();
+            $characters .= $provides;
+            $args       .= $value . " ";
+        }
+    }
+    $client->{log}->debug("[$self->{name}] Writing: $characters $args");
+    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $self->{name} $characters $args\r\n");
     #$client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CREATIONTIME  . " $client->{nick} $self->{name} " . time() . "\r\n");
 }
 sub quit {
@@ -81,7 +90,7 @@ sub quit {
     my $msg    = shift // "Leaving.";
     if($self->{clients}->{$client->{nick}} // "") {
         # We should be in the room b/c of the caller but let's be safe.
-        print "Removed (QUIT) a client from channel $self->{name}\r\n";
+        $client->{log}->info("[$self->{name}] Removed (QUIT) a client (nick: $client->{name}) from channel");
         $self->stripModes($client, 0);
         $self->sendToRoom($client, ":$mask QUIT :$msg");
         delete $self->{clients}->{$client->{nick}};
@@ -96,20 +105,19 @@ sub part {
     my $mask   = $client->getMask();
     my $msg    = shift;
     if($self->{clients}->{$client->{nick}}) {
-        print "Removed (PART) a client from channel $self->{name}\r\n";
+        $client->{log}->info("[$self->{name}] Removed (PART) a client (nick: $client->{name}) from channel");
         $self->sendToRoom($client, ":$mask PART $self->{name} :$msg");
         $self->stripModes($client, 0);
         delete $self->{clients}->{$client->{nick}};
+    } else {
+        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
     }
     my $chanSize = keys($self->{clients}->%*);
     if($chanSize == 0) {
-        print "Deleting the room\r\n";
+        $client->{log}->info("[$self->{name}] Deleting the room");
         delete $ircd->{channels}->{$self->{name}};
     }
-    return;
     # If we get here, they weren't in the room.
-    # XXX: Is this right?
-    $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
 }
 
 sub kick {

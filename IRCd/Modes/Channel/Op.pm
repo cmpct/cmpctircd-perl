@@ -13,6 +13,8 @@ sub new {
         'desc'     => 'Provides the +o (op) mode for moderating a channel.',
         'affects'  => {},
         'channel'  => shift,
+
+        'chanwide' => 0,
     };
     bless $self, $class;
     return $self;
@@ -32,8 +34,8 @@ sub grant {
     my $targetClient = undef;
 
     if(!$self->{channel}->{clients}->{$client->{nick}}) {
-        print "They're not in the room!\r\n";
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
+        $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel\r\n");
         return;
     }
     my $targetNick = $args;
@@ -45,8 +47,8 @@ sub grant {
         return;
     }
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
-        print "No permission!\r\n";
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
+        $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator\r\n");
         return;
     }
     my $mask = $client->getMask();
@@ -67,22 +69,22 @@ sub revoke {
     my $targetClient = undef;
 
     if(!$self->{channel}->{clients}->{$client->{nick}}) {
-        print "They're not in the room!\r\n";
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
+        $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel\r\n");
         return;
     }
     my $targetNick = $args;
     # NOTE: Let's keep ERR_NOSUCHNICK here rather than ERR_USERNOTONCHANNEL to avoid +i leaks
     # There's only a semantic difference between the two (see: grant)
     if(!($targetClient = $self->{channel}->{clients}->{$targetNick})) {
-        print "The target doesn't exist!\r\n";
+        $client->{log}->info("[$self->{channel}] Target (nick: $targetNick) not in the room!");
         $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $client->{nick} $targetNick :No such nick/channel\r\n");
         return;
     }
     # TODO: Consider the privilege of the person we're affecting?
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
-        print "No permission!\r\n";
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
+        $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator\r\n");
         return;
     }
     my $mask = $client->getMask();

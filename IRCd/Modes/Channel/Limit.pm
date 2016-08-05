@@ -15,6 +15,7 @@ sub new {
         'channel'  => shift,
 
         'limit'    => 50,
+        'chanwide' => 1,
     };
     bless $self, $class;
     return $self;
@@ -34,13 +35,13 @@ sub grant {
     my $force    = shift // 0;
 
     if(!$self->{channel}->{clients}->{$client->{nick}}) {
-        print "They're not in the room!\r\n";
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
+        $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel\r\n");
         return;
     }
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
-        print "No permission!\r\n";
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
+        $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator\r\n");
         return;
     }
     # TODO: Only one arg of type integer
@@ -67,12 +68,12 @@ sub revoke {
 
     # TODO: No arg required
     if(!$self->{channel}->{clients}->{$client->{nick}}) {
-        print "They're not in the room!\r\n";
-        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
+        $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
+        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel\r\n");
         return;
     }
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
-        print "No permission!\r\n";
+        $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
         $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
         return;
     }
