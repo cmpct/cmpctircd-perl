@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use diagnostics;
-use IRCd::Packets;
+use IRCd::Client::Packets;
 use IRCd::Constants;
 
 package IRCd::Client;
@@ -47,7 +47,7 @@ sub parse {
 
     # TODO: Modular system
     # Check if function exists, and if so, call it
-    if (my $handlerRef = IRCd::Packets->can(lc($splitPacket[0]))) {
+    if (my $handlerRef = IRCd::Client::Packets->can(lc($splitPacket[0]))) {
         $handlerRef->($self, $msg);
     } else {
         $self->{log}->warn("UNHANDLED PACKET: " . $splitPacket[0]);

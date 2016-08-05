@@ -5,7 +5,7 @@ use diagnostics;
 use feature 'postderef';
 use IRCd::Channel;
 use IRCd::Constants;
-package IRCd::Packets;
+package IRCd::Client::Packets;
 
 sub nick {
     my $client = shift;
@@ -90,7 +90,7 @@ sub join {
             my @splitPacket = split(",", $channelInput);
             my $i = 0;
             foreach(@splitPacket) {
-                IRCd::Packets::join($client, $_, 1);
+                IRCd::Client::Packets::join($client, $_, 1);
                 $i++;
                 last if($i > $ircd->{maxtargets});
             }
