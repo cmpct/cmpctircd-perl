@@ -8,25 +8,27 @@ use IRCd::Constants;
 package IRCd::Client;
 
 sub new {
-    my $class = shift;
+    my ($class, %args) = @_;
     my $self = {
-        'socket'   => shift,
-        'ircd'     => shift,
-        'config'   => shift,
+        'socket'         => $args{socket},
+        'ircd'           => $args{ircd},
+        'config'         => $args{config},
+        'buffer'         => '',
 
-        'sentWelcome'    => 0,
-        'idle'           => 0,
-        'lastPong'       => time(),
-        'waitingForPong' => 0,
-        'server'         => undef,
+        'sentWelcome'    => $args{sentWelcome}    // 0,
+        'idle'           => $args{idle}           // 0,
+        'lastPong'       => $args{lastPong}       // time(),
+        'waitingForPong' => $args{waitingForPong} // 0,
 
-        'nick'           => "",
-        'ident'          => "",
-        'ip'             => 0,
+        'server'         => $args{server}         // undef,
+        'nick'           => $args{nick}           // "",
+        'ident'          => $args{ident}          // "",
+        'ip'             => $args{ip}             // 0,
 
+        'uid'            => $args{uid}            // 0,
     };
-    $self->{log} = $self->{ircd}->{log};
     bless $self, $class;
+    $self->{log} = $self->{ircd}->{log};
     return $self;
 }
 
@@ -85,14 +87,14 @@ sub checkTimeout {
         $socket->write("PING :$self->{pingcookie}\r\n");
         $self->{waitingForPong} = 1;
     } else {
-        $self->{log}->debug("[$self->{nick}] " . time() . " !> " . $period) if(!$self->{waitingForPong});
+        #$self->{log}->debug("[$self->{nick}] " . time() . " !> " . $period) if(!$self->{waitingForPong});
     }
     # XXX: What if  need to PONG straight away?
     if(time() > ($self->{lastPong} + ($ircd->{pingtimeout} * 2)) and $self->{waitingForPong}) {
         $self->disconnect(1, "Ping timeout");
     } else {
         return if(time() > $period);
-        $self->{log}->debug("[$self->{nick}] " . time() . " !> " . ($self->{lastPong} + ($ircd->{pingtimeout} * 2))) if($self->{waitingForPong});
+        #$self->{log}->debug("[$self->{nick}] " . time() . " !> " . ($self->{lastPong} + ($ircd->{pingtimeout} * 2))) if($self->{waitingForPong});
     }
 }
 

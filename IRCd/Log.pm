@@ -42,7 +42,7 @@ sub warn {
     my $self = shift;
     my $msg  = shift;
     if($self->shouldLog('warn')) {
-        print Term::ANSIColor::colored("[WARN] "  . $_ . "\r\n", 'bright_red') foreach(split("\r\n", $msg));
+        print Term::ANSIColor::colored("[WARN]  "  . $_ . "\r\n", 'bright_red') foreach(split("\r\n", $msg));
     }
 }
 
@@ -50,7 +50,7 @@ sub info {
     my $self = shift;
     my $msg  = shift;
     if($self->shouldLog('info')) {
-        print Term::ANSIColor::colored("[INFO] "  . $_ . "\r\n", 'bright_blue') foreach(split("\r\n", $msg));
+        print Term::ANSIColor::colored("[INFO]  "  . $_ . "\r\n", 'bright_blue') foreach(split("\r\n", $msg));
     }
 }
 sub debug {
