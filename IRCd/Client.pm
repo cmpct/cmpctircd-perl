@@ -73,6 +73,15 @@ sub sendWelcome {
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFMOTD . " $self->{nick} :End of /MOTD command.\r\n");
     close($motd);
     $self->{sentWelcome} = 1;
+
+    # Tell the servers we're connected to that we exist
+    # XXX: HELPER FUNCTIONS!
+    # XXX: need sid too
+    foreach(values($self->{ircd}->{servers}->{id}->%*)) {
+        my $server = $_->{client};
+        $self->{log}->debug("[$self->{nick}] Announcing new client to [$server->{name}]");
+        $server->syncUser($self->{nick});
+    }
 }
 
 sub checkTimeout {
