@@ -56,6 +56,9 @@ sub protoctl {
             $server->{sid} = $_;
         }
     }
+
+    $ircd->{servers}->{sid}->{$server->{sid}}   = $server;
+    $ircd->{servers}->{name}->{$server->{name}} = $server;
     $server->{log}->debug("Server name: $server->{name}") if($server->{name} // 0);
     $server->{log}->debug("Server SID:  $server->{sid}")  if($server->{sid}  // 0);
 
@@ -109,18 +112,32 @@ sub uid {
 
     # Receiving an introduction
     # https://www.unrealircd.org/docs/Server_protocol:UID_command
-    my ($pNickname,     $pHopCount, $pTimestamp,   $pUser, $pHost, $pUID,
-        $pServiceStamp, $pUmodes,   $pCloakedHost, $pIP,   $pGECOS)
+    my ($pNickname,     $pHopCount, $pTimestamp, $pUser,        $pHost, $pUID,
+        $pServiceStamp, $pUmodes,   $pVirtHost,  $pCloakedHost, $pIP)
     = @splitPacket;
 
+    my @gecos   = split(":", $msg);
+    my $pGECOS  = $gecos[2];
 
-    $server->{clients}->{uid}->{$pUID} = IRCd::Client->new(
+    my $clientObject = IRCd::Client->new(
         'socket' => $socket,
         'ircd'   => $ircd,
         'config' => $config,
+        'server' => $server,
+
         'uid'    => $pUID,
         'nick'   => $pNickname,
+
+        'hopcount'  => $pHopCount,
+        'timestamp' => $pTimestamp,
+        'ident'     => $pUser,
+        'host'      => $pHost,
+        'ip'        => $pHost,
+        'realname'  => $pGECOS,
     );
+
+    $server->{clients}->{uid}->{$pUID}           = $clientObject;
+    $server->{clients}->{nick}->{lc($pNickname)} = $clientObject;
     $server->{log}->info("Introducing: $pNickname!$pUser\@$pHost [$pUID]");
 }
 
@@ -142,11 +159,11 @@ sub notice {
     # Special case
     if($target eq "0") {
         foreach(values($ircd->{clients}->{nick}->%*)) {
-            #print ":$source->{nick} NOTICE $_->{nick} :$splitMessage[2]\r\n";
-            # XXX: @services.int is a nono
-            $_->{socket}->{sock}->write(":$source->{nick}!$source->{nick}\@services.int NOTICE $_->{nick} :$splitMessage[2]\r\n");
+            $_->{socket}->{sock}->write(":$source->{nick}!$source->{nick}\@$source->{host} NOTICE $_->{nick} :$splitMessage[2]\r\n");
         }
     }
+    # XXX: We need to handle the non-special case too
+    # XXX: Ditto for PRIVMSG
 }
 
 

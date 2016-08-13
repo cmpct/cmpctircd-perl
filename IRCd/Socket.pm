@@ -7,9 +7,9 @@ package IRCd::Socket;
 sub new {
     my $class = shift;
     my $self  = {
-        'fd'   => shift,
-        'sock' => shift,
-        'type' => undef,
+        'fd'     => shift,
+        'sock'   => shift,
+        'type'   => undef,
         'client' => undef,
     };
     bless $self, $class;

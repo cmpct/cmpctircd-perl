@@ -15,13 +15,12 @@ sub new {
         'channel'  => shift,
 
         'limit'    => 50,
+        # Can it be set on a user, or just a channel at large?
         'chanwide' => 1,
     };
     bless $self, $class;
     return $self;
 }
-
-# XXX: Limit is different because it doesn't affect clients per-se.
 
 sub grant {
     my $self     = shift;

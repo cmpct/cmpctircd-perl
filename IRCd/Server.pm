@@ -59,11 +59,6 @@ sub sync {
         $self->syncUser($_);
     }
     $socket->write(":042 EOS\r\n");
-    # [2016-08-08 15:10:45] m_uid(): new user on `irc.cmpct.info': irc.cmpct.info
-    # [2016-08-08 15:10:45] user_add(): user (user@127.0.0.1) -> irc.cmpct.info
-    # [2016-08-08 15:10:45] <- :00AAAAAAC NOTICE 0 :Services are presently running in debug mode, attached to a console. You should take extra caution when utilizing your services passwords.
-    # [2016-08-08 15:10:45] -> :042 EOS
-    # TODO: that
     # TODO: sync-on-join/quit/etc
     # TODO: sjoin
     # TODO: and join
@@ -90,6 +85,7 @@ sub syncUser {
     my $sCloakHost = $client->{ip};
     my $sIP        = $client->{ip};
     my $sGECOS     = $client->{realname};
+    # TODO: $self->{sid}
     $socket->write(":042 UID $sNick $sHop $sTime $sUser $sHost $sUID $sServiceStamp $sUmodes $sVirtHost $sCloakHost $sIP $sGECOS\r\n");
 }
 

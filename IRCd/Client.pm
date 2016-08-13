@@ -23,8 +23,9 @@ sub new {
         'server'         => $args{server}         // undef,
         'nick'           => $args{nick}           // "",
         'ident'          => $args{ident}          // "",
-        'ip'             => $args{ip}             // 0,
+        'realname'       => $args{realname}       // "",
 
+        'ip'             => $args{ip}             // 0,
         'uid'            => $args{uid}            // 0,
     };
     bless $self, $class;
@@ -136,6 +137,21 @@ sub createCookie {
         $cookie .= $characters[rand @characters];
     }
     return $cookie;
+}
+
+sub write {
+    my $self = shift;
+    my $msg  = shift;
+    # XXX: differentiate between $self->{server} and the server we reside on?
+    if(ref($self->{server}) eq "IRCd::Server") {
+        # Write on the appropriate socket
+        # XXX: We need UID translation?
+        $self->{server}->{socket}->{sock}->write($msg);
+    } else {
+        # Dispatch locally
+        $msg .= "\r\n" if($msg !~ /\r\n/);
+        $self->{socket}->{sock}->write($msg);
+    }
 }
 
 

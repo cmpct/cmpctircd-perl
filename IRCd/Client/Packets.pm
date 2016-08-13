@@ -246,7 +246,7 @@ sub privmsg {
             return;
         }
         # Send the message to the target user
-        $user->{socket}->{sock}->write(":$mask PRIVMSG $user->{nick} :$realmsg\r\n");
+        $user->write(":$mask PRIVMSG $user->{nick} :$realmsg\r\n");
     }
 }
 sub mode {

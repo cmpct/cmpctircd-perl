@@ -59,12 +59,15 @@ sub setup {
     ) or die $!;
     $self->{clientEpoll} = IRCd::Sockets::Epoll->new($self->{clientListener});
     $self->{serverEpoll} = IRCd::Sockets::Epoll->new($self->{serverListener});
+    # XXX: Should we remove 'id' and have an idToFd function?
     $self->{clients} = {
         id       => {},
+        uid      => {},
         nick     => {}
     };
     $self->{servers} = {
         id       => {},
+        sid      => {},
         name     => {},
     };
     $self->{host}        = $self->{config}->{host};
@@ -123,17 +126,6 @@ sub clientLoop {
             if($buffer eq "") {
                 $self->{clientEpoll}->del($socket->{sock});
             } else {
-                # Depending on the port, maybe not a Client.
-                # But they're a client for now.
-                if(!defined $socket->{client}) {
-                    # XXX: config could go away?
-                    $socket->{client} = IRCd::Client->new((
-                        'socket' => $socket,
-                        'ircd'   => $self,
-                        'config' => $self->{config},
-                    ));
-                    $socket->{client}->{server} = $self->{host};
-                }
                 $socket->{client}->{ip} = $socket->{sock}->peerhost();
 
                 # Thanks to john for figuring this out
@@ -174,7 +166,7 @@ sub serverLoop {
                         'socket' => $socket,
                         'ircd'   => $self,
                         'config' => $self->{config},
-                    );
+            );
             $socket->{client}->{ip}     = $socket->{sock}->peerhost();
             $socket->{client}->{server} = $self->{host};
             $self->{serverEpoll}->add($newSock);
@@ -186,17 +178,6 @@ sub serverLoop {
             if($buffer eq "") {
                 $self->{serverEpoll}->del($socket->{sock});
             } else {
-                # Depending on the port, maybe not a Client.
-                # But they're a client for now.
-                if(!defined $socket->{client}) {
-                    # XXX: config could go away?
-                    $socket->{client} = IRCd::Server->new(
-                        'socket' => $socket,
-                        'ircd'   => $self,
-                        'config' => $self->{config},
-                    );
-                    $socket->{client}->{server} = $self->{host};
-                }
                 $socket->{client}->{ip} = $socket->{sock}->peerhost();
 
                 # Thanks to john for figuring this out
@@ -219,8 +200,14 @@ sub serverLoop {
 
 sub getClientByNick {
     my $self = shift;
-    my $nick = shift;
+    my $nick = lc(shift);
+    # First attempt a local search...
     return $self->{clients}->{nick}->{$nick} if($self->{clients}->{nick}->{$nick});
+    # Then check our connected servers...
+    # XXX: we'll need a hunt_server in time for hops > 0
+    foreach(values($self->{servers}->{sid}->%*)) {
+        return $_->{clients}->{nick}->{$nick} if($_->{clients}->{nick}->{$nick});
+    }
     return 0;
 }
 
