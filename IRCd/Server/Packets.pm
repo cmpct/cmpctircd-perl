@@ -102,8 +102,9 @@ sub uid {
     my $ircd   = $server->{ircd};
 
     my @splitPacket = split(" ", $msg);
-    shift @splitPacket, $splitPacket[0];
-    shift @splitPacket, $splitPacket[1];
+    # Yes, there are meant to be two of these.
+    shift @splitPacket;
+    shift @splitPacket;
 
 
     # Receiving an introduction
