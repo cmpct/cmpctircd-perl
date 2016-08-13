@@ -135,8 +135,17 @@ sub clientLoop {
                     $socket->{client}->{server} = $self->{host};
                 }
                 $socket->{client}->{ip} = $socket->{sock}->peerhost();
-                my @splitBuffer = split("\r\n", $buffer);
-                foreach(@splitBuffer) {
+
+                # Thanks to john for figuring this out
+                # Append the client's buffer with newly read packets
+                # Extract every message ending with \r\n
+                # Remove messages ending with \r\n from the client's buffer
+                # Parse the successful (properly delimited) messages
+                $socket->{client}->{buffer} .= $buffer;
+                my @result = $socket->{client}->{buffer} =~ /(.*?)\r\n/g;
+                $socket->{client}->{buffer} =~ s/(.*?)\r\n//g;
+                foreach(@result) {
+                    next if($_ eq '');
                     $self->{log}->debug("RECV: " . $_);
                     $socket->{client}->parse($_);
                 }
@@ -190,34 +199,18 @@ sub serverLoop {
                 }
                 $socket->{client}->{ip} = $socket->{sock}->peerhost();
 
-                my @splitBuffer = split("\r\n", $buffer, -1);
-                my $index       = $#splitBuffer;
-                # this code:
-                # 1) checks if this read was a complete read or if there was a packet dangling off the end (no \r\n, so the last index isn't blank)
-                # 2) if it was a chunked read, adds the dangling packet at the end to the buffer
-                # 3) read the buffer if THIS TIME it wasn't a chunked read
-                # 4) and when reading, append the newly read packet (first index) to the old buffer
-                # 5) parse that new $chunkedPacket (combination of the two, buffer and new packet)
-                # 6) parse the rest as normal
-                # XXX: "I'm not sure if there's a better way, or if this way would work if there were multiple packets chunked up""
-                # XXX: This WILL be revisited and later added for Clients
-                if($splitBuffer[$index] ne '') {
-                     # Add it to the buffer and then delete it so we don't process it below
-                    warn "Adding this to the buffer: $splitBuffer[$index]\r\n";
-                    $socket->{client}->{buffer} .= $splitBuffer[$index];
-                    $splitBuffer[$index] = '';
-                } else {
-                    # Only process if this time, it wasn't a chunked read
-                    my $chunkedPacket = $socket->{client}->{buffer} . $splitBuffer[0];
-                    $self->{log}->debug("CRECV: " . $chunkedPacket);
-                    $socket->{client}->parse($chunkedPacket);
-                    $splitBuffer[0] = '';
-                    $socket->{client}->{buffer} = '';
-                }
-                for(my $i = 0; $i < @splitBuffer; $i++) {
-                    next if($splitBuffer[$i] eq '');
-                    $self->{log}->debug("RECV: " . $splitBuffer[$i]);
-                    $socket->{client}->parse($splitBuffer[$i]);
+                # Thanks to john for figuring this out
+                # Append the client's buffer with newly read packets
+                # Extract every message ending with \r\n
+                # Remove messages ending with \r\n from the client's buffer
+                # Parse the successful (properly delimited) messages
+                $socket->{client}->{buffer} .= $buffer;
+                my @result = $socket->{client}->{buffer} =~ /(.*?)\r\n/g;
+                $socket->{client}->{buffer} =~ s/(.*?)\r\n//g;
+                foreach(@result) {
+                    next if($_ eq '');
+                    $self->{log}->debug("RECV: " . $_);
+                    $socket->{client}->parse($_);
                 }
             }
         }
