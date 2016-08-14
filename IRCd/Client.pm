@@ -15,10 +15,11 @@ sub new {
         'config'         => $args{config},
         'buffer'         => '',
 
-        'sentWelcome'    => $args{sentWelcome}    // 0,
         'idle'           => $args{idle}           // 0,
+        'lastPing'       => $args{lastPing}       // 0,
         'lastPong'       => $args{lastPong}       // time(),
         'waitingForPong' => $args{waitingForPong} // 0,
+        'registered'     => $args{registered}     // 0,
 
         'server'         => $args{server}         // undef,
         'nick'           => $args{nick}           // "",
@@ -43,6 +44,7 @@ sub getMask {
 
 sub parse {
     my $self = shift;
+    my $ircd = $self->{ircd};
     my $msg  = shift;
     my $sock = shift;
 
@@ -50,8 +52,28 @@ sub parse {
 
     # TODO: Modular system
     # Check if function exists, and if so, call it
+    my %registrationCommands = (
+        'user'   => 1,
+        'nick'   => 1,
+        'pong'   => 1,
+        #'cap'   => 1,
+        #'pass'  => 1,
+    );
+    my $requirePong = 0;
+    $requirePong = 1 if ($ircd->{config}->{requirepong} and $self->{waitingForPong});
     if (my $handlerRef = IRCd::Client::Packets->can(lc($splitPacket[0]))) {
-        $handlerRef->($self, $msg);
+        # TODO: Registration Timeout error, rather than just ping timeout
+        if($requirePong and !$registrationCommands{lc($splitPacket[0])}) {
+            $self->{log}->debug("[$self->{nick}] User attempted to register without PONG");
+            $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTREGISTERED . " * :You have not registered\r\n");
+            return;
+        }
+        if(!$self->{registered} and !$registrationCommands{lc($splitPacket[0])}) {
+            $self->{log}->debug("[$self->{nick}] User sent command [$splitPacket[0]] pre-registration");
+            $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTREGISTERED . " * :You have not registered\r\n");
+        } else {
+            $handlerRef->($self, $msg);
+        }
     } else {
         $self->{log}->warn("UNHANDLED PACKET: " . $splitPacket[0]);
     }
@@ -73,7 +95,7 @@ sub sendWelcome {
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTD      . " $self->{nick} :- " . $_ . "\r\n") foreach(@motd);
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFMOTD . " $self->{nick} :End of /MOTD command.\r\n");
     close($motd);
-    $self->{sentWelcome} = 1;
+    $self->{registered} = 1;
 
     # Tell the servers we're connected to that we exist
     # XXX: HELPER FUNCTIONS!
@@ -92,14 +114,16 @@ sub checkTimeout {
     my $period = $self->{lastPong} + $ircd->{pingtimeout};
     my $socket = $self->{socket}->{sock};
 
-    if(time() > $period and !$self->{waitingForPong}) {
+    my $requirePong = 0;
+    $requirePong = 1 if ($ircd->{config}->{requirepong} and !$self->{lastPing});
+    if($requirePong or (time() > $period and !$self->{waitingForPong})) {
         $self->{pingcookie} = $self->createCookie();
         $socket->write("PING :$self->{pingcookie}\r\n");
+        $self->{lastPing} = time();
         $self->{waitingForPong} = 1;
     } else {
         #$self->{log}->debug("[$self->{nick}] " . time() . " !> " . $period) if(!$self->{waitingForPong});
     }
-    # XXX: What if  need to PONG straight away?
     if(time() > ($self->{lastPong} + ($ircd->{pingtimeout} * 2)) and $self->{waitingForPong}) {
         $self->disconnect(1, "Ping timeout");
     } else {

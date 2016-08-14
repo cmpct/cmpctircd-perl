@@ -77,7 +77,7 @@ sub quit {
         # We should be in the room b/c of the caller but let's be safe.
         $client->{log}->info("[$self->{name}] Removed (QUIT) a client (nick: $client->{name}) from channel");
         $self->stripModes($client, 0);
-        $self->sendToRoom($client, ":$mask QUIT :$msg");
+        $self->sendToRoom($client, ":$mask QUIT :$msg", 0);
         delete $self->{clients}->{$client->{nick}};
         return;
     }

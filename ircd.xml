@@ -13,6 +13,7 @@
         <provider>epoll</provider>
     </sockets>
     <advanced>
+        <requirepong>1</requirepong>
         <pingtimeout>120</pingtimeout>
         <maxtargets>200</maxtargets>
     </advanced>

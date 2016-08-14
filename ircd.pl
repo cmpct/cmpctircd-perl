@@ -154,7 +154,7 @@ sub clientLoop {
 
 sub serverLoop {
     my $self     = shift;
-    my $readable = $self->{serverSelector}->readable(1000);
+    my @readable = $self->{serverSelector}->readable(1000);
     foreach my $event (@readable) {
         # This is needed because of the way that IO::Epoll vs IO::Socket return handles (or fds)
         $event = fileno($event) if(ref($event) eq 'IO::Socket::INET');

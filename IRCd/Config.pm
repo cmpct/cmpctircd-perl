@@ -22,6 +22,7 @@ sub new {
         # <sockets>
         'provider' => undef,
         # <advanced>
+        'requirepong' => undef,
         'pingtimeout' => undef,
         'maxtargets'  => undef,
     };
@@ -42,6 +43,7 @@ sub parse {
         $self->{network}     = $xmlRef->{'ircd'}->{'network'};
         $self->{desc}        = $xmlRef->{'ircd'}->{'desc'};
         $self->{socketprovider} = $xmlRef->{'sockets'}->{'provider'};
+        $self->{requirepong} = $xmlRef->{'advanced'}->{'requirepong'};
         $self->{pingtimeout} = $xmlRef->{'advanced'}->{'pingtimeout'};
         $self->{maxtargets}  = $xmlRef->{'advanced'}->{'maxtargets'};
     }
