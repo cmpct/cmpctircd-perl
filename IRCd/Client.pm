@@ -143,13 +143,13 @@ sub write {
     my $self = shift;
     my $msg  = shift;
     # XXX: differentiate between $self->{server} and the server we reside on?
+    $msg .= "\r\n" if($msg !~ /\r\n/);
     if(ref($self->{server}) eq "IRCd::Server") {
         # Write on the appropriate socket
         # XXX: We need UID translation?
         $self->{server}->{socket}->{sock}->write($msg);
     } else {
         # Dispatch locally
-        $msg .= "\r\n" if($msg !~ /\r\n/);
         $self->{socket}->{sock}->write($msg);
     }
 }

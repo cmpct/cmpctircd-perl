@@ -17,6 +17,7 @@ sub new {
         'limit'    => 50,
         # Can it be set on a user, or just a channel at large?
         'chanwide' => 1,
+        'hasparam' => 1,
     };
     bless $self, $class;
     return $self;

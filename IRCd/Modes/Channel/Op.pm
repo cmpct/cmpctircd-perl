@@ -15,6 +15,7 @@ sub new {
         'channel'  => shift,
 
         'chanwide' => 0,
+        'hasparam' => 1,
     };
     bless $self, $class;
     return $self;

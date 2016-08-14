@@ -61,25 +61,10 @@ sub addClient {
     }
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_ENDOFNAMES    . " $client->{nick} $self->{name} :End of /NAMES list.\r\n");
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :" . $self->{topic}->get() . "\r\n") if($self->{topic}->get() ne "");
-    # XXX: Need a way of knowing if MODEs are MODEable (on join)
 
-    my $modes       = "";
-    my $characters  = "+";
-    my $args        = "";
-    my $provides    = "";
-    my $value       = "";
-    # XXX: Port this to a function so we can do /MODE #chan
-    foreach(keys($self->{modes}->%*)) {
-        my $chanwide  = $self->{modes}->{$_}->{chanwide};
-        if($chanwide) {
-            $provides = $self->{modes}->{$_}->{provides};
-            $value    = $self->{modes}->{$_}->get();
-            $characters .= $provides;
-            $args       .= $value . " ";
-        }
-    }
-    $client->{log}->debug("[$self->{name}] Writing: $characters $args");
-    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $self->{name} $characters $args\r\n");
+    my $modes = $self->getModeStrings("+");
+    $client->{log}->debug("[$self->{name}] Writing: $modes->{characters} $modes->{args}");
+    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $self->{name} $modes->{characters} $modes->{args}\r\n");
     #$client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CREATIONTIME  . " $client->{nick} $self->{name} " . time() . "\r\n");
 }
 sub quit {
@@ -213,15 +198,32 @@ sub size {
     my $self = shift;
     return keys($self->{clients}->%*);
 }
-
 sub resides {
     my $self   = shift;
     my $client = shift;
     my $mask   = $client->getMask();
     my $msg    = shift;
-
     return 1 if ($self->{clients}->{$client->{nick}});
     return 0;
+}
+sub getModeStrings {
+    my $self        = shift;
+    my $characters  = shift // "+";
+    my $modes       = "";
+    my $args        = "";
+    foreach(keys($self->{modes}->%*)) {
+        my $chanwide  = $self->{modes}->{$_}->{chanwide};
+        if($chanwide) {
+            my $provides = $self->{modes}->{$_}->{provides};
+            my $value    = $self->{modes}->{$_}->get();
+            $characters .= $provides;
+            $args       .= $value . " ";
+        }
+    }
+    return {
+        'characters' => $characters,
+        'args'       => $args,
+    };
 }
 sub sendToRoom {
     my $self   = shift;

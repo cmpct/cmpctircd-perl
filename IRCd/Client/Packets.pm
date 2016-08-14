@@ -256,28 +256,33 @@ sub mode {
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
-
-    $msg =~ s/\r\n//;
-    my %argmodes = (
-        'a' => 1,
-        'o' => 1,
-        'l' => 1,
-    );
-    my @split           = split(" ", $msg, 4);
+    my @split  = split(" ", $msg, 4);
 
     if($split[1] !~ /^#/) {
         # TODO: This is for a usermode!
         $client->{log}->warn("[$client->{nick}] MODE not for a channel, not yet supported.\r\n");
         return;
     }
-    if(@split < 3) {
-        # TODO: People can request modes too, e.g. MODE #cmpct!
-        $client->{log}->warn("[$client->{nick}] MODE request for a channel, not yet supported.\r\n");
+    # Lookup channel
+    my $channel = $ircd->{channels}->{$split[1]};
+    if(!$channel) {
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $split[1] :No such nick/channel\r\n");
         return;
     }
-    my @modes      = split('', $split[2]);
-    my @parameters = split(' ', $split[3]);
-    my $const = 0;
+    if(@split < 3) {
+        my $channelModes = $channel->getModeStrings("+");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $split[1] $channelModes->{characters} $channelModes->{args}\r\n");
+        $client->{log}->warn("[$client->{nick}] MODE $split[1] => $channelModes->{characters} $channelModes->{args}");
+        return;
+    }
+    # $channel exists at this point
+    my %argmodes = ();
+    foreach(values($channel->{modes}->%*)) {
+        $argmodes{$_->{provides}} = 1 if($_->{hasparam});
+    }
+    my @modes           = split('', $split[2]);
+    my @parameters      = split(' ', $split[3]);
+    my $const           = 0;
     my $currentModifier = "";
     foreach(@modes) {
         if($_ eq "+") {
@@ -286,12 +291,6 @@ sub mode {
         } elsif($_ eq "-") {
             $currentModifier = "-";
             next;
-        }
-        # Lookup channel
-        my $channel = $ircd->{channels}->{$split[1]};
-        if(!$channel) {
-            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $split[1] :No such nick/channel\r\n");
-            return;
         }
         $client->{log}->debug("[$client->{nick}] MODE: $currentModifier$_");
         if($channel->{modes}->{$_}) {
