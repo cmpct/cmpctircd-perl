@@ -9,7 +9,7 @@
         <port>6667</port>
     </server>
     <sockets>
-        <!-- Can be one of: epoll -->
+        <!-- Can be one of: epoll, select -->
         <provider>epoll</provider>
     </sockets>
     <advanced>

@@ -31,7 +31,7 @@ sub del {
 sub readable {
     my $self = shift;
     my $result = IO::Epoll::epoll_wait($self->{epoll}, 1024, shift);
-    return $result;
+    return @$result;
 }
 
 1;

@@ -2,6 +2,10 @@
 use strict;
 use warnings;
 use diagnostics;
+
+use IRCd::Sockets::Epoll;
+use IRCd::Sockets::Select;
+
 package IRCd::Config;
 
 sub new {
@@ -11,10 +15,13 @@ sub new {
         # <ircd>
         'host'     => undef,
         'network'  => undef,
+        'desc'     => undef,
         # <server>
         'ip'       => undef,
         'port'     => undef,
-        # advanced
+        # <sockets>
+        'provider' => undef,
+        # <advanced>
         'pingtimeout' => undef,
         'maxtargets'  => undef,
     };
@@ -34,9 +41,19 @@ sub parse {
         $self->{host}        = $xmlRef->{'ircd'}->{'host'};
         $self->{network}     = $xmlRef->{'ircd'}->{'network'};
         $self->{desc}        = $xmlRef->{'ircd'}->{'desc'};
+        $self->{socketprovider} = $xmlRef->{'sockets'}->{'provider'};
         $self->{pingtimeout} = $xmlRef->{'advanced'}->{'pingtimeout'};
         $self->{maxtargets}  = $xmlRef->{'advanced'}->{'maxtargets'};
     }
+}
+
+sub getSockProvider {
+    my $self     = shift;
+    my $listener = shift;
+    # Honour their preference until we can't.
+    my $OS = $^O;
+    return IRCd::Sockets::Epoll->new($listener)  if($self->{socketprovider} eq "epoll" and $OS eq 'linux');
+    return IRCd::Sockets::Select->new($listener) if($self->{socketprovider} eq "select");
 }
 
 1;

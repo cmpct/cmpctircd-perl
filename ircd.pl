@@ -57,9 +57,8 @@ sub setup {
         Listen    => 5,
         ReuseAddr => 1,
     ) or die $!;
-    $self->{clientEpoll} = IRCd::Sockets::Epoll->new($self->{clientListener});
-    $self->{serverEpoll} = IRCd::Sockets::Epoll->new($self->{serverListener});
-    # XXX: Should we remove 'id' and have an idToFd function?
+    $self->{clientSelector} = $self->{config}->getSockProvider($self->{clientListener});
+    $self->{serverSelector} = $self->{config}->getSockProvider($self->{serverListener});
     $self->{clients} = {
         id       => {},
         uid      => {},
@@ -100,9 +99,12 @@ sub run {
 
 sub clientLoop {
     my $self     = shift;
-    my $readable = $self->{clientEpoll}->readable(1000);
-    foreach my $event (@$readable) {
-        if($event->[0] == fileno($self->{clientListener})) {
+    my @readable = $self->{clientSelector}->readable(1000);
+    foreach my $event (@readable) {
+        # This is needed because of the way that IO::Epoll vs IO::Socket return handles (or fds)
+        $event = fileno($event) if(ref($event) eq 'IO::Socket::INET');
+        $event = $event->[0]    if(ref($event) eq 'ARRAY');
+        if($event == fileno($self->{clientListener})) {
             # Accept a new client
             my $newSock = $self->{clientListener}->accept;
             my $newfd   = fileno($newSock);
@@ -117,14 +119,14 @@ sub clientLoop {
             );
             $socket->{client}->{ip}     = $socket->{sock}->peerhost();
             $socket->{client}->{server} = $self->{host};
-            $self->{clientEpoll}->add($newSock);
+            $self->{clientSelector}->add($newSock);
         } else {
             # Read from an existing client
             my $buffer  = "";
-            my $socket   = $self->{clients}->{id}->{$event->[0]};
+            my $socket   = $self->{clients}->{id}->{$event};
             $socket->{sock}->recv($buffer, 1024);
             if($buffer eq "") {
-                $self->{clientEpoll}->del($socket->{sock});
+                $self->{clientSelector}->del($socket->{sock});
             } else {
                 $socket->{client}->{ip} = $socket->{sock}->peerhost();
 
@@ -152,9 +154,12 @@ sub clientLoop {
 
 sub serverLoop {
     my $self     = shift;
-    my $readable = $self->{serverEpoll}->readable(1000);
-    foreach my $event (@$readable) {
-        if($event->[0] == fileno($self->{serverListener})) {
+    my $readable = $self->{serverSelector}->readable(1000);
+    foreach my $event (@readable) {
+        # This is needed because of the way that IO::Epoll vs IO::Socket return handles (or fds)
+        $event = fileno($event) if(ref($event) eq 'IO::Socket::INET');
+        $event = $event->[0]    if(ref($event) eq 'ARRAY');
+        if($event == fileno($self->{serverListener})) {
             # Accept a new client
             my $newSock = $self->{serverListener}->accept;
             my $newfd   = fileno($newSock);
@@ -169,14 +174,14 @@ sub serverLoop {
             );
             $socket->{client}->{ip}     = $socket->{sock}->peerhost();
             $socket->{client}->{server} = $self->{host};
-            $self->{serverEpoll}->add($newSock);
+            $self->{serverSelector}->add($newSock);
         } else {
             # Read from an existing client
             my $buffer  = "";
-            my $socket   = $self->{servers}->{id}->{$event->[0]};
+            my $socket   = $self->{servers}->{id}->{$event};
             $socket->{sock}->recv($buffer, 1024);
             if($buffer eq "") {
-                $self->{serverEpoll}->del($socket->{sock});
+                $self->{serverSelector}->del($socket->{sock});
             } else {
                 $socket->{client}->{ip} = $socket->{sock}->peerhost();
 
