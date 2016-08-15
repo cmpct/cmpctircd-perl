@@ -155,8 +155,9 @@ sub checkResolve {
     my $ircd = $self->{ircd};
     my $mask = $self->getMask();
     my $sock = $self->{socket}->{sock};
-
-    if(my $answer = $self->{resolve}->read($self->{query})) {
+    my $answer = 0;
+    
+    if($answer = $self->{resolve}->read($self->{query}) and $answer > 0) {
         # We got an answer to our query!
         $self->{log}->debug("[$self->{nick}] Got an answer to our DNS query for [$self->{ip}]: $answer");
         $self->{host} = $answer;
