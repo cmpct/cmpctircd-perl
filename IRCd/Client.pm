@@ -27,7 +27,12 @@ sub new {
         'realname'       => $args{realname}       // "",
 
         'ip'             => $args{ip}             // 0,
+        'host'           => $args{host}           // 0,
         'uid'            => $args{uid}            // 0,
+
+        'resolve'        => $args{resolve} // IRCd::Resolve->new(),
+        'query'          => $args{query}   // undef,
+
     };
     bless $self, $class;
     $self->{log} = $self->{ircd}->{log};
@@ -38,8 +43,9 @@ sub getMask {
     my $self  = shift;
     my $nick  = $self->{nick}  // "";
     my $ident = $self->{ident} // "";
-    my $ip    = $self->{ip}    // "";
-    return $nick . '!' . $ident . '@' . $ip;
+    my $host  = $self->{host}  // "";
+
+    return $nick . '!' . $ident . '@' . $host;
 }
 
 sub parse {
@@ -131,6 +137,20 @@ sub checkTimeout {
         #$self->{log}->debug("[$self->{nick}] " . time() . " !> " . ($self->{lastPong} + ($ircd->{pingtimeout} * 2))) if($self->{waitingForPong});
     }
 }
+
+sub checkResolve {
+    my $self = shift;
+    my $ircd = $self->{ircd};
+    my $mask = $self->getMask();
+    my $sock = $self->{socket}->{sock};
+
+    if(my $answer = $self->{resolve}->read($self->{query})) {
+        # We got an answer to our query!
+        $self->{log}->debug("Got an answer to our DNS query: $answer");
+        $self->{host} = $answer;
+    }
+}
+
 
 sub disconnect {
     my $self     = shift;

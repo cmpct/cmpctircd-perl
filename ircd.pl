@@ -149,6 +149,7 @@ sub clientLoop {
     foreach(values($self->{clients}->{id}->%*)) {
         next if(!defined $_->{client});
         $_->{client}->checkTimeout();
+        $_->{client}->checkResolve();
     }
 }
 

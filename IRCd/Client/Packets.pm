@@ -5,6 +5,7 @@ use diagnostics;
 use feature 'postderef';
 use IRCd::Channel;
 use IRCd::Constants;
+use IRCd::Resolve;
 package IRCd::Client::Packets;
 
 sub nick {
@@ -59,6 +60,9 @@ sub user {
     $client->{log}->debug("IDENT: $client->{ident}");
     $client->{log}->debug("REAL:  $client->{realname}");
 
+    if(!$client->{host}) {
+        $client->{query} = $client->{resolve}->fire($client->{ip});
+    }
     $client->sendWelcome() if($client->{nick} and !$client->{sentWelcome});
 }
 sub join {
