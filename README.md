@@ -19,6 +19,7 @@ Dependencies
 * IO::Epoll (libxml-simple-perl)
 * XML::Simple  (libio-epoll-perl)
 * Term::ANSIColor (within core on Debian)
+* Net::DNS (libnet-dns-perl)
 * `perl >= 5.20` for `postderef`
 
 Contact

@@ -33,6 +33,7 @@ sub new {
         'resolve'        => $args{resolve} // IRCd::Resolve->new(),
         'query'          => $args{query}   // undef,
 
+        'modes'          => $args{modes}   // {},
     };
     bless $self, $class;
     $self->{log} = $self->{ircd}->{log};

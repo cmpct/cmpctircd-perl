@@ -261,50 +261,80 @@ sub mode {
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
     my @split  = split(" ", $msg, 4);
-
-    if($split[1] !~ /^#/) {
-        # TODO: This is for a usermode!
-        $client->{log}->warn("[$client->{nick}] MODE not for a channel, not yet supported.\r\n");
-        return;
-    }
-    # Lookup channel
-    my $channel = $ircd->{channels}->{$split[1]};
-    if(!$channel) {
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $split[1] :No such nick/channel\r\n");
-        return;
-    }
-    if(@split < 3) {
-        my $channelModes = $channel->getModeStrings("+");
-        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $split[1] $channelModes->{characters} $channelModes->{args}\r\n");
-        $client->{log}->warn("[$client->{nick}] MODE $split[1] => $channelModes->{characters} $channelModes->{args}");
-        return;
-    }
-    # $channel exists at this point
+    my $type   = "";
     my %argmodes = ();
-    foreach(values($channel->{modes}->%*)) {
-        $argmodes{$_->{provides}} = 1 if($_->{hasparam});
-    }
-    my @modes           = split('', $split[2]);
-    my @parameters      = split(' ', $split[3]);
-    my $const           = 0;
-    my $currentModifier = "";
-    foreach(@modes) {
-        if($_ eq "+") {
-            $currentModifier = "+";
-            next;
-        } elsif($_ eq "-") {
-            $currentModifier = "-";
-            next;
+
+    $type   = "user" if($split[1] !~ /^#/);
+    $type   = "chan" if($split[1] =~ /^#/);
+    if($type eq "user") {
+        %argmodes = ();
+        foreach(values($client->{modes}->%*)) {
+            $argmodes{$_->{provides}} = 1 if($_->{hasparam});
         }
-        $client->{log}->debug("[$client->{nick}] MODE: $currentModifier$_");
-        if($channel->{modes}->{$_}) {
-            $channel->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, 0, 1)  if $currentModifier eq "+";
-            $channel->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, 0, 1)  if $currentModifier eq "-";
-            if($argmodes{$_}) {
-                $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_ $parameters[$const]");
-                $const++ if $argmodes{$_};
-            } else {
-                $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_");
+        my @modes           = split('', $split[2]);
+        my @parameters      = split(' ', $split[3]);
+        my $const           = 0;
+        my $currentModifier = "";
+        foreach(@modes) {
+            if($_ eq "+") {
+                $currentModifier = "+";
+                next;
+            } elsif($_ eq "-") {
+                $currentModifier = "-";
+                next;
+            }
+            $client->{log}->debug("[$client->{nick}] MODE: $currentModifier$_");
+            if($client->{modes}->{$_}) {
+                $client->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, 0, 1)  if $currentModifier eq "+";
+                $client->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, 0, 1)  if $currentModifier eq "-";
+                if($argmodes{$_}) {
+                    $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_ $parameters[$const]");
+                    $const++ if $argmodes{$_};
+                } else {
+                    $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_");
+                }
+            }
+        }
+    } elsif($type eq "channel") {
+        # Lookup channel
+        my $channel = $ircd->{channels}->{$split[1]};
+        if(!$channel) {
+            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $split[1] :No such nick/channel\r\n");
+            return;
+        }
+        if(@split < 3) {
+            my $channelModes = $channel->getModeStrings("+");
+            $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $split[1] $channelModes->{characters} $channelModes->{args}\r\n");
+            $client->{log}->warn("[$client->{nick}] MODE $split[1] => $channelModes->{characters} $channelModes->{args}");
+            return;
+        }
+        # $channel exists at this point
+        %argmodes = ();
+        foreach(values($channel->{modes}->%*)) {
+            $argmodes{$_->{provides}} = 1 if($_->{hasparam});
+        }
+        my @modes           = split('', $split[2]);
+        my @parameters      = split(' ', $split[3]);
+        my $const           = 0;
+        my $currentModifier = "";
+        foreach(@modes) {
+            if($_ eq "+") {
+                $currentModifier = "+";
+                next;
+            } elsif($_ eq "-") {
+                $currentModifier = "-";
+                next;
+            }
+            $client->{log}->debug("[$client->{nick}] MODE: $currentModifier$_");
+            if($channel->{modes}->{$_}) {
+                $channel->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, 0, 1)  if $currentModifier eq "+";
+                $channel->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, 0, 1)  if $currentModifier eq "-";
+                if($argmodes{$_}) {
+                    $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_ $parameters[$const]");
+                    $const++ if $argmodes{$_};
+                } else {
+                    $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_");
+                }
             }
         }
     }
