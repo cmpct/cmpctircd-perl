@@ -1,9 +1,10 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use diagnostics;
-use IRCd::Constants;
+no warnings "experimental::postderef"; # for older perls (<5.24)
+use feature 'postderef';
 
+use IRCd::Constants;
 use IRCd::Channel::Topic;
 use IRCd::Modes::Channel::Op;
 use IRCd::Modes::Channel::Limit;

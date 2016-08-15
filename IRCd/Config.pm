@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use diagnostics;
+no warnings "experimental::postderef"; # for older perls (<5.24)
+use feature 'postderef';
 
 use IRCd::Sockets::Epoll;
 use IRCd::Sockets::Select;

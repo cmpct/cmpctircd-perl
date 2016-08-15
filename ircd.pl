@@ -2,6 +2,9 @@
 use strict;
 use warnings;
 use diagnostics;
+no warnings "experimental::postderef"; # for older perls (<5.24)
+use feature 'postderef';
+
 use IO::Epoll;
 use IO::Socket::INET;
 use Data::Dumper;

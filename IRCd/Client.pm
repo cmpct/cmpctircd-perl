@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use diagnostics;
+no warnings "experimental::postderef"; # for older perls (<5.24)
+use feature 'postderef';
+
 use IRCd::Client::Packets;
 use IRCd::Constants;
 use IRCd::Modes::User::Cloak;
