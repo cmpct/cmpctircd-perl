@@ -10,7 +10,7 @@
     </server>
     <cloak>
         <!-- Generate three suitably random strings -->
-        <!-- Don't use these! -->
+        <!-- Use your own for security! -->
         <key>sKky8sCIhnlaXhkYfJXZRLED8</key>
         <key>iZS9JmBKRlJpwOdudB5u2I0vo</key>
         <key>aDnciDOQyYpmS7ldWCvxTXynS</key>
@@ -21,6 +21,7 @@
     </sockets>
     <advanced>
         <requirepong>1</requirepong>
+        <dns>1</dns>
         <pingtimeout>120</pingtimeout>
         <maxtargets>200</maxtargets>
     </advanced>

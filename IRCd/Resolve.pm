@@ -10,6 +10,7 @@ sub new {
     my $self  = {
         'resolver' => Net::DNS::Resolver->new,
     };
+    # TODO: A cache?
     bless $self, $class;
     return $self;
 }
@@ -27,6 +28,7 @@ sub read {
     return if(!$self->{resolver}->bgisready($socket));
     my $packet = $self->{resolver}->bgread($socket);
     return if(!$packet);
+    return -1 if($self->{resolver}->errorstring ne "NOERROR");
     my $resolvedHost = join('.', $packet->{answer}->[0]->{ptrdname}->{label}->@*);
     return $resolvedHost;
 }

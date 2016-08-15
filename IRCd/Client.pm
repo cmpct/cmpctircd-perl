@@ -75,6 +75,10 @@ sub parse {
     $requirePong = 1 if ($ircd->{config}->{requirepong} and $self->{waitingForPong});
     if (my $handlerRef = IRCd::Client::Packets->can(lc($splitPacket[0]))) {
         # TODO: Registration Timeout error, rather than just ping timeout
+        if($ircd->{dns} and $self->{query} and !$self->{host} and !$registrationCommands{lc($splitPacket[0])}) {
+            $self->{log}->debug("[$self->{nick}] Waiting to resolve host, blocking");
+            return;
+        }
         if($requirePong and !$registrationCommands{lc($splitPacket[0])}) {
             $self->{log}->debug("[$self->{nick}] User attempted to register without PONG");
             $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTREGISTERED . " * :You have not registered\r\n");
@@ -83,9 +87,9 @@ sub parse {
         if(!$self->{registered} and !$registrationCommands{lc($splitPacket[0])}) {
             $self->{log}->debug("[$self->{nick}] User sent command [$splitPacket[0]] pre-registration");
             $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTREGISTERED . " * :You have not registered\r\n");
-        } else {
-            $handlerRef->($self, $msg);
         }
+        # If we're registered and not waiting on a PONG/DNS query...
+        $handlerRef->($self, $msg);
     } else {
         $self->{log}->warn("UNHANDLED PACKET: " . $splitPacket[0]);
     }
@@ -152,8 +156,14 @@ sub checkResolve {
 
     if(my $answer = $self->{resolve}->read($self->{query})) {
         # We got an answer to our query!
-        $self->{log}->debug("Got an answer to our DNS query: $answer");
+        $self->{log}->debug("[$self->{nick}] Got an answer to our DNS query for [$self->{ip}]: $answer");
         $self->{host} = $answer;
+        $sock->write(":$ircd->{host} NOTICE * :*** Found your hostname\r\n");
+        $self->sendWelcome() if($self->{ident} and $self->{nick} and !$self->{registered});
+    } elsif($answer < 0) {
+        $self->{log}->debug("[$self->{nick}] Query for [$self->{ip}] failed");
+        $self->{host} = $self->{ip};
+        $sock->write(":$ircd->{host} NOTICE * :*** Could not resolve your hostname: Domain name not found; using your IP address ($self->{ip}) instead.\r\n");
     }
 }
 

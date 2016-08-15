@@ -37,7 +37,7 @@ sub nick {
     $client->{log}->debug("NICK: $client->{nick}");
 
     $ircd->{clients}->{nick}->{$client->{nick}} = $client;
-    $client->sendWelcome() if($client->{ident} and !$client->{sentWelcome});
+    $client->sendWelcome() if($client->{ident} and !$client->{registered} and $client->{host});
 }
 sub user {
     my $client = shift;
@@ -60,10 +60,7 @@ sub user {
     $client->{log}->debug("IDENT: $client->{ident}");
     $client->{log}->debug("REAL:  $client->{realname}");
 
-    if(!$client->{host}) {
-        $client->{query} = $client->{resolve}->fire($client->{ip});
-    }
-    $client->sendWelcome() if($client->{nick} and !$client->{sentWelcome});
+    $client->sendWelcome() if($client->{nick} and !$client->{registered} and $client->{host});
 }
 sub join {
     my $client = shift;

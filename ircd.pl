@@ -75,6 +75,7 @@ sub setup {
     $self->{ip}          = $self->{config}->{ip};
     $self->{port}        = $self->{config}->{port};
     $self->{cloak_keys}  = $self->{config}->{cloak_keys};
+    $self->{dns}         = $self->{config}->{dns};
     $self->{pingtimeout} = $self->{config}->{pingtimeout};
     $self->{maxtargets}  = $self->{config}->{maxtargets};
 
@@ -120,6 +121,13 @@ sub clientLoop {
             );
             $socket->{client}->{ip}     = $socket->{sock}->peerhost();
             $socket->{client}->{server} = $self->{host};
+            if($self->{dns}) {
+                $socket->{sock}->write(":$self->{host} NOTICE * :*** Looking up your hostname...\r\n");
+                $socket->{client}->{query} = $socket->{client}->{resolve}->fire($socket->{client}->{ip});
+            } else {
+                # TODO: Could have a 'no DNS resolve enabled' message here.
+                # TODO: I think some servers do it?
+            }
             $self->{clientSelector}->add($newSock);
         } else {
             # Read from an existing client
@@ -150,7 +158,7 @@ sub clientLoop {
     foreach(values($self->{clients}->{id}->%*)) {
         next if(!defined $_->{client});
         $_->{client}->checkTimeout();
-        $_->{client}->checkResolve();
+        $_->{client}->checkResolve() if($self->{dns});
     }
 }
 
