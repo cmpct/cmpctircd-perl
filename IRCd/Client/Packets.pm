@@ -164,16 +164,23 @@ sub whois {
     }
     my $targetIdent    = $targetClient->{ident};
     my $targetRealName = $targetClient->{realname};
-    my $targetHost     = $targetClient->{ip};
+    my $targetHost     = $targetClient->{host} // $targetClient->{ip};
     # XXX: Claims to be online since 1970.
     my $targetIdle     = time() - $client->{idle};
     # TODO: RPL_WHOISOPERATOR => 313,
+    # TODO: ircops will see '.. actually connected from'
     my @presentChannels = ();
+    $targetHost         = $targetClient->{cloak} if($targetClient->{modes}->{x}->has($targetClient));
+
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISUSER     . " $client->{nick} $targetNick $targetIdent $targetHost * :$targetRealName\r\n");
     foreach(values($ircd->{channels}->%*)) {
         if($_->{clients}->{$targetNick}) {
             push @presentChannels, $_->{name};
         }
+    }
+    if($targetClient == $client) {
+        # TODO: when ircops are added, add an OR for them
+        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISHOST . " $client->{nick} $targetNick :is connecting from $targetClient->{ident}\@$targetClient->{host} $targetClient->{ip}\r\n");
     }
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISCHANNELS . " $client->{nick} $targetNick :" . CORE::join(' ', @presentChannels) . "\r\n") if @presentChannels >= 1;
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISSERVER   . " $client->{nick} $targetNick $client->{server} :$ircd->{desc}\r\n");

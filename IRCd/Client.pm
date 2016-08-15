@@ -4,6 +4,7 @@ use warnings;
 use diagnostics;
 use IRCd::Client::Packets;
 use IRCd::Constants;
+use IRCd::Modes::User::Cloak;
 
 package IRCd::Client;
 
@@ -37,6 +38,8 @@ sub new {
     };
     bless $self, $class;
     $self->{log} = $self->{ircd}->{log};
+    # TODO: Default usermodes
+    $self->{modes}->{x} = IRCd::Modes::User::Cloak->new($self);
     return $self;
 }
 
@@ -45,7 +48,9 @@ sub getMask {
     my $nick  = $self->{nick}  // "";
     my $ident = $self->{ident} // "";
     my $host  = $self->{host}  // "";
+    my $cloak = shift // 0;
 
+    $host = $self->{cloak} if($cloak and $self->{modes}->{x}->has($self));
     return $nick . '!' . $ident . '@' . $host;
 }
 

@@ -74,6 +74,7 @@ sub setup {
     $self->{desc}        = $self->{config}->{desc};
     $self->{ip}          = $self->{config}->{ip};
     $self->{port}        = $self->{config}->{port};
+    $self->{cloak_keys}  = $self->{config}->{cloak_keys};
     $self->{pingtimeout} = $self->{config}->{pingtimeout};
     $self->{maxtargets}  = $self->{config}->{maxtargets};
 

@@ -31,6 +31,8 @@ use constant {
     RPL_MOTD          => 372,
     RPL_MOTDSTART     => 375,
     RPL_ENDOFMOTD     => 376,
+    RPL_WHOISHOST     => 378,
+    RPL_HOSTHIDDEN    => 396,
 
     # Errors
     ERR_NOSUCHNICK       => 401,

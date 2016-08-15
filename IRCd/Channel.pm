@@ -35,7 +35,7 @@ sub addClient {
     my $self     = shift;
     my $client   = shift;
     my $ircd     = $client->{ircd};
-    my $mask     = $client->getMask();
+    my $mask     = $client->getMask(1);
 
     return if($self->resides($client));
     if($self->size() >= $self->{modes}->{l}->get()) {
@@ -71,7 +71,7 @@ sub quit {
     my $self   = shift;
     my $client = shift;
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
     my $msg    = shift // "Leaving.";
     if($self->{clients}->{$client->{nick}} // "") {
         # We should be in the room b/c of the caller but let's be safe.
@@ -87,12 +87,13 @@ sub part {
     my $self   = shift;
     my $client = shift;
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
     my $msg    = shift;
+    my $forCloak = shift // 0;
     if($self->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{name}] Removed (PART) a client (nick: $client->{name}) from channel");
         $self->sendToRoom($client, ":$mask PART $self->{name} :$msg");
-        $self->stripModes($client, 0);
+        $self->stripModes($client, 0) if(!$forCloak);
         delete $self->{clients}->{$client->{nick}};
     } else {
         $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");

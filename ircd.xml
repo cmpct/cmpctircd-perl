@@ -8,6 +8,13 @@
         <ip>127.0.0.1</ip>
         <port>6667</port>
     </server>
+    <cloak>
+        <!-- Generate three suitably random strings -->
+        <!-- Don't use these! -->
+        <key>sKky8sCIhnlaXhkYfJXZRLED8</key>
+        <key>iZS9JmBKRlJpwOdudB5u2I0vo</key>
+        <key>aDnciDOQyYpmS7ldWCvxTXynS</key>
+    </cloak>
     <sockets>
         <!-- Can be one of: epoll, select -->
         <provider>epoll</provider>
