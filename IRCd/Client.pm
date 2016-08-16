@@ -92,6 +92,10 @@ sub parse {
             return;
         }
         # If we're registered and not waiting on a PONG/DNS query...
+        # For the sake of simplicity, any non-ping action should discount idling
+        if (lc($splitPacket[0]) ne "pong") {
+            $self->{idle} = time();
+        }
         $handlerRef->($self, $msg);
     } else {
         $self->{log}->warn("UNHANDLED PACKET: " . $splitPacket[0]);

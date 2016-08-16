@@ -74,7 +74,6 @@ sub join {
     my $recurs = shift // 0;
     my @splitPacket;
 
-    $client->{idle} = time();
     my $channelInput = $msg;
 
     if($recurs == 0) {
@@ -211,7 +210,6 @@ sub part {
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
 
-    $client->{idle} = time();
     # TODO: Need target support (recursion) here
     my @splitPacket = split(" ", $msg);
     my $partChannel = $splitPacket[1];
@@ -238,7 +236,6 @@ sub privmsg {
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask();
 
-    $client->{idle} = time();
     my @splitPacket = split(" ", $msg);
     my $target = $splitPacket[1];
     @splitPacket = split(":", $msg);
