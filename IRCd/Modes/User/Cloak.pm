@@ -39,7 +39,20 @@ sub grant {
     my $mask = $client->getMask();
 
     # Generate a cloak
-    $client->{cloak} = IRCd::Cloak::unreal_cloak($client->{ip}, $ircd->{cloak_keys}[0], $ircd->{cloak_keys}[1], $ircd->{cloak_keys}[2]);
+    # if the IP matches the host, then use IP cloaking, otherwise fall back to DNS
+    if ($client->{ip} eq $client->{host}) {
+        # detect v6, otherwise fall back to v4
+        if (index($client->{ip}, ":")) {
+            $client->{cloak} = IRCd::Cloak::unreal_cloak_v6($client->{ip}, $ircd->{cloak_keys}[0], $ircd->{cloak_keys}[1], $ircd->{cloak_keys}[2]);
+        } else {
+            $client->{cloak} = IRCd::Cloak::unreal_cloak_v4($client->{ip}, $ircd->{cloak_keys}[0], $ircd->{cloak_keys}[1], $ircd->{cloak_keys}[2]);
+        }
+    } else {
+            # The DNS version of the function needs hidden_host as well
+            # XXX: should this be ircd->hidden_host?
+            $client->{cloak} = IRCd::Cloak::unreal_cloak_dns($client->{host}, $config->{hidden_host}, $ircd->{cloak_keys}[0], $ircd->{cloak_keys}[1], $ircd->{cloak_keys}[2]);
+    }
+
     $self->{client}->{log}->debug("[$client->{nick}] setting +x");
     
     $self->{client}->write(":$ircd->{host} " . IRCd::Constants::RPL_HOSTHIDDEN . " $client->{nick} $client->{cloak} :is now your displayed host\r\n");

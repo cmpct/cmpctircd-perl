@@ -7,20 +7,20 @@ use String::Scanf;
 
 package IRCd::Cloak;
 
-sub unreal_cloak {
+sub unreal_cloak_v4 {
     my $ip                   = shift;
     my ($key1, $key2, $key3) = @_;
     my $buffer               = "";
 
-	# https://github.com/unrealircd/unrealircd/blob/ae0fc98a04fce80e5b940617b9b3f5e43daa2dba/src/modules/cloak.c#L263
-	# Output: ALPHA.BETA.GAMMA.IP
-	# ALPHA is unique for a.b.c.d
-	# BETA  is unique for a.b.c.*
-	# GAMMA is unique for a.b.*
-	# We cloak like this:
-	# ALPHA = downsample(md5(md5("KEY2:A.B.C.D:KEY3")+"KEY1"));
-	# BETA  = downsample(md5(md5("KEY3:A.B.C:KEY1")+"KEY2"));
-	# GAMMA = downsample(md5(md5("KEY1:A.B:KEY2")+"KEY3"));
+    # https://github.com/unrealircd/unrealircd/blob/ae0fc98a04fce80e5b940617b9b3f5e43daa2dba/src/modules/cloak.c#L263
+    # Output: ALPHA.BETA.GAMMA.IP
+    # ALPHA is unique for a.b.c.d
+    # BETA  is unique for a.b.c.*
+    # GAMMA is unique for a.b.*
+    # We cloak like this:
+    # ALPHA = downsample(md5(md5("KEY2:A.B.C.D:KEY3")+"KEY1"));
+    # BETA  = downsample(md5(md5("KEY3:A.B.C:KEY1")+"KEY2"));
+    # GAMMA = downsample(md5(md5("KEY1:A.B:KEY2")+"KEY3"));
     
     # %u => unsigned integer
     my ($alpha, $beta, $gamma);
@@ -32,13 +32,13 @@ sub unreal_cloak {
     $buffer = Digest::MD5::md5($buffer . $key1);
     $alpha  = IRCd::Cloak::downsample($buffer);
 
-	## Beta ##
+    ## Beta ##
     $buffer = "$key3:$a:$b:$c:$key1";
     $buffer = Digest::MD5::md5($buffer);
     $buffer = Digest::MD5::md5($buffer . $key2);
     $beta   = IRCd::Cloak::downsample($buffer);
 
-	## Gamma ##
+    ## Gamma ##
     $buffer = "$key1:$a:$b:$key2";
     $buffer = Digest::MD5::md5($buffer);
     $buffer = Digest::MD5::md5($buffer . $key3);
@@ -48,6 +48,60 @@ sub unreal_cloak {
     return sprintf("%X.%X.%X.IP", $alpha, $beta, $gamma);
 }
 
+sub unreal_cloak_v6 {
+    my $ip                   = shift;
+    my ($key1, $key2, $key3) = @_;
+    my $buffer               = "";
+
+    # %u => unsigned integer
+    my ($alpha, $beta, $gamma);
+    my ($a, $b, $c, $d, $e, $f, $g, $h) = String::Scanf::sscanf("%x:%x:%x:%x:%x:%x:%x:%x", $ip);
+
+    ## Alpha ##
+    $buffer = "$key2:$ip:$key3";
+    $buffer = Digest::MD5::md5($buffer);
+    $buffer = Digest::MD5::md5($buffer . $key1);
+    $alpha  = IRCd::Cloak::downsample($buffer);
+
+    ## Beta ##
+    $buffer = "$key3:$a:$b:$c:$d:$e:$f:$g:$key1";
+    $buffer = Digest::MD5::md5($buffer);
+    $buffer = Digest::MD5::md5($buffer . $key2);
+    $beta   = IRCd::Cloak::downsample($buffer);
+
+    ## Gamma ##
+    $buffer = "$key1:$a:$b:$c:$d:$key2";
+    $buffer = Digest::MD5::md5($buffer);
+    $buffer = Digest::MD5::md5($buffer . $key3);
+    $gamma  = IRCd::Cloak::downsample($buffer);
+
+    # %X => Hex
+    return sprintf("%X.%X.%X.IP", $alpha, $beta, $gamma);
+}
+
+sub unreal_cloak_dns {
+    my $ip                   = shift;
+    my $hidden_host          = shift;
+    my ($key1, $key2, $key3) = @_;
+    my $buffer               = "";
+
+    my $alpha;
+
+    $buffer = "$key1:$ip:$key2";
+    $buffer = Digest::MD5::md5($buffer);
+    $buffer = Digest::MD5::md5($buffer . $key3);
+    $alpha  = IRCd::Cloak::downsample($buffer);
+
+    # We find the first dot to truncate at. If we don't find one, 0 will do.
+    if ($ip =~ /\.[A-Za-z]/g) {
+        my $start = $-[0] + 1;
+        return sprintf("%s-%X.%s", $hidden_host, $alpha, substr($ip, $start));
+    } else {
+        return sprintf("%s-%X", $hidden_host, $alpha);
+    }
+}
+
+# Converts a 128-bit MD5 into 32-bits
 sub downsample {
     my @buffer = unpack("W*", shift);
 

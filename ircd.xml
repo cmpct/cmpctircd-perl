@@ -14,6 +14,7 @@
         <key>sKky8sCIhnlaXhkYfJXZRLED8</key>
         <key>iZS9JmBKRlJpwOdudB5u2I0vo</key>
         <key>aDnciDOQyYpmS7ldWCvxTXynS</key>
+	<hiddenhost>cmpct</hiddenhost>
     </cloak>
     <sockets>
         <!-- Can be one of: epoll, select -->
