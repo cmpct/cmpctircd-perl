@@ -28,9 +28,9 @@ sub fire {
 sub read {
     my $self   = shift;
     my $socket = shift;
-    return if(!$self->{resolver}->bgisready($socket));
+    return 0  if(!$self->{resolver}->bgisready($socket));
     my $packet = $self->{resolver}->bgread($socket);
-    return if(!$packet);
+    return  0 if(!$packet);
     return -1 if($self->{resolver}->errorstring ne "NOERROR");
     my $resolvedHost = join('.', $packet->{answer}->[0]->{ptrdname}->{label}->@*);
     return $resolvedHost;

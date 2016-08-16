@@ -270,8 +270,8 @@ sub mode {
     my $type   = "";
     my %argmodes = ();
 
-    $type   = "user" if($split[1] !~ /^#/);
-    $type   = "chan" if($split[1] =~ /^#/);
+    $type   = "user"    if($split[1] !~ /^#/);
+    $type   = "channel" if($split[1] =~ /^#/);
     if($type eq "user") {
         %argmodes = ();
         foreach(values($client->{modes}->%*)) {

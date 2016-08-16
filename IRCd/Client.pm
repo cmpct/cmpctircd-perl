@@ -89,6 +89,7 @@ sub parse {
         if(!$self->{registered} and !$registrationCommands{lc($splitPacket[0])}) {
             $self->{log}->debug("[$self->{nick}] User sent command [$splitPacket[0]] pre-registration");
             $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTREGISTERED . " * :You have not registered\r\n");
+            return;
         }
         # If we're registered and not waiting on a PONG/DNS query...
         $handlerRef->($self, $msg);
@@ -167,6 +168,7 @@ sub checkResolve {
         $self->{log}->debug("[$self->{nick}] Query for [$self->{ip}] failed");
         $self->{host} = $self->{ip};
         $sock->write(":$ircd->{host} NOTICE * :*** Could not resolve your hostname: Domain name not found; using your IP address ($self->{ip}) instead.\r\n");
+        $self->sendWelcome() if($self->{ident} and $self->{nick} and !$self->{registered});
     }
 }
 
