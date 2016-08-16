@@ -23,6 +23,7 @@ sub new {
         'lastPong'       => $args{lastPong}       // time(),
         'waitingForPong' => $args{waitingForPong} // 0,
         'registered'     => $args{registered}     // 0,
+        'signonTime'     => $args{signonTime}     // time(),
 
         'server'         => $args{server}         // undef,
         'nick'           => $args{nick}           // "",

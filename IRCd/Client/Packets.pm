@@ -163,7 +163,6 @@ sub whois {
     my $targetIdent    = $targetClient->{ident};
     my $targetRealName = $targetClient->{realname};
     my $targetHost     = $targetClient->{host} // $targetClient->{ip};
-    # XXX: Claims to be online since 1970.
     my $targetIdle     = time() - $client->{idle};
     # TODO: RPL_WHOISOPERATOR => 313,
     # TODO: ircops will see '.. actually connected from'
@@ -182,7 +181,7 @@ sub whois {
     }
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISCHANNELS . " $client->{nick} $targetNick :" . CORE::join(' ', @presentChannels) . "\r\n") if @presentChannels >= 1;
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISSERVER   . " $client->{nick} $targetNick $client->{server} :$ircd->{desc}\r\n");
-    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISIDLE     . " $client->{nick} $targetNick $targetIdle :seconds idle\r\n");
+    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISIDLE     . " $client->{nick} $targetNick $targetIdle $client->{signonTime} :seconds idle, signon time\r\n");
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHOIS    . " $client->{nick} $targetNick :End of /WHOIS list\r\n");
 }
 sub quit {
