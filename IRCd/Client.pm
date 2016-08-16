@@ -18,7 +18,7 @@ sub new {
         'config'         => $args{config},
         'buffer'         => '',
 
-        'idle'           => $args{idle}           // 0,
+        'idle'           => $args{idle}           // time(),
         'lastPing'       => $args{lastPing}       // 0,
         'lastPong'       => $args{lastPong}       // time(),
         'waitingForPong' => $args{waitingForPong} // 0,
