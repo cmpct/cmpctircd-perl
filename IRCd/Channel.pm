@@ -76,7 +76,7 @@ sub quit {
     my $msg    = shift // "Leaving.";
     if($self->{clients}->{$client->{nick}} // "") {
         # We should be in the room b/c of the caller but let's be safe.
-        $client->{log}->info("[$self->{name}] Removed (QUIT) a client (nick: $client->{name}) from channel");
+        $client->{log}->info("[$self->{name}] Removed (QUIT) a client (nick: $client->{nick}) from channel");
         $self->stripModes($client, 0);
         $self->sendToRoom($client, ":$mask QUIT :$msg", 0);
         delete $self->{clients}->{$client->{nick}};
@@ -92,7 +92,7 @@ sub part {
     my $msg    = shift;
     my $forCloak = shift // 0;
     if($self->{clients}->{$client->{nick}}) {
-        $client->{log}->info("[$self->{name}] Removed (PART) a client (nick: $client->{name}) from channel");
+        $client->{log}->info("[$self->{name}] Removed (PART) a client (nick: $client->{nick}) from channel");
         $self->sendToRoom($client, ":$mask PART $self->{name} :$msg");
         $self->stripModes($client, 0) if(!$forCloak);
         delete $self->{clients}->{$client->{nick}};
@@ -100,11 +100,12 @@ sub part {
         $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
     }
     my $chanSize = keys($self->{clients}->%*);
-    if($chanSize == 0) {
+    if($chanSize == 0 and !$forCloak) {
+	# Don't destroy the room if we're leaving for a 'changing host' message
+	# It'll result in a crash because of the ->addClient on a dead Channel object
         $client->{log}->info("[$self->{name}] Deleting the room");
         delete $ircd->{channels}->{$self->{name}};
     }
-    # If we get here, they weren't in the room.
 }
 
 sub kick {
