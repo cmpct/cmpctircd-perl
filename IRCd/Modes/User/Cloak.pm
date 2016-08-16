@@ -42,7 +42,7 @@ sub grant {
     # if the IP matches the host, then use IP cloaking, otherwise fall back to DNS
     if ($client->{ip} eq $client->{host}) {
         # detect v6, otherwise fall back to v4
-        if (index($client->{ip}, ":")) {
+        if (index($client->{ip}, ":") != -1) {
             $client->{cloak} = IRCd::Cloak::unreal_cloak_v6($client->{ip}, $ircd->{cloak_keys}[0], $ircd->{cloak_keys}[1], $ircd->{cloak_keys}[2]);
         } else {
             $client->{cloak} = IRCd::Cloak::unreal_cloak_v4($client->{ip}, $ircd->{cloak_keys}[0], $ircd->{cloak_keys}[1], $ircd->{cloak_keys}[2]);
