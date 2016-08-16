@@ -129,6 +129,12 @@ sub sendWelcome {
         $self->{log}->debug("[$self->{nick}] Announcing new client to [$server->{name}]");
         $server->syncUser($self->{nick});
     }
+
+    # Set initial modes
+    foreach (values($ircd->{config}->{usermodes}->%*)) {
+        my $mode = $_->{name};
+        $self->{modes}->{$mode}->grant($self,  "+", $mode,  $_->{param} // undef, 0, 1);
+    }
 }
 
 sub checkTimeout {
