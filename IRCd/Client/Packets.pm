@@ -107,7 +107,7 @@ sub join {
         $ircd->{channels}->{$channelInput}->addClient($client);
     } else {
         $client->{log}->info("[$channelInput] Creating channel..\r\n");
-        my $channel = IRCd::Channel->new($channelInput);
+        my $channel = IRCd::Channel->new($channelInput, $client, $ircd);
         $channel->addClient($client);
         $ircd->{channels}->{$channelInput} = $channel;
     }
@@ -287,8 +287,8 @@ sub mode {
             }
             $client->{log}->debug("[$client->{nick}] MODE: $currentModifier$_");
             if($client->{modes}->{$_}) {
-                $client->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, 0, 1)  if $currentModifier eq "+";
-                $client->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, 0, 1)  if $currentModifier eq "-";
+                $client->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, 0)  if $currentModifier eq "+";
+                $client->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, 0)  if $currentModifier eq "-";
                 if($argmodes{$_}) {
                     $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_ $parameters[$const]");
                     $const++ if $argmodes{$_};

@@ -21,6 +21,12 @@ sub new {
         'topic'     => undef,
     };
     bless $self, $class;
+
+    # used for modes
+    my $client = shift;
+    my $ircd = shift;
+
+    # TODO: iterate over all possible modes
     $self->{modes}->{o} = IRCd::Modes::Channel::Op->new($self);
     $self->{modes}->{l} = IRCd::Modes::Channel::Limit->new($self);
     foreach(keys($self->{modes}->%*)) {
@@ -29,6 +35,14 @@ sub new {
         $self->{privilege}->{$level} = $self->{modes}->{$_}->symbol() if($level ne "" and $symbol ne "");
     }
     $self->{topic} = IRCd::Channel::Topic->new("", $self);
+
+    # Set initial modes
+    foreach (values($ircd->{config}->{channelmodes}->%*)) {
+        my $mode = $_->{name};
+        # we need to pass the client, otherwise the mode setting won't have a user to ref to
+        $self->{modes}->{$mode}->grant($client,  "+", $mode,  $_->{param} // undef, 1);
+    }
+
     return $self;
 }
 
@@ -39,7 +53,8 @@ sub addClient {
     my $mask     = $client->getMask(1);
 
     return if($self->resides($client));
-    if($self->size() >= $self->{modes}->{l}->get()) {
+    my $limit = $self->{modes}->{l}->get();
+    if($self->size() >= $limit and $limit > 0) {
         # Channel is full
         # XXX: Does Pidgin recognise this?
         $client->{log}->info("[$self->{name}] Channel is full");

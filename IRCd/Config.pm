@@ -43,6 +43,7 @@ sub parse {
         $self->{host}        = $xmlRef->{'ircd'}->{'host'};
         $self->{network}     = $xmlRef->{'ircd'}->{'network'};
         $self->{desc}        = $xmlRef->{'ircd'}->{'desc'};
+        $self->{channelmodes} = $xmlRef->{'channelmodes'};
         $self->{usermodes}   = $xmlRef->{'usermodes'};
         $self->{cloak_keys}  = $xmlRef->{'cloak'}->{'key'};
         $self->{hidden_host} = $xmlRef->{'cloak'}->{'hiddenhost'};

@@ -14,7 +14,7 @@ sub new {
         'affects'  => {},
         'channel'  => shift,
 
-        'limit'    => 50,
+        'limit'    => 0,
         # Can it be set on a user, or just a channel at large?
         'chanwide' => 1,
         'hasparam' => 1,
@@ -34,7 +34,7 @@ sub grant {
     my $args     = shift // $self->{limit};
     my $force    = shift // 0;
 
-    if(!$self->{channel}->{clients}->{$client->{nick}}) {
+    if(!$force and !$self->{channel}->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
         $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel\r\n");
         return;

@@ -8,11 +8,18 @@
         <ip>127.0.0.1</ip>
         <port>6667</port>
     </server>
+    <channelmodes>
+        <!-- limit mode -->
+        <mode>
+            <name>l</name>
+            <param>0</param> <!-- leave empty, if you don't need it -->
+        </mode>
+    </channelmodes>
     <usermodes>
         <!-- cloak mode -->
         <mode>
             <name>x</name>
-            <param></param> <!-- leave empty, if you dont need it -->
+            <param></param> <!-- leave empty, if you don't need it -->
         </mode>
     </usermodes>
     <cloak>
