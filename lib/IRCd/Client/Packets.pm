@@ -114,8 +114,10 @@ sub join {
         $ircd->{channels}->{$channelInput}->addClient($client);
     } else {
         $client->{log}->info("[$channelInput] Creating channel..\r\n");
-        my $channel = IRCd::Channel->new($channelInput, $client, $ircd);
+        my $channel = IRCd::Channel->new($channelInput);
         $channel->addClient($client);
+        # some modes won't apply without the user in the channel, so apply after adding client
+        $channel->initModes($client, $ircd);
         $ircd->{channels}->{$channelInput} = $channel;
     }
 

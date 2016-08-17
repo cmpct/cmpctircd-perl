@@ -25,10 +25,6 @@ sub new {
     };
     bless $self, $class;
 
-    # used for modes
-    my $client = shift;
-    my $ircd = shift;
-
     # TODO: iterate over all possible modes
     $self->{modes}->{b} = IRCd::Modes::Channel::Ban->new($self);
     $self->{modes}->{l} = IRCd::Modes::Channel::Limit->new($self);
@@ -42,6 +38,16 @@ sub new {
     }
     $self->{topic} = IRCd::Channel::Topic->new("", $self);
 
+    return $self;
+}
+
+# This needs to be done after the client has been added, otherwise modes might not set properly
+sub initModes {
+    # used for modes
+    my $self = shift;
+    my $client = shift;
+    my $ircd = shift;
+
     # Set initial modes
     foreach my $chanModes (values($ircd->{config}->{channelmodes}->%*)) {
         foreach(keys($chanModes->%*)) {
@@ -51,8 +57,6 @@ sub new {
             $self->{modes}->{$name}->grant($client,  "+", $name, $param // undef, 1);
         }
     }
-
-    return $self;
 }
 
 sub addClient {
