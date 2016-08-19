@@ -9,6 +9,7 @@ use IRCd::Channel::Topic;
 use IRCd::Modes::Channel::Ban;
 use IRCd::Modes::Channel::Limit;
 use IRCd::Modes::Channel::Op;
+use IRCd::Modes::Channel::Topic;
 
 package IRCd::Channel;
 
@@ -31,6 +32,7 @@ sub new {
     $self->{modes}->{b} = IRCd::Modes::Channel::Ban->new($self);
     $self->{modes}->{l} = IRCd::Modes::Channel::Limit->new($self);
     $self->{modes}->{o} = IRCd::Modes::Channel::Op->new($self);
+    $self->{modes}->{t} = IRCd::Modes::Channel::Topic->new($self);
     foreach(keys($self->{modes}->%*)) {
         my $level  = $self->{modes}->{$_}->level();
         my $symbol = $self->{modes}->{$_}->symbol();
@@ -169,9 +171,11 @@ sub topic {
         $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
         return;
     }
-    if($self->getStatus($client) < 3) {
-        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
-        return;
+    if($self->{modes}->{t}->get()) {
+        if($self->getStatus($client) < 3) {
+            $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
+            return;
+        }
     }
     # XXX: +t/-t
     # XXX: RPL_NOTOPIC is a thing too
@@ -225,8 +229,12 @@ sub getModeStrings {
         if($chanwide) {
             my $provides = $self->{modes}->{$_}->{provides};
             my $value    = $self->{modes}->{$_}->get();
-            $characters .= $provides;
-            $args       .= $value . " ";
+            if($value > 0 and $value ne '') {
+                $characters .= $provides;
+                if($self->{modes}->{$_}->{hasparam}) {
+                    $args       .= $value . " ";
+                }
+            }
         }
     }
     return {
