@@ -38,6 +38,7 @@ sub grant {
     my $targetClient = undef;
     my $mask = $client->getMask();
 
+    return if($self->{affects}->{$client});
     # Generate a cloak
     # if the IP matches the host, then use IP cloaking, otherwise fall back to DNS
     if ($client->{ip} eq $client->{host}) {
@@ -48,9 +49,9 @@ sub grant {
             $client->{cloak} = IRCd::Cloak::unreal_cloak_v4($client->{ip}, $ircd->{cloak_keys}[0], $ircd->{cloak_keys}[1], $ircd->{cloak_keys}[2]);
         }
     } else {
-            # The DNS version of the function needs hidden_host as well
-            # XXX: should this be ircd->hidden_host?
-            $client->{cloak} = IRCd::Cloak::unreal_cloak_dns($client->{host}, $config->{hidden_host}, $ircd->{cloak_keys}[0], $ircd->{cloak_keys}[1], $ircd->{cloak_keys}[2]);
+        # The DNS version of the function needs hidden_host as well
+        # XXX: should this be ircd->hidden_host?
+        $client->{cloak} = IRCd::Cloak::unreal_cloak_dns($client->{host}, $config->{hidden_host}, $ircd->{cloak_keys}[0], $ircd->{cloak_keys}[1], $ircd->{cloak_keys}[2]);
     }
 
     $self->{client}->{log}->debug("[$client->{nick}] setting +x");
@@ -78,6 +79,7 @@ sub revoke {
     my $announce = shift // 1;
     my $targetClient = undef;
 
+    return if(!$self->{affects}->{$client});
     my $mask = $client->getMask();
     $self->{client}->{log}->debug("[$client->{nick}] unsetting +x");
     $client->{cloak} = $client->{host};

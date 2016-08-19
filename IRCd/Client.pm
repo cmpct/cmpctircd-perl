@@ -41,7 +41,6 @@ sub new {
     };
     bless $self, $class;
     $self->{log} = $self->{ircd}->{log};
-    # TODO: Default usermodes
     $self->{modes}->{x} = IRCd::Modes::User::Cloak->new($self);
     return $self;
 }
@@ -68,33 +67,40 @@ sub parse {
     # TODO: Modular system
     # Check if function exists, and if so, call it
     my %registrationCommands = (
-        'user'   => 1,
-        'nick'   => 1,
-        'pong'   => 1,
-        #'cap'   => 1,
-        #'pass'  => 1,
+        'USER'   => 1,
+        'NICK'   => 1,
+        'PONG'   => 1,
+        #'CAP'   => 1,
+        #'PASS'  => 1,
     );
     my $requirePong = 0;
     $requirePong = 1 if ($ircd->{config}->{requirepong} and $self->{waitingForPong});
     if (my $handlerRef = IRCd::Client::Packets->can(lc($splitPacket[0]))) {
         # TODO: Registration Timeout error, rather than just ping timeout
-        if($ircd->{dns} and $self->{query} and !$self->{host} and !$registrationCommands{lc($splitPacket[0])}) {
+        if($ircd->{dns} and $self->{query} and !$self->{host} and !$registrationCommands{uc($splitPacket[0])}) {
             $self->{log}->debug("[$self->{nick}] Waiting to resolve host, blocking");
             return;
         }
-        if($requirePong and !$registrationCommands{lc($splitPacket[0])}) {
+        if($requirePong and !$registrationCommands{uc($splitPacket[0])}) {
             $self->{log}->debug("[$self->{nick}] User attempted to register without PONG");
             $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTREGISTERED . " * :You have not registered\r\n");
             return;
         }
-        if(!$self->{registered} and !$registrationCommands{lc($splitPacket[0])}) {
+        if(!$self->{registered} and !$registrationCommands{uc($splitPacket[0])}) {
             $self->{log}->debug("[$self->{nick}] User sent command [$splitPacket[0]] pre-registration");
             $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTREGISTERED . " * :You have not registered\r\n");
             return;
         }
         # If we're registered and not waiting on a PONG/DNS query...
         # For the sake of simplicity, any non-ping action should discount idling
-        if (lc($splitPacket[0]) ne "pong") {
+        my %idleCommands = (
+            'PONG'  => 1,
+            'PING'  => 1,
+            'WHOIS' => 1,
+            'WHO'   => 1,
+            'NAMES' => 1
+        );
+        if (!$idleCommands{uc($splitPacket[0])}) {
             $self->{idle} = time();
         }
         $handlerRef->($self, $msg);

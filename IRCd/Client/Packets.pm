@@ -32,8 +32,15 @@ sub nick {
             return;
         }
     }
-    delete $ircd->{clients}->{nick}->{$client->{nick}} if $client->{nick} ne "";
     # TODO: Check for invalid nick...
+    foreach(values($ircd->{channels}->%*)) {
+        if($_->{clients}->{$client->{nick}}) {
+            $_->sendToRoom($client, ":$mask NICK :$splitPacket[1]");
+            $_->{clients}->{$splitPacket[1]} = $client;
+            delete $_->{clients}->{$client->{nick}};
+        }
+    }
+    delete $ircd->{clients}->{nick}->{$client->{nick}} if $client->{nick} ne "";
     $client->{nick} = $splitPacket[1];
     $socket->write(":$mask NICK :$client->{nick}\r\n");
     $client->{log}->debug("NICK: $client->{nick}");
@@ -59,8 +66,8 @@ sub user {
     @splitPacket = split(":", $msg);
     $client->{realname} = $splitPacket[1];
 
-    $client->{log}->debug("IDENT: $client->{ident}");
-    $client->{log}->debug("REAL:  $client->{realname}");
+    $client->{log}->debug("[$client->{nick}] IDENT: $client->{ident}");
+    $client->{log}->debug("[$client->{nick}] REAL:  $client->{realname}");
 
     $client->sendWelcome() if($client->{nick} and !$client->{registered} and $client->{host});
 }
@@ -237,7 +244,7 @@ sub privmsg {
 
     my @splitPacket = split(" ", $msg);
     my $target = $splitPacket[1];
-    @splitPacket = split(":", $msg);
+    @splitPacket = split(":", $msg, 2);
     my $realmsg = $splitPacket[1];
 
     # TODO: Validation, no such channel
