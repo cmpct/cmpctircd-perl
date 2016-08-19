@@ -319,6 +319,16 @@ sub mode {
         my @parameters      = split(' ', $split[3]);
         my $const           = 0;
         my $currentModifier = "";
+        # Special case for just +b (ban list)
+        if($split[2] eq '+b' and $split[3] eq '') {
+            $client->{log}->debug("[$client->{nick}] Requested +b list for $split[1]");
+            foreach(values($channel->{modes}->{b}->list()->%*)) {
+                my $banMask = $_->mask();
+                $client->write(":$ircd->{host} " . IRCd::Constants::RPL_BANLIST .  " $client->{nick} $channel->{name} $banMask $_->{setter} $_->{time}");
+            }
+            $client->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFBANLIST . " $client->{nick} $channel->{name} :End of channel ban list");
+            return;
+        }
         foreach(@modes) {
             if($_ eq "+") {
                 $currentModifier = "+";

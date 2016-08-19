@@ -28,6 +28,8 @@ use constant {
     RPL_WHOREPLY      => 352,
     RPL_NAMREPLY      => 353,
     RPL_ENDOFNAMES    => 366,
+    RPL_BANLIST       => 367,
+    RPL_ENDOFBANLIST  => 368,
     RPL_MOTD          => 372,
     RPL_MOTDSTART     => 375,
     RPL_ENDOFMOTD     => 376,
@@ -37,6 +39,7 @@ use constant {
     # Errors
     ERR_NOSUCHNICK       => 401,
     ERR_NOSUCHCHANNEL    => 403,
+    ERR_CANNOTSENDTOCHAN => 404,
     ERR_NICKNAMEINUSE    => 433,
     ERR_USERNOTINCHANNEL => 441,
     ERR_NOTONCHANNEL     => 442,
@@ -44,6 +47,7 @@ use constant {
     ERR_NOTREGISTERED    => 451,
     ERR_NEEDMOREPARAMS   => 461,
     ERR_CHANNELISFULL    => 471,
+    ERR_BANNEDFROMCHAN   => 474,
     ERR_CHANOPRIVSNEEDED => 482,
 };
 

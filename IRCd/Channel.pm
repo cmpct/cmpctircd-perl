@@ -6,8 +6,9 @@ use feature 'postderef';
 
 use IRCd::Constants;
 use IRCd::Channel::Topic;
-use IRCd::Modes::Channel::Op;
+use IRCd::Modes::Channel::Ban;
 use IRCd::Modes::Channel::Limit;
+use IRCd::Modes::Channel::Op;
 
 package IRCd::Channel;
 
@@ -27,8 +28,9 @@ sub new {
     my $ircd = shift;
 
     # TODO: iterate over all possible modes
-    $self->{modes}->{o} = IRCd::Modes::Channel::Op->new($self);
+    $self->{modes}->{b} = IRCd::Modes::Channel::Ban->new($self);
     $self->{modes}->{l} = IRCd::Modes::Channel::Limit->new($self);
+    $self->{modes}->{o} = IRCd::Modes::Channel::Op->new($self);
     foreach(keys($self->{modes}->%*)) {
         my $level  = $self->{modes}->{$_}->level();
         my $symbol = $self->{modes}->{$_}->symbol();
@@ -58,7 +60,12 @@ sub addClient {
         # Channel is full
         # XXX: Does Pidgin recognise this?
         $client->{log}->info("[$self->{name}] Channel is full");
-        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANNELISFULL . " $client->{nick} $self->{name} :Cannot join channel (+l)\r\n");
+        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANNELISFULL  . " $client->{nick} $self->{name} :Cannot join channel (+l)\r\n");
+        return;
+    }
+    if($self->{modes}->{b}->has($client)) {
+        $client->{log}->info("[$self->{name}] User (nick: $client->{nick}) is banned from the channel");
+        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_BANNEDFROMCHAN . " $client->{nick} $self->{name} :Cannot join channel (+b)\r\n");
         return;
     }
     $self->{clients}->{$client->{nick}} = $client;
@@ -93,7 +100,7 @@ sub quit {
         # We should be in the room b/c of the caller but let's be safe.
         $client->{log}->info("[$self->{name}] Removed (QUIT) a client (nick: $client->{nick}) from channel");
         $self->stripModes($client, 0);
-        $self->sendToRoom($client, ":$mask QUIT :$msg", 0);
+        $self->sendToRoom($client, ":$mask QUIT :$msg", 0, 1);
         delete $self->{clients}->{$client->{nick}};
         return;
     }
@@ -108,7 +115,7 @@ sub part {
     my $forCloak = shift // 0;
     if($self->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{name}] Removed (PART) a client (nick: $client->{nick}) from channel");
-        $self->sendToRoom($client, ":$mask PART $self->{name} :$msg");
+        $self->sendToRoom($client, ":$mask PART $self->{name} :$msg", 0, 1);
         $self->stripModes($client, 0) if(!$forCloak);
         delete $self->{clients}->{$client->{nick}};
     } else {
@@ -208,22 +215,6 @@ sub stripModes {
         $self->{modes}->{$_}->revoke($client, undef, undef, undef, 1, $announce) if($self->{modes}->{$_}->has($client));
     }
 }
-
-###        ###
-###  Misc  ###
-###        ###
-sub size {
-    my $self = shift;
-    return keys($self->{clients}->%*);
-}
-sub resides {
-    my $self   = shift;
-    my $client = shift;
-    my $mask   = $client->getMask();
-    my $msg    = shift;
-    return 1 if ($self->{clients}->{$client->{nick}});
-    return 0;
-}
 sub getModeStrings {
     my $self        = shift;
     my $characters  = shift // "+";
@@ -243,12 +234,37 @@ sub getModeStrings {
         'args'       => $args,
     };
 }
+
+###        ###
+###  Misc  ###
+###        ###
+sub size {
+    my $self = shift;
+    return keys($self->{clients}->%*);
+}
+sub resides {
+    my $self   = shift;
+    my $client = shift;
+    my $mask   = $client->getMask();
+    my $msg    = shift;
+    return 1 if ($self->{clients}->{$client->{nick}});
+    return 0;
+}
 sub sendToRoom {
     my $self   = shift;
     my $client = shift;
+    my $ircd   = $client->{ircd};
     my $msg    = shift;
     my $sendToSelf = shift // 1;
-
+    # $force is needed for banned QUITs/PARTs, etc
+    # TODO: Create a ->privmsg and ->notice for IRCd::Channel, alleviating the need for
+    # sendToRoom to handle so many of these cases
+    my $force  = shift // 0;
+    if($self->{modes}->{b}->has($client) and $self->getStatus($client) < $self->{modes}->{o}->level()) {
+        $client->{log}->info("[$self->{name}] User (nick: $client->{nick}) is banned from the channel");
+        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CANNOTSENDTOCHAN . " $client->{nick} $self->{name} :Cannot send to channel (you're banned)\r\n");
+        return;
+    }
     foreach(values($self->{clients}->%*)) {
         next if(($_ eq $client) and !$sendToSelf);
         if($msg =~ /\r\n/) {
