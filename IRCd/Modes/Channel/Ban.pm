@@ -2,7 +2,8 @@
 use strict;
 use warnings;
 use diagnostics;
-use Data::Dumper; # REMOVE
+no warnings "experimental::postderef"; # for older perls (<5.24)
+use feature 'postderef';
 
 use IRCd::Ban;
 package IRCd::Modes::Channel::Ban;

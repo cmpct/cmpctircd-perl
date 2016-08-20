@@ -8,6 +8,7 @@ use IRCd::Constants;
 use IRCd::Channel::Topic;
 use IRCd::Modes::Channel::Ban;
 use IRCd::Modes::Channel::Limit;
+use IRCd::Modes::Channel::NoExternal;
 use IRCd::Modes::Channel::Op;
 use IRCd::Modes::Channel::Topic;
 
@@ -31,6 +32,7 @@ sub new {
     # TODO: iterate over all possible modes
     $self->{modes}->{b} = IRCd::Modes::Channel::Ban->new($self);
     $self->{modes}->{l} = IRCd::Modes::Channel::Limit->new($self);
+    $self->{modes}->{n} = IRCd::Modes::Channel::NoExternal->new($self);
     $self->{modes}->{o} = IRCd::Modes::Channel::Op->new($self);
     $self->{modes}->{t} = IRCd::Modes::Channel::Topic->new($self);
     foreach(keys($self->{modes}->%*)) {
@@ -41,10 +43,13 @@ sub new {
     $self->{topic} = IRCd::Channel::Topic->new("", $self);
 
     # Set initial modes
-    foreach (values($ircd->{config}->{channelmodes}->%*)) {
-        my $mode = $_->{name};
-        # we need to pass the client, otherwise the mode setting won't have a user to ref to
-        $self->{modes}->{$mode}->grant($client,  "+", $mode,  $_->{param} // undef, 1);
+    foreach my $chanModes (values($ircd->{config}->{channelmodes}->%*)) {
+        foreach(keys($chanModes->%*)) {
+            my $name  = $_;
+            my $param = $chanModes->{$name}->{param};
+            # we need to pass the client, otherwise the mode setting won't have a user to ref to
+            $self->{modes}->{$name}->grant($client,  "+", $name, $param // undef, 1);
+        }
     }
 
     return $self;
@@ -125,8 +130,8 @@ sub part {
     }
     my $chanSize = keys($self->{clients}->%*);
     if($chanSize == 0 and !$forCloak) {
-	# Don't destroy the room if we're leaving for a 'changing host' message
-	# It'll result in a crash because of the ->addClient on a dead Channel object
+        # Don't destroy the room if we're leaving for a 'changing host' message
+        # It'll result in a crash because of the ->addClient on a dead Channel object
         $client->{log}->info("[$self->{name}] Deleting the room");
         delete $ircd->{channels}->{$self->{name}};
     }
@@ -269,8 +274,13 @@ sub sendToRoom {
     # sendToRoom to handle so many of these cases
     my $force  = shift // 0;
     if($self->{modes}->{b}->has($client) and $self->getStatus($client) < $self->{modes}->{o}->level()) {
-        $client->{log}->info("[$self->{name}] User (nick: $client->{nick}) is banned from the channel");
+        $client->{log}->info("[$self->{name}] User (nick: $client->{nick}) is banned from the channel $self->{name}");
         $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CANNOTSENDTOCHAN . " $client->{nick} $self->{name} :Cannot send to channel (you're banned)\r\n");
+        return;
+    }
+    if($self->{modes}->{n}->get() and !$self->{clients}->{$client->{nick}}) {
+        $client->{log}->info("[$self->{name}] User (nick: $client->{nick}) tried to externally message $self->{name}");
+        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CANNOTSENDTOCHAN . " $client->{nick} $self->{name} :Cannot send to channel (no external messages)\r\n");
         return;
     }
     foreach(values($self->{clients}->%*)) {

@@ -14,6 +14,14 @@
             <name>l</name>
             <param>0</param> <!-- leave empty, if you don't need it -->
         </mode>
+        <mode>
+            <name>n</name>
+            <param></param>
+        </mode>
+        <mode>
+            <name>t</name>
+            <param></param>
+        </mode>
     </channelmodes>
     <usermodes>
         <!-- cloak mode -->
