@@ -62,6 +62,7 @@ sub grant {
 
     # Rejoin all of our channels
     foreach my $chan (keys($ircd->{channels}->%*)) {
+        next if(!$ircd->{channels}->{$chan}->resides($client));
         $ircd->{channels}->{$chan}->part($client, "Changing host", 1);
         $ircd->{channels}->{$chan}->addClient($client);
     }
@@ -89,6 +90,7 @@ sub revoke {
 
     # Rejoin all of our channels
     foreach my $chan (keys($ircd->{channels}->%*)) {
+        next if(!$ircd->{channels}->{$chan}->resides($client));
         $ircd->{channels}->{$chan}->part($client, "Changing host", 1);
         $ircd->{channels}->{$chan}->addClient($client);
     }
