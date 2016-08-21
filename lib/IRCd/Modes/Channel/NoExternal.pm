@@ -45,7 +45,7 @@ sub grant {
         $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator\r\n");
         return;
     }
-    my $mask = $client->getMask();
+    my $mask = $client->getMask(1);
     $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args");
     $self->{set} = 1;
 }
@@ -71,7 +71,7 @@ sub revoke {
         $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
         return;
     }
-    my $mask = $client->getMask();
+    my $mask = $client->getMask(1);
     $self->{set} = 0;
     $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args");
 }

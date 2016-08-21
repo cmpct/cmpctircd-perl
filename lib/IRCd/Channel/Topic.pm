@@ -22,7 +22,7 @@ sub set {
     my $socket   = $client->{socket}->{sock};
     my $config   = $client->{config};
     my $ircd     = $client->{ircd};
-    my $mask     = $client->getMask();
+    my $mask     = $client->getMask(1);
     my $topic    = shift;
     my $force    = shift // 0;
     my $announce = shift // 1;

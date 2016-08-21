@@ -45,7 +45,7 @@ sub grant {
         return;
     }
     # TODO: Only one arg of type integer
-    my $mask = $client->getMask();
+    my $mask = $client->getMask(1);
     if($self->{limit} eq $args) {
         # Is the same as before, ignore.
         return;
@@ -77,7 +77,7 @@ sub revoke {
         $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
         return;
     }
-    my $mask = $client->getMask();
+    my $mask = $client->getMask(1);
     # TODO: Should we check that their arg matches the current mode?
     # I don't think so.
     $self->{limit} = 0;

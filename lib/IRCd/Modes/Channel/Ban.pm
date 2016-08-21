@@ -44,7 +44,7 @@ sub grant {
         $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator\r\n");
         return;
     }
-    my $mask = $client->getMask();
+    my $mask = $client->getMask(1);
     my($nick, $user, $host) = ('*', '*', '*');
     # Infer characteristics of the ban based on the present characters
     # 'Fill in the blanks'
@@ -99,7 +99,7 @@ sub revoke {
         return;
     }
     my($nick, $user, $host) = ('*', '*', '*');
-    my $mask = $client->getMask();
+    my $mask = $client->getMask(1);
     my $banMask = $args;
     if($self->{bans}->{$banMask}) {
         $client->{log}->debug("[$self->{channel}->{name}] $client->{nick} unset a ban for $nick!$user\@$host");

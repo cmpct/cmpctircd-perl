@@ -122,7 +122,7 @@ sub part {
     my $forCloak = shift // 0;
     if($self->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{name}] Removed (PART) a client (nick: $client->{nick}) from channel");
-        $self->sendToRoom($client, ":$mask PART $self->{name} :$msg", 0, 1);
+        $self->sendToRoom($client, ":$mask PART $self->{name} :$msg", 1, 1);
         $self->stripModes($client, 0) if(!$forCloak);
         delete $self->{clients}->{$client->{nick}};
     } else {
@@ -141,7 +141,7 @@ sub kick {
     my $self         = shift;
     my $client       = shift;
     my $ircd         = $client->{ircd};
-    my $mask         = $client->getMask();
+    my $mask         = $client->getMask(1);
     my $targetUser   = shift;
     my $targetClient = shift;
     my $kickReason   = shift;
@@ -169,7 +169,7 @@ sub topic {
     my $self   = shift;
     my $client = shift;
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
     my $topic  = shift;
 
     if(!$self->{clients}->{$client->{nick}}) {
@@ -206,7 +206,7 @@ sub topic {
 sub getStatus {
     my $self   = shift;
     my $client = shift;
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
 
     my $highestLevel = 0;
     foreach(keys($self->{modes}->%*)) {
@@ -258,7 +258,7 @@ sub size {
 sub resides {
     my $self   = shift;
     my $client = shift;
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
     my $msg    = shift;
     return 1 if ($self->{clients}->{$client->{nick}});
     return 0;

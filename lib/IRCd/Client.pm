@@ -157,7 +157,7 @@ sub sendWelcome {
 sub checkTimeout {
     my $self   = shift;
     my $ircd   = $self->{ircd};
-    my $mask   = $self->getMask();
+    my $mask   = $self->getMask(1);
     my $period = $self->{lastPong} + $ircd->{pingtimeout};
     my $socket = $self->{socket}->{sock};
 
@@ -182,7 +182,7 @@ sub checkTimeout {
 sub checkResolve {
     my $self = shift;
     my $ircd = $self->{ircd};
-    my $mask = $self->getMask();
+    my $mask = $self->getMask(1);
     my $sock = $self->{socket}->{sock};
     my $answer = 0;
     
@@ -204,7 +204,7 @@ sub checkResolve {
 sub disconnect {
     my $self     = shift;
     my $ircd     = $self->{ircd};
-    my $mask     = $self->getMask();
+    my $mask     = $self->getMask(1);
     my $graceful = shift // 0;
     my $reason   = shift // "Leaving.";
     # Callers are expected to handle the graceful QUIT, or any other

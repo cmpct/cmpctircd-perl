@@ -36,7 +36,7 @@ sub grant {
     my $force    = shift // 0;
     my $announce = shift // 1;
     my $targetClient = undef;
-    my $mask = $client->getMask();
+    my $mask = $client->getMask(1);
 
     return if($self->{affects}->{$client});
     # Generate a cloak
@@ -80,7 +80,7 @@ sub revoke {
     my $targetClient = undef;
 
     return if(!$self->{affects}->{$client});
-    my $mask = $client->getMask();
+    my $mask = $client->getMask(0);
     $self->{client}->{log}->debug("[$client->{nick}] unsetting +x");
     $client->{cloak} = $client->{host};
     $self->{client}->write(":$ircd->{host} " . IRCd::Constants::RPL_HOSTHIDDEN . " $client->{nick} $client->{host} :is now your displayed host\r\n");

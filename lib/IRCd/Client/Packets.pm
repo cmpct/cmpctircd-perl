@@ -16,7 +16,7 @@ sub nick {
     my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
 
     my @splitPacket = split(" ", $msg);
     if(scalar(@splitPacket) < 2) {
@@ -54,7 +54,7 @@ sub user {
     my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
 
     my @splitPacket = split(" ", $msg);
 
@@ -77,7 +77,7 @@ sub join {
     my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
     my $recurs = shift // 0;
     my @splitPacket;
 
@@ -126,7 +126,7 @@ sub who {
     my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
 
     # XXX: We need to parse ',' and the rest of that
     # XXX: But forget it for now.
@@ -146,7 +146,7 @@ sub who {
     # https://bitbucket.org/pidgin/main/src/1cf07b94c6ca44814ad456de985947be66a391c8/libpurple/protocols/irc/msgs.c?at=default&fileviewer=file-view-default#msgs.c-942
     foreach(values($channel->{clients}->%*)) {
         my $user = $_->{ident};
-        my $host = $_->{ip};
+        my $host = $_->{cloak} if($_->{modes}->{x}->has($_));
         my $nick = $_->{nick};
         my $real = $_->{realname};
         # XXX: include '*' for ircop
@@ -161,7 +161,7 @@ sub whois {
     my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
     my @splitMessage = split(" ", $msg);
     my $target = $splitMessage[1];
     my $targetNick    = $splitMessage[1];
@@ -206,7 +206,7 @@ sub quit {
     my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
 
     my @splitPacket = split(" ", $msg);
     my $quitReason  = $splitPacket[1];
@@ -223,7 +223,7 @@ sub part {
     my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
 
     # TODO: Need target support (recursion) here
     my @splitPacket = split(" ", $msg);
@@ -268,7 +268,7 @@ sub privmsg {
     my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
 
     my @splitPacket = split(" ", $msg);
     my $target = $splitPacket[1];
@@ -300,7 +300,7 @@ sub mode {
     my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
     my @split  = split(" ", $msg, 4);
     my $type   = "";
     my %argmodes = ();
@@ -396,7 +396,7 @@ sub ping {
     my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
     # XXX: Is this right?
     $socket->write("PONG " . time() . "\r\n");
 }
@@ -406,7 +406,7 @@ sub pong {
     my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
 
     my @splitPacket = split(" ", $msg, 2);
     $splitPacket[1] =~ s/://;
@@ -423,7 +423,7 @@ sub topic {
     my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
 
     my @splitPacket  = split(" ", $msg);
     my $topicChannel = $splitPacket[1];
@@ -453,7 +453,7 @@ sub kick {
     my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
-    my $mask   = $client->getMask();
+    my $mask   = $client->getMask(1);
 
     # Validation of various sorts
     my @splitPacket   = split(" ", $msg);
