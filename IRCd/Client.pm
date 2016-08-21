@@ -112,11 +112,19 @@ sub parse {
 }
 
 sub sendWelcome {
-    my $self = shift;
-    my $ircd = $self->{ircd};
+    my $self        = shift;
+    my $ircd        = $self->{ircd};
+    my $create_time = $ircd->{create_time};
+    my $create_str  = sprintf("%s %u %u at %s", $create_time->month_abbr(),
+                        $create_time->day(), $create_time->year(),
+                        $create_time->hms);
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_WELCOME  . " $self->{nick} :Welcome to the $ircd->{network} IRC Network $self->{nick}!$self->{ident}\@$self->{ip}\r\n");
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_YOURHOST . " $self->{nick} :Your host is $ircd->{host}, running version $ircd->{version}\r\n");
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_CREATED  . " $self->{nick} :This server was created on 1/1/1970\r\n");
+    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_YOURHOST . " $self->{nick} :Your host is $ircd->{host}, running version cmpctircd-$ircd->{version}\r\n");
+    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_CREATED  . " $self->{nick} :This server was created $create_str\r\n");
+    # XXX: Generate the user/chan modes programatically
+    #$self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MYINFO   . " $self->{nick} $ircd->{host} cmpctircd-$ircd->{version} x ntlo\r\n");
+    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ISUPPORT . " $self->{nick} CASEMAPPING=rfc1459 PREFIX=(o)@ STATUSMSG=@ NETWORK=$ircd->{network} MAXTARGETS=$ircd->{maxtargets}\r\n");
+    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ISUPPORT . ' $self->{nick} CHANTYPES=# CHANMODES=b,l,nt' . "\r\n");
 
     # Write MOTD
     my $motd;

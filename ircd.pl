@@ -7,7 +7,7 @@ use feature 'postderef';
 
 use IO::Epoll;
 use IO::Socket::INET;
-use Data::Dumper;
+use DateTime;
 
 # ircd modules
 use IRCd::Config;
@@ -81,7 +81,7 @@ sub setup {
     $self->{dns}         = $self->{config}->{dns};
     $self->{pingtimeout} = $self->{config}->{pingtimeout};
     $self->{maxtargets}  = $self->{config}->{maxtargets};
-
+    $self->{create_time} = DateTime->now;
     $self->{log}->info("Starting cmpctircd");
     $self->{log}->info("==> Host: $self->{host}");
     $self->{log}->info("==> Listening on: $self->{ip}:$self->{port}");
