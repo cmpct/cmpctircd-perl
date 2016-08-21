@@ -117,7 +117,7 @@ sub uid {
         $pServiceStamp, $pUmodes,   $pVirtHost,  $pCloakedHost, $pIP)
     = @splitPacket;
 
-    my @gecos   = split(":", $msg);
+    my @gecos   = split(":", $msg, 2);
     my $pGECOS  = $gecos[2];
 
     my $clientObject = IRCd::Client->new(
@@ -152,7 +152,7 @@ sub notice {
     my @splitPacket   = split(" ", $msg);
     my $source        = $splitPacket[0];
     my $target        = $splitPacket[2];
-    my @splitMessage  = split(":", $msg);
+    my @splitMessage  = split(":", $msg, 2);
     my $message       = $splitMessage[2];
     $source =~ s/://;
     # Do we need a findByUID?

@@ -63,7 +63,7 @@ sub user {
         return;
     }
     $client->{ident}    = $splitPacket[1];
-    @splitPacket = split(":", $msg);
+    @splitPacket = split(":", $msg, 2);
     $client->{realname} = $splitPacket[1];
 
     $client->{log}->debug("[$client->{nick}] IDENT: $client->{ident}");
@@ -208,7 +208,7 @@ sub quit {
 
     my @splitPacket = split(" ", $msg);
     my $quitReason  = $splitPacket[1];
-    @splitPacket    = split(":", $quitReason);
+    @splitPacket    = split(":", $quitReason, 2);
     $quitReason     = $splitPacket[1];
 
     # TODO: Max length
@@ -229,7 +229,7 @@ sub part {
     my $partReason  = $splitPacket[2];
 
     if($partReason // 0) {
-        @splitPacket = split(":", $partReason);
+        @splitPacket = split(":", $partReason, 2);
         $partReason = $splitPacket[1];
     } else {
         $partReason = "";
@@ -428,7 +428,7 @@ sub topic {
     my $topicText    = $splitPacket[2] // "";
 
     if($topicText) {
-        @splitPacket = split(":", $msg);
+        @splitPacket = split(":", $msg, 2);
         $topicText   = $splitPacket[1];
     }
 
@@ -462,7 +462,7 @@ sub kick {
     }
 
     my $targetUser    = $splitPacket[2];
-    my @kickSplit     = split(":", $msg);
+    my @kickSplit     = split(":", $msg, 2);
     my $kickReason    = $kickSplit[1] // "Kicked.";
     $targetChannel->kick($client, $targetUser, $kickReason);
 }
