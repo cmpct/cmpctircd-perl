@@ -14,8 +14,11 @@ Checkout *master*, edit `ircd.xml`, and run `./ircd.pl` to test.
 Windows is untested as of yet, but it should run with `select` as the socket provider  (`<sockets:provider>`). `epoll` is 
 recommended on Linux.
 
+TLS certs and keys should be 'tls_cert.pem' and 'tls_key.pem' respectively.
+
 Dependencies
 ------------
+* IO::Socket::SSL (libio-socket-ssl-perl, only if `<server:tls>` is enabled)
 * IO::Epoll (libxml-simple-perl)
 * XML::Simple  (libio-epoll-perl)
 * Term::ANSIColor (within core on Debian)

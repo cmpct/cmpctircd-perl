@@ -13,9 +13,12 @@
 Windows is untested as of yet, but it should run with <code>select</code> as the socket provider  (<code>&lt;sockets:provider&gt;</code>). <code>epoll</code> is
 recommended on Linux.</p>
 
+<p>TLS certs and keys should be &lsquo;tls_cert.pem&rsquo; and &lsquo;tls_key.pem&rsquo; respectively.</p>
+
 <h2>Dependencies</h2>
 
 <ul>
+<li>IO::Socket::SSL (libio-socket-ssl-perl, only if <code>&lt;server:tls&gt;</code> is enabled)</li>
 <li>IO::Epoll (libxml-simple-perl)</li>
 <li>XML::Simple  (libio-epoll-perl)</li>
 <li>Term::ANSIColor (within core on Debian)</li>

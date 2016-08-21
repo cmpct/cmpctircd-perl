@@ -40,6 +40,8 @@ sub parse {
 
         $self->{ip}          = $xmlRef->{'server'}->{'ip'};
         $self->{port}        = $xmlRef->{'server'}->{'port'};
+        $self->{tls}         = $xmlRef->{'server'}->{'tls'};
+        $self->{tlsport}     = $xmlRef->{'server'}->{'tlsport'};
         $self->{host}        = $xmlRef->{'ircd'}->{'host'};
         $self->{network}     = $xmlRef->{'ircd'}->{'network'};
         $self->{desc}        = $xmlRef->{'ircd'}->{'desc'};

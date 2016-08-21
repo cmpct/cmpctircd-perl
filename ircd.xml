@@ -7,6 +7,8 @@
     <server>
         <ip>127.0.0.1</ip>
         <port>6667</port>
+        <tls>1</tls>
+        <tlsport>6697</tlsport>
     </server>
     <channelmodes>
         <!-- limit mode -->

@@ -195,6 +195,8 @@ sub whois {
     if ($targetClient->{away} ne '') {
         $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_AWAY   . " $client->{nick} $targetNick :$targetClient->{away}\r\n");
     }
+    # XXX: Some IRCds (ircd-hybrid) use 275?
+    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISSECURE   . " $client->{nick} $targetNick :is connected via TLS (secure line)\r\n") if($targetClient->{tls});
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISIDLE     . " $client->{nick} $targetNick $targetIdle $client->{signonTime} :seconds idle, signon time\r\n");
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHOIS    . " $client->{nick} $targetNick :End of /WHOIS list\r\n");
 }

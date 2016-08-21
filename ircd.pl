@@ -48,18 +48,34 @@ sub setup {
     my $self = shift;
     $self->{log} = IRCd::Log->new();
     $self->{config}->parse();
+    # TODO: Make a listener hash so we can have many of each
     $self->{clientListener} = IO::Socket::INET->new(
         LocalHost => $self->{config}->{ip},
         LocalPort => $self->{config}->{port},
         Listen    => 5,
         ReuseAddr => 1,
     ) or die $!;
+    $self->{clientListener}->blocking(0);
     $self->{serverListener} = IO::Socket::INET->new(
         LocalHost => $self->{config}->{ip},
         LocalPort => 6661,
         Listen    => 5,
         ReuseAddr => 1,
     ) or die $!;
+    $self->{serverListener}->blocking(0);
+    if($self->{config}->{tls}) {
+        require IO::Socket::SSL;
+        $self->{clientTLSListener} = IO::Socket::SSL->new(
+            LocalHost     => $self->{config}->{ip},
+            LocalPort     => $self->{config}->{tlsport},
+            SSL_cert_file => 'tls_cert.pem',
+            SSL_key_file  => 'tls_key.pem',
+            Listen        => 5,
+            ReuseAddr     => 1,
+        ) or die $!;
+        $self->{clientTLSListener}->blocking(0);
+        $self->{clientTLSSelector} = $self->{config}->getSockProvider($self->{clientTLSListener});
+    }
     $self->{clientSelector} = $self->{config}->getSockProvider($self->{clientListener});
     $self->{serverSelector} = $self->{config}->getSockProvider($self->{serverListener});
     $self->{clients} = {
@@ -93,25 +109,39 @@ sub run {
         ###               ###
         ###  Client loop  ###
         ###               ###
-        $self->clientLoop();
+        $self->clientLoop($self->{clientListener}, $self->{clientSelector}, 1024);
+
+        ###              ###
+        ### Client (TLS) ###
+        ###     loop     ###
+        ###              ###
+        if($self->{clientTLSListener}) {
+            # http://search.cpan.org/~sullr/IO-Socket-SSL-2.036/lib/IO/Socket/SSL.pod#Common_Usage_Errors
+            $self->clientLoop($self->{clientTLSListener}, $self->{clientTLSSelector}, 16000, 1);
+        }
 
         ###               ###
         ###  Server loop  ###
         ###               ###
-        $self->serverLoop();
+        $self->serverLoop($self->{serverListener}, $self->{serverSelector}, 1024);
     }
 }
 
 sub clientLoop {
     my $self     = shift;
-    my @readable = $self->{clientSelector}->readable(1000);
+    my $listener = shift;
+    my $selector = shift;
+    my $bytes    = shift // 1024;
+    my $tls      = shift // 0;
+
+    my @readable = $selector->readable(1000);
     foreach my $event (@readable) {
         # This is needed because of the way that IO::Epoll vs IO::Socket return handles (or fds)
         $event = fileno($event) if(ref($event) eq 'IO::Socket::INET');
         $event = $event->[0]    if(ref($event) eq 'ARRAY');
-        if($event == fileno($self->{clientListener})) {
+        if($event == fileno($listener)) {
             # Accept a new client
-            my $newSock = $self->{clientListener}->accept;
+            my $newSock = $listener->accept;
             my $newfd   = fileno($newSock);
             my $sockObj = IRCd::Socket->new($newfd, $newSock);
             $self->{clients}->{id}->{$newfd} = $sockObj;
@@ -121,6 +151,7 @@ sub clientLoop {
                 'socket' => $socket,
                 'ircd'   => $self,
                 'config' => $self->{config},
+                'tls'    => $tls,
             );
             $socket->{client}->{ip}     = $socket->{sock}->peerhost();
             $socket->{client}->{server} = $self->{host};
@@ -131,14 +162,16 @@ sub clientLoop {
                 # TODO: Could have a 'no DNS resolve enabled' message here.
                 # TODO: I think some servers do it?
             }
-            $self->{clientSelector}->add($newSock);
+            $selector->add($newSock);
         } else {
             # Read from an existing client
             my $buffer  = "";
             my $socket   = $self->{clients}->{id}->{$event};
-            $socket->{sock}->recv($buffer, 1024);
+            return if(!$socket);
+
+            sysread($socket->{sock}, $buffer, $bytes);
             if($buffer eq "") {
-                $self->{clientSelector}->del($socket->{sock});
+                $selector->del($socket->{sock});
             } else {
                 $socket->{client}->{ip} = $socket->{sock}->peerhost();
 
@@ -167,14 +200,19 @@ sub clientLoop {
 
 sub serverLoop {
     my $self     = shift;
-    my @readable = $self->{serverSelector}->readable(1000);
+    my $listener = shift;
+    my $selector = shift;
+    my $bytes    = shift // 1024;
+    my $tls      = shift // 0;
+
+    my @readable = $selector->readable(1000);
     foreach my $event (@readable) {
         # This is needed because of the way that IO::Epoll vs IO::Socket return handles (or fds)
         $event = fileno($event) if(ref($event) eq 'IO::Socket::INET');
         $event = $event->[0]    if(ref($event) eq 'ARRAY');
-        if($event == fileno($self->{serverListener})) {
+        if($event == fileno($listener)) {
             # Accept a new client
-            my $newSock = $self->{serverListener}->accept;
+            my $newSock = $listener->accept;
             my $newfd   = fileno($newSock);
             my $sockObj = IRCd::Socket->new($newfd, $newSock);
             $self->{servers}->{id}->{$newfd} = $sockObj;
@@ -184,17 +222,20 @@ sub serverLoop {
                         'socket' => $socket,
                         'ircd'   => $self,
                         'config' => $self->{config},
+                        'tls'    => $tls,
             );
             $socket->{client}->{ip}     = $socket->{sock}->peerhost();
             $socket->{client}->{server} = $self->{host};
-            $self->{serverSelector}->add($newSock);
+            $selector->add($newSock);
         } else {
             # Read from an existing client
             my $buffer  = "";
             my $socket   = $self->{servers}->{id}->{$event};
-            $socket->{sock}->recv($buffer, 1024);
+            return if(!$socket);
+
+            sysread($socket->{sock}, $buffer, $bytes);
             if($buffer eq "") {
-                $self->{serverSelector}->del($socket->{sock});
+                $selector->del($socket->{sock});
             } else {
                 $socket->{client}->{ip} = $socket->{sock}->peerhost();
 

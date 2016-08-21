@@ -41,6 +41,7 @@ use constant {
     RPL_ENDOFMOTD     => 376,
     RPL_WHOISHOST     => 378,
     RPL_HOSTHIDDEN    => 396,
+    RPL_WHOISSECURE   => 671,
 
     # Errors
     ERR_NOSUCHNICK       => 401,

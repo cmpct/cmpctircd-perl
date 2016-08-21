@@ -17,6 +17,7 @@ sub new {
         'ircd'           => $args{ircd},
         'config'         => $args{config},
         'buffer'         => '',
+        'tls'            => $args{tls}            // 0,
 
         'idle'           => $args{idle}           // time(),
         'lastPing'       => $args{lastPing}       // 0,
