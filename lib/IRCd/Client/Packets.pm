@@ -216,7 +216,7 @@ sub quit {
     $quitReason     = $splitPacket[1];
 
     # TODO: Max length
-    $client->disconnect(1, $quitReason);
+    $client->disconnect(1, "Quit: " . $quitReason);
     # XXX: Let anyone who we're PMIng know? is that a thing?
 }
 sub part {
