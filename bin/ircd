@@ -5,6 +5,8 @@ use diagnostics;
 no warnings "experimental::postderef"; # for older perls (<5.24)
 use feature 'postderef';
 
+use Path::Tiny qw(path);
+use lib path($0)->absolute->parent->sibling('lib')->stringify;
 use Getopt::Long;
 use IO::Epoll;
 use IO::Socket::INET;

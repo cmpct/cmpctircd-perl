@@ -15,6 +15,8 @@ requires 'IO::Epoll';
 requires 'XML::Simple';
 requires 'Term::ANSIColor';
 requires 'Net::DNS';
+requires 'Datetime';
+requires 'Path::Tiny';
 requires 'Getopt::Long';
 requires 'Module::Install';
 requires 'String::Scanf';
