@@ -25,6 +25,8 @@ sub new {
         'registered'     => $args{registered}     // 0,
         'signonTime'     => $args{signonTime}     // time(),
 
+        'away'           => $args{away}           // "",
+
         'server'         => $args{server}         // undef,
         'nick'           => $args{nick}           // "",
         'ident'          => $args{ident}          // "",

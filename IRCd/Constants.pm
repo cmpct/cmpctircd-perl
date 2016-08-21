@@ -12,6 +12,10 @@ use constant {
     RPL_YOURHOST => '002',
     RPL_CREATED  => '003',
 
+    RPL_AWAY          => 301,
+    RPL_UNAWAY        => 305,
+    RPL_NOWAWAY       => 306,
+
     RPL_WHOISUSER     => 311,
     RPL_WHOISSERVER   => 312,
     RPL_WHOISOPERATOR => 313,

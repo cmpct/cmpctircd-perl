@@ -135,6 +135,7 @@ sub who {
     my $target      = $splitPacket[1];
 
     # Get the channel obj
+    # XXX: support user targets (insp does)
     my $channel = $ircd->{channels}->{$target};
     if(!$channel) {
         $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $target :No such nick/channel\r\n");
@@ -148,7 +149,9 @@ sub who {
         my $host = $_->{ip};
         my $nick = $_->{nick};
         my $real = $_->{realname};
-        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOREPLY . " $client->{nick} $channel->{name} $user $host $config->{host} $nick H :0 $real\r\n");
+        # XXX: include '*' for ircop
+        my $away = $_->{away} // '' ne '' ? "G" : "H";
+        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOREPLY . " $client->{nick} $channel->{name} $user $host $config->{host} $nick $away :0 $real\r\n");
     }
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHO . " $client->{nick} $channel->{name} :End of /WHO list.\r\n");
 }
@@ -188,6 +191,10 @@ sub whois {
     }
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISCHANNELS . " $client->{nick} $targetNick :" . CORE::join(' ', @presentChannels) . "\r\n") if @presentChannels >= 1;
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISSERVER   . " $client->{nick} $targetNick $client->{server} :$ircd->{desc}\r\n");
+    # we only state away if they are away
+    if ($targetClient->{away} ne '') {
+        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_AWAY   . " $client->{nick} $targetNick :$targetClient->{away}\r\n");
+    }
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISIDLE     . " $client->{nick} $targetNick $targetIdle $client->{signonTime} :seconds idle, signon time\r\n");
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHOIS    . " $client->{nick} $targetNick :End of /WHOIS list\r\n");
 }
@@ -234,6 +241,25 @@ sub part {
         $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $partChannel :No such nick/channel\r\n");
     }
 }
+sub away {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+
+    # the only param is the message itself
+    my @splitPacket = split(":", $msg, 2);
+    my $awayMessage  = $splitPacket[1] // '';
+
+    $client->{away} = $awayMessage;
+
+    if($awayMessage ne '') {
+        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_NOWAWAY . " $client->{nick} :You have been marked as being away\r\n");
+    } else {
+        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_UNAWAY . " $client->{nick} :You are no longer marked as being away\r\n");
+    }
+}
 sub privmsg {
     my $client = shift;
     my $msg    = shift;
@@ -257,6 +283,10 @@ sub privmsg {
         if($user == 0) {
             $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $client->{nick} $target :No such nick/channel\r\n");
             return;
+        }
+        # Warn the sender if the user is idle
+        if ($user->{away} ne '') {
+            $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_AWAY . " $client->{nick} $target :$user->{away}\r\n");
         }
         # Send the message to the target user
         $user->write(":$mask PRIVMSG $user->{nick} :$realmsg\r\n");
