@@ -129,7 +129,7 @@ sub sendWelcome {
 
     # Write MOTD
     my $motd;
-    open($motd, "<", "ircd.motd");
+    open($motd, "<", $ircd->{motd_path});
     my @motd = <$motd>;
     # TODO: Strip out blank lines?
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTDSTART . " $self->{nick} :- $ircd->{host} Message of the Day -\r\n");

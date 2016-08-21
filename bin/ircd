@@ -41,6 +41,7 @@ sub new {
         'pingtimeout' => undef,
         'maxtargets'  => undef,
     };
+    $self->{motd_path} = shift;
     bless $self, $class;
     return $self;
 }
@@ -277,13 +278,18 @@ if(!caller) {
         print STDERR "SIGPIPE @_\n";
     };
     my $config = "/etc/cmpctircd/ircd.xml";
+    my $motd   = "/etc/cmpctircd/ircd.motd";
     Getopt::Long::GetOptions(
         "config=s" => \$config,
+        "motd=s"   => \$motd,
     );
     if(!-e $config) {
-        die "Config file [$config] does not exist! Please create it and try again.\r\n";
+        die "Config file [$config] does not exist! Please create it or tell me where it is (--config) and try again.\r\n";
     }
-    my $ircd = IRCd::Run->new($config);
+    if(!-e $motd) {
+        die "MOTD file [$motd] does not exist! Please create it or tell me where it is (--motd) and try again.\r\n";
+    }
+    my $ircd = IRCd::Run->new($config, $motd);
     $ircd->setup;
     $ircd->run;
 };

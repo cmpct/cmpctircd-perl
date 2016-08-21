@@ -3,3 +3,8 @@
 # Packaging stuff
 META.yml
 inc/
+MYMETA.json
+MYMETA.yml
+Makefile
+blib/
+pm_to_blib
