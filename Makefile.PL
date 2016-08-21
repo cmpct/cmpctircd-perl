@@ -15,6 +15,8 @@ requires 'IO::Epoll';
 requires 'XML::Simple';
 requires 'Term::ANSIColor';
 requires 'Net::DNS';
+requires 'Getopt::Long';
+requires 'Module::Install';
 requires 'String::Scanf';
 
 install_script 'bin/ircd';
@@ -25,8 +27,8 @@ pure_install:: extra_install
 install_vendor:: extra_install
 
 extra_install:
-        install -d $(DESTDIR)/etc/cmpctircd/
-        install -m 640 ircd.xml $(DESTDIR)/etc/cmpctircd/ircd.xml.example
+	install -d $(DESTDIR)/etc/cmpctircd/
+	install -m 640 ircd.xml $(DESTDIR)/etc/cmpctircd/ircd.xml.example
 END_OF_MAKEFILE
 
 WriteAll;
