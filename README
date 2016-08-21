@@ -23,6 +23,7 @@ recommended on Linux.</p>
 <li>XML::Simple  (libio-epoll-perl)</li>
 <li>Term::ANSIColor (within core on Debian)</li>
 <li>Net::DNS (libnet-dns-perl)</li>
+<li>Getopt::Long (within core on Debian)</li>
 <li>String::Scanf (install with CPAN)</li>
 <li><code>perl &gt;= 5.20</code> for <code>postderef</code></li>
 </ul>

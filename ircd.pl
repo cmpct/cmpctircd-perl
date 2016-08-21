@@ -5,6 +5,7 @@ use diagnostics;
 no warnings "experimental::postderef"; # for older perls (<5.24)
 use feature 'postderef';
 
+use Getopt::Long;
 use IO::Epoll;
 use IO::Socket::INET;
 use DateTime;
@@ -275,7 +276,14 @@ if(!caller) {
     $SIG{PIPE} = sub {
         print STDERR "SIGPIPE @_\n";
     };
-    my $ircd = IRCd::Run->new("ircd.xml");
+    my $config = "/etc/cmpctircd/ircd.xml";
+    Getopt::Long::GetOptions(
+        "config=s" => \$config,
+    );
+    if(!-e $config) {
+        die "Config file [$config] does not exist! Please create it and try again.\r\n";
+    }
+    my $ircd = IRCd::Run->new($config);
     $ircd->setup;
     $ircd->run;
 };

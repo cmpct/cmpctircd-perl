@@ -23,7 +23,9 @@ Dependencies
 * XML::Simple  (libio-epoll-perl)
 * Term::ANSIColor (within core on Debian)
 * Net::DNS (libnet-dns-perl)
+* Getopt::Long (within core on Debian)
 * String::Scanf (install with CPAN)
+* Module::Install (libmodule-install-perl)
 * `perl >= 5.20` for `postderef`
 
 Contact
