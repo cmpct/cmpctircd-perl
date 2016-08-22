@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 use diagnostics;
-use IO::Epoll;
 
 package IRCd::Sockets::Epoll;
 
@@ -12,6 +11,7 @@ sub new {
             epoll        => IO::Epoll::epoll_create(10),
             listenerSock => shift,
     };
+    require IO::Epoll;
     bless $self, $class;
     $self->add($self->{listenerSock});
     return $self;

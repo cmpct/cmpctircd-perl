@@ -8,7 +8,6 @@ use feature 'postderef';
 use Path::Tiny qw(path);
 use lib path($0)->absolute->parent->sibling('lib')->stringify;
 use Getopt::Long;
-use IO::Epoll;
 use IO::Socket::INET;
 use DateTime;
 
