@@ -331,7 +331,6 @@ sub privmsg {
     @splitPacket = split(":", $msg, 2);
     my $realmsg = $splitPacket[1];
 
-    # TODO: Validation, no such channel
     if($target =~ /^#/) {
         # Target was a channel
         my $channel = $ircd->{channels}->{$target};
@@ -352,6 +351,41 @@ sub privmsg {
         }
         # Send the message to the target user
         $user->write(":$mask PRIVMSG $user->{nick} :$realmsg\r\n");
+    }
+}
+sub notice {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask(1);
+
+    my @splitPacket = split(" ", $msg);
+    my $target = $splitPacket[1];
+    @splitPacket = split(":", $msg, 2);
+    my $realmsg = $splitPacket[1];
+
+    if($target =~ /^#/) {
+        # Target was a channel
+        my $channel = $ircd->{channels}->{$target};
+        if(!$channel) {
+            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $target :No such nick/channel\r\n");
+            return;
+        }
+        $channel->sendToRoom($client, ":$client->{nick} NOTICE $channel->{name} :$realmsg", 0);
+    } else {
+        my $user = $ircd->getClientByNick($target);
+        if($user == 0) {
+            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $client->{nick} $target :No such nick/channel\r\n");
+            return;
+        }
+        # Warn the sender if the user is idle
+        if ($user->{away} ne '') {
+            $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_AWAY . " $client->{nick} $target :$user->{away}\r\n");
+        }
+        # Send the message to the target user
+        $user->write(":$mask NOTICE $user->{nick} :$realmsg\r\n");
     }
 }
 sub mode {
