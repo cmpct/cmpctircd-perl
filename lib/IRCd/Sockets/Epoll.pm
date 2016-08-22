@@ -8,6 +8,7 @@ package IRCd::Sockets::Epoll;
 
 sub new {
     my $class = shift;
+    require IO::Epoll;
     my $self = {
             epoll        => IO::Epoll::epoll_create(10),
             listenerSock => shift,

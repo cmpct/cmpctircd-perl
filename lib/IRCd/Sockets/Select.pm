@@ -8,6 +8,7 @@ package IRCd::Sockets::Select;
 
 sub new {
     my $class = shift;
+    require IO::Select;
     my $self = {
             select       => IO::Select->new(),
             listenerSock => shift,
