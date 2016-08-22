@@ -345,8 +345,6 @@ sub mode {
         foreach(values($client->{modes}->%*)) {
             $argmodes{$_->{provides}} = 1 if($_->{hasparam});
         }
-        return if(!$split[2] // "");
-        return if(!$split[3] // "");
         my @modes           = split('',  $split[2] // "");
         my @parameters      = split(' ', $split[3] // "");
         my $const           = 0;
@@ -389,12 +387,12 @@ sub mode {
         foreach(values($channel->{modes}->%*)) {
             $argmodes{$_->{provides}} = 1 if($_->{hasparam});
         }
-        my @modes           = split('', $split[2]);
-        my @parameters      = split(' ', $split[3]);
+        my @modes           = split('',  $split[2] // "");
+        my @parameters      = split(' ', $split[3] // "");
         my $const           = 0;
         my $currentModifier = "";
         # Special case for just +b (ban list)
-        if($split[2] eq '+b' and $split[3] eq '') {
+        if($split[2] eq '+b' and !$split[3]) {
             $client->{log}->debug("[$client->{nick}] Requested +b list for $split[1]");
             foreach(values($channel->{modes}->{b}->list()->%*)) {
                 my $banMask = $_->mask();
