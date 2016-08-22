@@ -217,7 +217,7 @@ sub disconnect {
     }
     $self->{socket}->{sock}->close();
     delete $ircd->{clients}->{id}->{$self->{socket}->{fd}};
-    delete $ircd->{clients}->{nick}->{$self->{nick}};
+    delete $ircd->{clients}->{nick}->{lc($self->{nick})};
 }
 
 ###                    ###

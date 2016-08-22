@@ -72,7 +72,7 @@ sub syncUser {
     my $config = $self->{config};
     my $ircd   = $self->{ircd};
     my $user   = shift;
-    my $client = $self->{ircd}->{clients}->{nick}->{$user};
+    my $client = $self->{ircd}->{clients}->{nick}->{lc($user)};
     
     return -1 if(!$client);
     my $sNick  = $client->{nick};
