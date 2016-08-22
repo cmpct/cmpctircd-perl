@@ -127,16 +127,7 @@ sub sendWelcome {
     #$self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MYINFO   . " $self->{nick} $ircd->{host} cmpctircd-$ircd->{version} x ntlo\r\n");
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ISUPPORT . " $self->{nick} CASEMAPPING=rfc1459 PREFIX=(o)@ STATUSMSG=@ NETWORK=$ircd->{network} MAXTARGETS=$ircd->{maxtargets}\r\n");
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ISUPPORT . " $self->{nick} CHANTYPES=# CHANMODES=b,l,nt" . "\r\n");
-
-    # Write MOTD
-    my $motd;
-    open($motd, "<", $ircd->{motd_path});
-    my @motd = <$motd>;
-    # TODO: Strip out blank lines?
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTDSTART . " $self->{nick} :- $ircd->{host} Message of the Day -\r\n");
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTD      . " $self->{nick} :- " . $_ . "\r\n") foreach(@motd);
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFMOTD . " $self->{nick} :End of /MOTD command.\r\n");
-    close($motd);
+    $self->motd();
     $self->{registered} = 1;
 
     # Tell the servers we're connected to that we exist
@@ -153,6 +144,18 @@ sub sendWelcome {
         my $mode = $_->{name};
         $self->{modes}->{$mode}->grant($self,  "+", $mode,  $_->{param} // undef, 0, 1);
     }
+}
+
+sub motd {
+    my $self = shift;
+    my $ircd = $self->{ircd};
+    my $motd;
+    open($motd, "<", $ircd->{motd_path});
+    my @motd = <$motd>;
+    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTDSTART . " $self->{nick} :- $ircd->{host} Message of the Day -\r\n");
+    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTD      . " $self->{nick} :- " . $_ . "\r\n") foreach(@motd);
+    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFMOTD . " $self->{nick} :End of /MOTD command.\r\n");
+    close($motd);
 }
 
 sub checkTimeout {

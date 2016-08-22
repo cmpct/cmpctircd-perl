@@ -587,6 +587,17 @@ sub kick {
     $targetChannel->kick($client, $targetUser, $kickReason);
 }
 
+sub motd {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask(1);
+    
+    $client->motd();
+  }
+
 
 # :card.freenode.net 451 * :You have not registered
 1;
