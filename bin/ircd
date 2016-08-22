@@ -138,7 +138,7 @@ sub clientLoop {
     my $bytes    = shift // 1024;
     my $tls      = shift // 0;
 
-    my @readable = $selector->readable(1000);
+    my @readable = $selector->readable(100);
     foreach my $event (@readable) {
         # This is needed because of the way that IO::Epoll vs IO::Socket return handles (or fds)
         $event = fileno($event) if(ref($event) eq 'IO::Socket::INET');
@@ -209,7 +209,7 @@ sub serverLoop {
     my $bytes    = shift // 1024;
     my $tls      = shift // 0;
 
-    my @readable = $selector->readable(1000);
+    my @readable = $selector->readable(100);
     foreach my $event (@readable) {
         # This is needed because of the way that IO::Epoll vs IO::Socket return handles (or fds)
         $event = fileno($event) if(ref($event) eq 'IO::Socket::INET');
