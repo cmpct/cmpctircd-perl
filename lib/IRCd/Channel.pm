@@ -44,15 +44,18 @@ sub new {
 # This needs to be done after the client has been added, otherwise modes might not set properly
 sub initModes {
     # used for modes
-    my $self = shift;
+    my $self   = shift;
     my $client = shift;
-    my $ircd = shift;
+    my $ircd   = shift;
 
     # Set initial modes
     foreach my $chanModes (values($ircd->{config}->{channelmodes}->%*)) {
         foreach(keys($chanModes->%*)) {
             my $name  = $_;
             my $param = $chanModes->{$name}->{param};
+            if(ref($param) eq 'HASH') {
+                $param = "";
+            }
             # we need to pass the client, otherwise the mode setting won't have a user to ref to
             $self->{modes}->{$name}->grant($client,  "+", $name, $param // undef, 1);
         }
@@ -96,9 +99,10 @@ sub addClient {
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_ENDOFNAMES    . " $client->{nick} $self->{name} :End of /NAMES list.\r\n");
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :" . $self->{topic}->get() . "\r\n") if($self->{topic}->get() ne "");
 
-    my $modes = $self->getModeStrings("+");
-    $client->{log}->debug("[$self->{name}] Writing: $modes->{characters} $modes->{args}");
-    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $self->{name} $modes->{characters} $modes->{args}\r\n");
+    #my $modes = $self->getModeStrings("+");
+    #$client->{log}->debug("[$self->{name}] Writing: $modes->{characters} $modes->{args}");
+    # XXX: Will use this for clientless mode setting?
+    #$client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $self->{name} $modes->{characters} $modes->{args}\r\n");
     #$client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CREATIONTIME  . " $client->{nick} $self->{name} " . time() . "\r\n");
 }
 sub quit {

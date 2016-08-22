@@ -157,6 +157,33 @@ sub who {
     }
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHO . " $client->{nick} $channel->{name} :End of /WHO list.\r\n");
 }
+sub names {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask(1);
+
+    # Targets?
+    my @splitPacket = split(" ", $msg);
+    my $target      = $splitPacket[1];
+
+    # Get the channel obj
+    my $channel = $ircd->{channels}->{$target};
+    if(!$channel) {
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $target :No such nick/channel\r\n");
+        return;
+    }
+
+    # TODO: Implement userhost-in-names (IRCv3)
+    foreach(values($channel->{clients}->%*)) {
+        my $nick       = $_->{nick};
+        my $userSymbol = $channel->{privilege}->{$channel->getStatus($_)} // "";
+        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_NAMREPLY . " $client->{nick} = $channel->{name} :$userSymbol$nick\r\n");
+    }
+    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFNAMES . " $client->{nick} $channel->{name} :End of /NAMES list.\r\n");
+}
 sub whois {
     my $client = shift;
     my $msg    = shift;
@@ -281,6 +308,10 @@ sub privmsg {
     if($target =~ /^#/) {
         # Target was a channel
         my $channel = $ircd->{channels}->{$target};
+        if(!$channel) {
+            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $target :No such nick/channel\r\n");
+            return;
+        }
         $channel->sendToRoom($client, ":$client->{nick} PRIVMSG $channel->{name} :$realmsg", 0);
     } else {
         my $user = $ircd->getClientByNick($target);
@@ -314,8 +345,10 @@ sub mode {
         foreach(values($client->{modes}->%*)) {
             $argmodes{$_->{provides}} = 1 if($_->{hasparam});
         }
-        my @modes           = split('', $split[2]);
-        my @parameters      = split(' ', $split[3]);
+        return if(!$split[2] // "");
+        return if(!$split[3] // "");
+        my @modes           = split('',  $split[2] // "");
+        my @parameters      = split(' ', $split[3] // "");
         my $const           = 0;
         my $currentModifier = "";
         foreach(@modes) {
@@ -439,8 +472,6 @@ sub topic {
     if($ircd->{channels}->{$topicChannel}) {
         $ircd->{channels}->{$topicChannel}->topic($client, $topicText);
     } else {
-        # XXX: This should actually be 'no such channel'?
-        # XXX: Fix the PART handler too
         $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $topicChannel :No such nick/channel\r\n");
     }
 }
