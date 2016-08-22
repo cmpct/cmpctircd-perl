@@ -18,6 +18,9 @@ sub nick {
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
 
+    # XXX: For supybot/limnoria
+    # XXX: No idea why it sends it; it's not as if NICKs can have spaces
+    $msg =~ s/://;
     my @splitPacket = split(" ", $msg);
     if(scalar(@splitPacket) < 2) {
         $socket->write(":$config->{host} " . IRCd::Constants::ERR_NEEDMOREPARAMS . " * NICK :Not enough parameters\r\n");
@@ -83,6 +86,16 @@ sub user {
 
     $client->sendWelcome() if($client->{nick} and !$client->{registered} and $client->{host});
 }
+sub cap {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask(1);
+    # XXX: stub
+    $client->{log}->debug("[$client->{nick}] CAP not yet implemented");
+}
 sub join {
     my $client = shift;
     my $msg    = shift;
@@ -93,8 +106,10 @@ sub join {
     my $recurs = shift // 0;
     my @splitPacket;
 
+    # XXX: For supybot/limnoria
+    # XXX: No idea why it sends it; it's not as if NICKs can have spaces
+    $msg =~ s/://;
     my $channelInput = $msg;
-
     if($recurs == 0) {
         @splitPacket = split(" ", $msg);
         if(scalar(@splitPacket) < 2) {
@@ -403,6 +418,7 @@ sub mode {
         my @parameters      = split(' ', $split[3] // "");
         my $const           = 0;
         my $currentModifier = "";
+        $split[2] =~ s/://;
         # Special case for just +b (ban list)
         if($split[2] eq '+b' and !$split[3]) {
             $client->{log}->debug("[$client->{nick}] Requested +b list for $split[1]");
@@ -434,6 +450,31 @@ sub mode {
             }
         }
     }
+}
+sub userhost {
+    my $client = shift;
+    my $msg    = shift;
+    my $socket = $client->{socket}->{sock};
+    my $config = $client->{config};
+    my $ircd   = $client->{ircd};
+    my $mask   = $client->getMask(1);
+
+    my @target       = split(" ", $msg);
+    my $targetNick   = $target[1];
+    my $away         = "";
+    if(my $targetClient = $ircd->getClientByNick($targetNick)) {
+        $away = "-" if($client->{away});
+        $away = "+" if($client->{away});
+        my $user = $targetClient->{ident};
+        my $host = "";
+        if($targetClient eq $client) {
+            $host = $targetClient->{host} // $targetClient->{ip};
+        } else {
+            $host = $targetClient->{cloak} // $targetClient->{host} // $targetClient->{ip};
+        }
+        $client->write(":$ircd->{host} " . IRCd::Constants::RPL_USERHOST . " $client->{nick} $targetNick=$away$user\@$host");
+    }
+
 }
 sub ping {
     my $client = shift;

@@ -108,6 +108,7 @@ sub parse {
         }
         $handlerRef->($self, $msg);
     } else {
+        $self->write(":$ircd->{host} " . IRCd::Constants::ERR_UNKNOWNCOMMAND . " $self->{nick} $splitPacket[0] :Unknown command");
         $self->{log}->warn("UNHANDLED PACKET: " . $splitPacket[0]);
     }
 }

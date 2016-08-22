@@ -15,6 +15,7 @@ use constant {
     RPL_ISUPPORT => '005',
 
     RPL_AWAY          => 301,
+    RPL_USERHOST      => 302,
     RPL_UNAWAY        => 305,
     RPL_NOWAWAY       => 306,
 
@@ -47,6 +48,7 @@ use constant {
     ERR_NOSUCHNICK       => 401,
     ERR_NOSUCHCHANNEL    => 403,
     ERR_CANNOTSENDTOCHAN => 404,
+    ERR_UNKNOWNCOMMAND   => 421,
     ERR_ERRONEUSNICKNAME => 432,
     ERR_NICKNAMEINUSE    => 433,
     ERR_USERNOTINCHANNEL => 441,
