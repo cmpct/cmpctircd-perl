@@ -32,7 +32,12 @@ sub nick {
             return;
         }
     }
-    # TODO: Check for invalid nick...
+    # Check for invalid nick
+    if ($splitPacket[1] !~ /[A-Za-z{}\[\]_\\^|`][A-Za-z{}\[\]_\-\\^|`0-9]*/) {
+        $socket->write(":$config->{host} " . IRCd::Constants::ERR_ERRONEUSNICKNAME . " * NICK :Erroneous nickname: Illegal characters\r\n");
+        return;
+    }
+    # Notify channels of the change
     foreach(values($ircd->{channels}->%*)) {
         if($_->{clients}->{$client->{nick}}) {
             $_->sendToRoom($client, ":$mask NICK :$splitPacket[1]");
