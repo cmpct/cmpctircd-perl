@@ -146,6 +146,7 @@ sub clientLoop {
         if($event == fileno($listener)) {
             # Accept a new client
             my $newSock = $listener->accept;
+            return if(!$newSock);
             my $newfd   = fileno($newSock);
             my $sockObj = IRCd::Socket->new($newfd, $newSock);
             $self->{clients}->{id}->{$newfd} = $sockObj;
@@ -185,8 +186,8 @@ sub clientLoop {
                 # Remove messages ending with \r\n from the client's buffer
                 # Parse the successful (properly delimited) messages
                 $socket->{client}->{buffer} .= $buffer;
-                my @result = $socket->{client}->{buffer} =~ /(.*?)\r\n/g;
-                $socket->{client}->{buffer} =~ s/(.*?)\r\n//g;
+                my @result = $socket->{client}->{buffer} =~ /(.*?)\r?\n/g;
+                $socket->{client}->{buffer} =~ s/(.*?)\r?\n//g;
                 foreach(@result) {
                     next if($_ eq '');
                     $self->{log}->debug("RECV: " . $_);
@@ -249,8 +250,8 @@ sub serverLoop {
                 # Remove messages ending with \r\n from the client's buffer
                 # Parse the successful (properly delimited) messages
                 $socket->{client}->{buffer} .= $buffer;
-                my @result = $socket->{client}->{buffer} =~ /(.*?)\r\n/g;
-                $socket->{client}->{buffer} =~ s/(.*?)\r\n//g;
+                my @result = $socket->{client}->{buffer} =~ /(.*?)\r?\n/g;
+                $socket->{client}->{buffer} =~ s/(.*?)\r?\n//g;
                 foreach(@result) {
                     next if($_ eq '');
                     $self->{log}->debug("RECV: " . $_);

@@ -152,7 +152,7 @@ sub kick {
     my $mask         = $client->getMask(1);
     my $targetUser   = shift;
     my $targetClient = shift;
-    my $kickReason   = shift;
+    my $kickReason   = shift // "Kicked.";
 
     if(!$self->{clients}->{$client->{nick}}) {
         $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
