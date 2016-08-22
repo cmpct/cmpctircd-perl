@@ -67,6 +67,13 @@ sub user {
         $socket->write(":$config->{host} " . IRCd::Constants::ERR_NEEDMOREPARAMS . " * USER :Not enough parameters\r\n");
         return;
     }
+
+    # validate nick
+    if ($splitPacket[1] !~ /[A-Za-z0-9_\-\.]/) {
+        $socket->write("ERROR :Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.\r\n");
+        $client->disconnect(1);
+        return;
+    }
     $client->{ident}    = $splitPacket[1];
     @splitPacket = split(":", $msg, 2);
     $client->{realname} = $splitPacket[1];
