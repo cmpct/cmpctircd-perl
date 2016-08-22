@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 use diagnostics;
+use IO::Select;
 
 package IRCd::Sockets::Select;
 
@@ -11,7 +12,6 @@ sub new {
             select       => IO::Select->new(),
             listenerSock => shift,
     };
-    require IO::Select;
     bless $self, $class;
     $self->add($self->{listenerSock});
     return $self;
