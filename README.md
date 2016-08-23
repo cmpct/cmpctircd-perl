@@ -10,24 +10,25 @@ Status
 For now, it is still under heavy development. It will be clear when it is production ready. 
 [Bugzilla](https://bugs.cmpct.info/) is a good indicator of progress.
 
-Checkout *master*, edit `ircd.xml`, and run `./ircd.pl` to test.
+Checkout *master*, edit `ircd.xml`, and run `bin/ircd --config ircd.xml --motd ircd.motd` to test.
 Windows is untested as of yet, but it should run with `select` as the socket provider  (`<sockets:provider>`). `epoll` is 
 recommended on Linux.
 
-TLS certs and keys should be 'tls_cert.pem' and 'tls_key.pem' respectively.
+TLS certs and keys should be 'tls\_cert.pem' and 'tls\_key.pem' respectively. Install with `./Makefile.PL; make; sudo make
+install`.
 
 Dependencies
 ------------
 * IO::Socket::SSL (libio-socket-ssl-perl, only if `<server:tls>` is enabled)
-* IO::Epoll (libxml-simple-perl)
-* XML::Simple  (libio-epoll-perl)
+* IO::Epoll (libio-epoll-perl)
+* XML::Simple (libxml-simple-perl)
 * Term::ANSIColor (within core on Debian)
 * Net::DNS (libnet-dns-perl)
 * Getopt::Long (within core on Debian)
 * Datetime (libdatetime-perl)
 * Path::Tiny (libpath-tiny-perl)
-* String::Scanf (install with CPAN)
 * Module::Install (libmodule-install-perl)
+* String::Scanf (install with CPAN)
 * `perl >= 5.20` for `postderef`
 
 Contact

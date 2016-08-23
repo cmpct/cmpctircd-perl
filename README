@@ -9,21 +9,25 @@
 <p>For now, it is still under heavy development. It will be clear when it is production ready.
 <a href="https://bugs.cmpct.info/">Bugzilla</a> is a good indicator of progress.</p>
 
-<p>Checkout <em>master</em>, edit <code>ircd.xml</code>, and run <code>./ircd.pl</code> to test.
+<p>Checkout <em>master</em>, edit <code>ircd.xml</code>, and run <code>bin/ircd --config ircd.xml --motd ircd.motd</code> to test.
 Windows is untested as of yet, but it should run with <code>select</code> as the socket provider  (<code>&lt;sockets:provider&gt;</code>). <code>epoll</code> is
 recommended on Linux.</p>
 
-<p>TLS certs and keys should be &lsquo;tls_cert.pem&rsquo; and &lsquo;tls_key.pem&rsquo; respectively.</p>
+<p>TLS certs and keys should be &lsquo;tls_cert.pem&rsquo; and &lsquo;tls_key.pem&rsquo; respectively. Install with <code>./Makefile.PL; make; sudo make
+install</code>.</p>
 
 <h2>Dependencies</h2>
 
 <ul>
 <li>IO::Socket::SSL (libio-socket-ssl-perl, only if <code>&lt;server:tls&gt;</code> is enabled)</li>
-<li>IO::Epoll (libxml-simple-perl)</li>
-<li>XML::Simple  (libio-epoll-perl)</li>
+<li>IO::Epoll (libio-epoll-perl)</li>
+<li>XML::Simple (libxml-simple-perl)</li>
 <li>Term::ANSIColor (within core on Debian)</li>
 <li>Net::DNS (libnet-dns-perl)</li>
 <li>Getopt::Long (within core on Debian)</li>
+<li>Datetime (libdatetime-perl)</li>
+<li>Path::Tiny (libpath-tiny-perl)</li>
+<li>Module::Install (libmodule-install-perl)</li>
 <li>String::Scanf (install with CPAN)</li>
 <li><code>perl &gt;= 5.20</code> for <code>postderef</code></li>
 </ul>
