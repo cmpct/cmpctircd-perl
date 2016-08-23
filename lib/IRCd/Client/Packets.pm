@@ -29,10 +29,12 @@ sub nick {
 
     # NICK already in use
     if($client->{nick} ne $splitPacket[1]) {
-        if($ircd->{clients}->{nick}->{lc($splitPacket[1])}) {
-            $client->{log}->info("[$client->{nick}] NICK in use!");
-            $socket->write(":$config->{host} " . IRCd::Constants::ERR_NICKNAMEINUSE . " * NICK :Nickname is already in use\r\n");
-            return;
+        if(my $nickObj = $ircd->{clients}->{nick}->{lc($splitPacket[1])}) {
+            if($nickObj ne $client) {
+                $client->{log}->info("[$client->{nick}] NICK in use!");
+                $socket->write(":$config->{host} " . IRCd::Constants::ERR_NICKNAMEINUSE . " * $splitPacket[1] :Nickname is already in use\r\n");
+                return;
+            }
         }
     }
     # Check for invalid nick
@@ -43,7 +45,7 @@ sub nick {
     # Notify channels of the change
     foreach(values($ircd->{channels}->%*)) {
         if($_->{clients}->{$client->{nick}}) {
-            $_->sendToRoom($client, ":$mask NICK :$splitPacket[1]");
+            $_->sendToRoom($client, ":$mask NICK :$splitPacket[1]", 0);
             $_->{clients}->{$splitPacket[1]} = $client;
             delete $_->{clients}->{$client->{nick}};
         }
