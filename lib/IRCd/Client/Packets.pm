@@ -526,8 +526,9 @@ sub ping {
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
-    # XXX: Is this right?
-    $socket->write("PONG " . time() . "\r\n");
+    my @splitPacket = split(" ", $msg);
+    $splitPacket[1] =~ s/://;
+    $socket->write(":$ircd->{host} PONG $ircd->{host} :" . $splitPacket[1] . "\r\n");
 }
 sub pong {
     my $client = shift;
