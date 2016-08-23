@@ -84,7 +84,7 @@ sub parse {
             $self->{log}->debug("[$self->{nick}] Waiting to resolve host, blocking");
             return;
         }
-        if($requirePong and !$registrationCommands{uc($splitPacket[0])}) {
+        if(!$self->{registered} and $requirePong and !$registrationCommands{uc($splitPacket[0])}) {
             $self->{log}->debug("[$self->{nick}] User attempted to register without PONG");
             $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTREGISTERED . " * :You have not registered\r\n");
             return;
