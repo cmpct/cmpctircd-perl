@@ -182,7 +182,8 @@ sub who {
         my $real = $_->{realname};
         # XXX: include '*' for ircop
         my $away = $_->{away} // '' ne '' ? "G" : "H";
-        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOREPLY . " $client->{nick} $channel->{name} $user $host $config->{host} $nick $away :0 $real\r\n");
+        my $userSymbol = $channel->{privilege}->{$channel->getStatus($_)} // "";
+        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOREPLY . " $client->{nick} $channel->{name} $user $host $config->{host} $nick $away$userSymbol :0 $real\r\n");
     }
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHO . " $client->{nick} $channel->{name} :End of /WHO list.\r\n");
 }
