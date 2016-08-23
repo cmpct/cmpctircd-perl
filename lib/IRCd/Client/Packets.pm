@@ -408,6 +408,12 @@ sub mode {
         foreach(values($client->{modes}->%*)) {
             $argmodes{$_->{provides}} = 1 if($_->{hasparam});
         }
+        if(@split eq 3 and $split[2] eq '') {
+            my $userModes = $client->getModeStrings("+");
+            $client->write(":$ircd->{host} " . IRCd::Constants::RPL_UMODEIS . " $client->{nick} $userModes->{characters} $userModes->{args}");
+            $client->{log}->warn("[$client->{nick}] MODE $client->{nick} => $userModes->{characters} $userModes->{args}");
+            return;
+        }
         my @modes           = split('',  $split[2] // "");
         my @parameters      = split(' ', $split[3] // "");
         my $const           = 0;

@@ -95,6 +95,11 @@ sub revoke {
         $ircd->{channels}->{$chan}->addClient($client);
     }
 }
+sub get {
+    my $self = shift;
+    return 1 if($self->has($self->{client}));
+    return 0;
+}
 sub has {
     my $self   = shift;
     my $client = shift;

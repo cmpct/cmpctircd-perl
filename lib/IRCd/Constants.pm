@@ -14,6 +14,7 @@ use constant {
     RPL_MYINFO   => '004',
     RPL_ISUPPORT => '005',
 
+    RPL_UMODEIS       => 221,
     RPL_AWAY          => 301,
     RPL_USERHOST      => 302,
     RPL_UNAWAY        => 305,

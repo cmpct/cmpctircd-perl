@@ -251,5 +251,25 @@ sub write {
     }
 }
 
+sub getModeStrings {
+    my $self        = shift;
+    my $characters  = shift // "+";
+    my $modes       = "";
+    my $args        = "";
+    foreach(keys($self->{modes}->%*)) {
+        my $provides = $self->{modes}->{$_}->{provides};
+        my $value    = $self->{modes}->{$_}->get();
+        if($value > 0 and $value ne '') {
+            $characters .= $provides;
+            if($self->{modes}->{$_}->{hasparam}) {
+                $args       .= $value . " ";
+            }
+        }
+    }
+    return {
+        'characters' => $characters,
+        'args'       => $args,
+    };
+}
 
 1;
