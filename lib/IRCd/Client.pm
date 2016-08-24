@@ -37,13 +37,14 @@ sub new {
         'host'           => $args{host}           // 0,
         'uid'            => $args{uid}            // 0,
 
-        'resolve'        => $args{resolve} // IRCd::Resolve->new(),
+        'resolve'        => $args{resolve} // undef,
         'query'          => $args{query}   // undef,
 
         'modes'          => $args{modes}   // {},
     };
     bless $self, $class;
-    $self->{log} = $self->{ircd}->{log};
+    $self->{log}        = $self->{ircd}->{log};
+    $self->{resolve}    = IRCd::Resolve->new($self);
     $self->{modes}->{x} = IRCd::Modes::User::Cloak->new($self);
     return $self;
 }

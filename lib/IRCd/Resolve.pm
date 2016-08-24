@@ -9,16 +9,14 @@ package IRCd::Resolve;
 sub new {
     my $class = shift;
     my $self  = {
-        'ircd'        => shift,
+        'client'        => shift,
     };
-    if($self->{ircd}->{dns}) {
-        require Net::DNS;
-    } else {
-	return;
-    }
-    $self->{resolver} = Net::DNS::Resolver->new;
-    # TODO: A cache?
     bless $self, $class;
+    if($self->{client}->{ircd}->{dns}) {
+        require Net::DNS;
+        $self->{resolver} = Net::DNS::Resolver->new;
+    }
+    # TODO: A cache?
     return $self;
 }
 
