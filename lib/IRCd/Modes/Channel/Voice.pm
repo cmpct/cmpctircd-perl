@@ -1,0 +1,117 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use diagnostics;
+
+package IRCd::Modes::Channel::Voice;
+
+sub new {
+    my $class = shift;
+    my $self  = {
+        'name'     => 'voice',
+        'provides' => 'v',
+        'desc'     => 'Provides the +v (voice) mode for allowing users to speak in a muted channel.',
+        'affects'  => {},
+        'channel'  => shift,
+
+        'chanwide' => 0,
+        'hasparam' => 1,
+    };
+    bless $self, $class;
+    return $self;
+}
+
+sub grant {
+    my $self     = shift;
+    my $client   = shift;
+    my $socket   = $client->{socket}->{sock};
+    my $config   = $client->{config};
+    my $ircd     = $client->{ircd};
+    my $modifier = shift // "+";
+    my $mode     = shift // "v";
+    my $args     = shift // $client->{nick};
+    my $force    = shift // 0;
+    my $announce = shift // 1;
+    my $targetClient = undef;
+
+    if(!$self->{channel}->{clients}->{$client->{nick}}) {
+        $client->{log}->info("[$self->{channel}->{name}] Client (nick: $client->{nick}) not in the room!");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel}->{name} :You're not on that channel\r\n");
+        return;
+    }
+    my $targetNick = $args;
+    # NOTE: Let's keep ERR_NOSUCHNICK here rather than ERR_USERNOTONCHANNEL to avoid +i leaks
+    # There's only a semantic difference between the two (see: revoke).
+    if(!($targetClient = $self->{channel}->{clients}->{$targetNick})) {
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $client->{nick} $targetNick :No such nick/channel\r\n");
+        return;
+    }
+    if(!$force and $self->{channel}->getStatus($client) < IRCd::Modes::Channel::Op::level()) {
+        $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel}->{name} :You must be a channel operator\r\n");
+        return;
+    }
+    my $mask = $client->getMask(1);
+    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args") if $announce;
+    $self->{affects}->{$targetClient} = 1;
+}
+sub revoke {
+    my $self     = shift;
+    my $client   = shift;
+    my $socket   = $client->{socket}->{sock};
+    my $config   = $client->{config};
+    my $ircd     = $client->{ircd};
+    my $modifier = shift // "-";
+    my $mode     = shift // "v";
+    my $args     = shift // $client->{nick};
+    my $force    = shift // 0;
+    my $announce = shift // 1;
+    my $targetClient = undef;
+
+    if(!$self->{channel}->{clients}->{$client->{nick}}) {
+        $client->{log}->info("[$self->{channel}->{name}] Client (nick: $client->{nick}) not in the room!");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel\r\n");
+        return;
+    }
+    my $targetNick = $args;
+    # NOTE: Let's keep ERR_NOSUCHNICK here rather than ERR_USERNOTONCHANNEL to avoid +i leaks
+    # There's only a semantic difference between the two (see: grant)
+    if(!($targetClient = $self->{channel}->{clients}->{$targetNick})) {
+        $client->{log}->info("[$self->{channel}->{name}] Target (nick: $targetNick) not in the room!");
+        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $client->{nick} $targetNick :No such nick/channel\r\n");
+        return;
+    }
+    # TODO: Consider the privilege of the person we're affecting?
+    if(!$force and $self->{channel}->getStatus($client) < IRCd::Modes::Channel::Op::level()) {
+        if($client ne $targetClient) {
+            # Allow users to -v themselves
+            $client->{log}->info("[$self->{channel}->{name}] No permission for client (nick: $client->{nick})!");
+            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel}->{name} :You must be a channel operator\r\n");
+            return;
+        }
+    }
+    my $mask = $client->getMask(1);
+    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args") if $announce;
+    delete $self->{affects}->{$targetClient};
+}
+sub has {
+    my $self   = shift;
+    my $client = shift;
+    return 1 if($self->{affects}->{$client});
+    return 0;
+}
+
+sub level {
+    # 0 => normal
+    # 1 => voice
+    # 2 => halfop
+    # 3 => op
+    # 4 => admin
+    # 5 => owner
+    return 1;
+}
+sub symbol {
+    return '+';
+}
+
+1;

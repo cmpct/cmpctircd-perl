@@ -163,7 +163,7 @@ sub who {
     # XXX: But forget it for now.
     # XXX: Don't reveal +i users on the network.
     my @splitPacket = split(" ", $msg);
-    my $target      = $splitPacket[1];
+    my $target      = $splitPacket[1] // "";
 
     # Get the channel obj
     # XXX: support user targets (insp does)

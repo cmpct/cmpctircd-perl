@@ -11,6 +11,7 @@ use IRCd::Modes::Channel::Limit;
 use IRCd::Modes::Channel::NoExternal;
 use IRCd::Modes::Channel::Op;
 use IRCd::Modes::Channel::Topic;
+use IRCd::Modes::Channel::Voice;
 
 package IRCd::Channel;
 
@@ -31,6 +32,7 @@ sub new {
     $self->{modes}->{n} = IRCd::Modes::Channel::NoExternal->new($self);
     $self->{modes}->{o} = IRCd::Modes::Channel::Op->new($self);
     $self->{modes}->{t} = IRCd::Modes::Channel::Topic->new($self);
+    $self->{modes}->{v} = IRCd::Modes::Channel::Voice->new($self);
     foreach(keys($self->{modes}->%*)) {
         my $level  = $self->{modes}->{$_}->level();
         my $symbol = $self->{modes}->{$_}->symbol();
