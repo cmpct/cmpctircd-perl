@@ -8,6 +8,7 @@ use IRCd::Constants;
 use IRCd::Channel::Topic;
 use IRCd::Modes::Channel::Ban;
 use IRCd::Modes::Channel::Limit;
+use IRCd::Modes::Channel::Moderated;
 use IRCd::Modes::Channel::NoExternal;
 use IRCd::Modes::Channel::Op;
 use IRCd::Modes::Channel::Topic;
@@ -29,6 +30,7 @@ sub new {
     # TODO: iterate over all possible modes
     $self->{modes}->{b} = IRCd::Modes::Channel::Ban->new($self);
     $self->{modes}->{l} = IRCd::Modes::Channel::Limit->new($self);
+    $self->{modes}->{m} = IRCd::Modes::Channel::Moderated->new($self);
     $self->{modes}->{n} = IRCd::Modes::Channel::NoExternal->new($self);
     $self->{modes}->{o} = IRCd::Modes::Channel::Op->new($self);
     $self->{modes}->{t} = IRCd::Modes::Channel::Topic->new($self);
@@ -286,6 +288,11 @@ sub sendToRoom {
     if($self->{modes}->{b}->has($client) and $self->getStatus($client) < $self->{modes}->{o}->level()) {
         $client->{log}->info("[$self->{name}] User (nick: $client->{nick}) is banned from the channel $self->{name}");
         $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CANNOTSENDTOCHAN . " $client->{nick} $self->{name} :Cannot send to channel (you're banned)\r\n");
+        return;
+    }
+    if($msg =~ /(PRIVMSG|NOTICE)/ and $self->{modes}->{m}->get() and $self->getStatus($client) < $self->{modes}->{v}->level()) {
+        $client->{log}->info("[$self->{name}] User (nic: $client->{nick} tried to speak on muted channel $self->{name})");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CANNOTSENDTOCHAN . " $client->{nick} $self->{name} :Cannot send to channel (+m)");
         return;
     }
     if($self->{modes}->{n}->get() and !$self->{clients}->{$client->{nick}}) {
