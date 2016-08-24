@@ -4,14 +4,18 @@ use warnings;
 no warnings "experimental::postderef"; # for older perls (<5.24)
 use feature 'postderef';
 
-use Net::DNS;
-
 package IRCd::Resolve;
 
 sub new {
     my $class = shift;
+    if($ircd->{dns}) {
+        require Net::DNS;
+    } else {
+        return;
+    }
     my $self  = {
-        'resolver' => Net::DNS::Resolver->new,
+        'resolver'    => Net::DNS::Resolver->new,
+        'ircd'        => shift,
     };
     # TODO: A cache?
     bless $self, $class;

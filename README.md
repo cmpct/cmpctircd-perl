@@ -19,16 +19,16 @@ install`.
 
 Dependencies
 ------------
+* Net::DNS (libnet-dns-perl, only if `<advanced:dns>` is enabled)
 * IO::Socket::SSL (libio-socket-ssl-perl, only if `<server:tls>` is enabled)
 * IO::Epoll (libio-epoll-perl)
 * XML::Simple (libxml-simple-perl)
-* Term::ANSIColor (within core on Debian)
-* Net::DNS (libnet-dns-perl)
-* Getopt::Long (within core on Debian)
 * Datetime (libdatetime-perl)
 * Path::Tiny (libpath-tiny-perl)
 * Module::Install (libmodule-install-perl)
 * String::Scanf (install with CPAN)
+* Term::ANSIColor (within core on Debian)
+* Getopt::Long (within core on Debian)
 * `perl >= 5.20` for `postderef`
 
 Contact
