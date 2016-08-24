@@ -126,7 +126,7 @@ sub sendWelcome {
     # XXX: Generate the user/chan modes programatically
     #$self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MYINFO   . " $self->{nick} $ircd->{host} cmpctircd-$ircd->{version} x ntlo\r\n");
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ISUPPORT . " $self->{nick} CASEMAPPING=rfc1459 PREFIX=(ov)\@+ STATUSMSG=\@+ NETWORK=$ircd->{network} MAXTARGETS=$ircd->{maxtargets} :are supported by this server\r\n");
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ISUPPORT . " $self->{nick} CHANTYPES=# CHANMODES=b,l,nt :are supported by this server" . "\r\n");
+    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ISUPPORT . " $self->{nick} CHANTYPES=# CHANMODES=b,l,ntm :are supported by this server" . "\r\n");
     $self->motd();
     $self->{registered} = 1;
 
