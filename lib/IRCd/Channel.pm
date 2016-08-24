@@ -189,12 +189,6 @@ sub topic {
         $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
         return;
     }
-    if($self->{modes}->{t}->get()) {
-        if($self->getStatus($client) < 3) {
-            $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
-            return;
-        }
-    }
     # XXX: +t/-t
     # XXX: RPL_NOTOPIC is a thing too
     # XXX: I think we may need to tell the clients differently?
@@ -209,6 +203,12 @@ sub topic {
             $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_NOTOPIC      . " $client->{nick} $self->{name} :No topic is set\r\n");
         }
     } else {
+        if($self->{modes}->{t}->get()) {
+            if($self->getStatus($client) < 3) {
+                $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
+                return;
+            }
+        }
         $self->{topic}->set($client, $topic, 0, 1);
     }
 }
