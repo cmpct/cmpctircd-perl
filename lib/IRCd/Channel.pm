@@ -61,7 +61,7 @@ sub initModes {
                 $param = "";
             }
             # we need to pass the client, otherwise the mode setting won't have a user to ref to
-            $self->{modes}->{$name}->grant($client,  "+", $name, $param // undef, 1);
+            $self->{modes}->{$name}->grant($client,  "+", $name, $param // undef, 1, 0);
         }
     }
 }
@@ -103,11 +103,12 @@ sub addClient {
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_ENDOFNAMES    . " $client->{nick} $self->{name} :End of /NAMES list.\r\n");
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :" . $self->{topic}->get() . "\r\n") if($self->{topic}->get() ne "");
 
-    #my $modes = $self->getModeStrings("+");
-    #$client->{log}->debug("[$self->{name}] Writing: $modes->{characters} $modes->{args}");
-    # XXX: Will use this for clientless mode setting?
-    #$client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $self->{name} $modes->{characters} $modes->{args}\r\n");
-    #$client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_CREATIONTIME  . " $client->{nick} $self->{name} " . time() . "\r\n");
+    my $modes = $self->getModeStrings("+");
+    if($modes->{args}) {
+        $client->write(":$ircd->{host} MODE $self->{name} $modes->{characters} $modes->{args}");
+    } else {
+        $client->write(":$ircd->{host} MODE $self->{name} $modes->{characters}");
+    }
 }
 sub quit {
     my $self   = shift;
@@ -291,7 +292,7 @@ sub sendToRoom {
         return;
     }
     if($msg =~ /(PRIVMSG|NOTICE)/ and $self->{modes}->{m}->get() and $self->getStatus($client) < $self->{modes}->{v}->level()) {
-        $client->{log}->info("[$self->{name}] User (nic: $client->{nick} tried to speak on muted channel $self->{name})");
+        $client->{log}->info("[$self->{name}] User (nick: $client->{nick} tried to speak on muted channel $self->{name})");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CANNOTSENDTOCHAN . " $client->{nick} $self->{name} :Cannot send to channel (+m)");
         return;
     }

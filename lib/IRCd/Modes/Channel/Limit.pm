@@ -33,6 +33,7 @@ sub grant {
     my $mode     = shift // "l";
     my $args     = shift // $self->{limit};
     my $force    = shift // 0;
+    my $announce = shift // 1;
 
     if(!$force and !$self->{channel}->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
@@ -52,8 +53,7 @@ sub grant {
     } else {
         $self->{limit} = $args;
     }
-    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args");
-    #$self->{affects}->{$client} = 1;
+    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args") if($announce);
 }
 sub revoke {
     my $self     = shift;
@@ -65,6 +65,7 @@ sub revoke {
     my $mode     = shift // "l";
     my $args     = shift // $self->{limit};
     my $force    = shift // 0;
+    my $announce = shift // 1;
 
     # TODO: No arg required
     if(!$self->{channel}->{clients}->{$client->{nick}}) {
@@ -81,7 +82,7 @@ sub revoke {
     # TODO: Should we check that their arg matches the current mode?
     # I don't think so.
     $self->{limit} = 0;
-    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args");
+    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args") if($announce);
 }
 
 sub get {

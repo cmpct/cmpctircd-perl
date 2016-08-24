@@ -144,9 +144,9 @@ sub join {
     } else {
         $client->{log}->info("[$channelInput] Creating channel..\r\n");
         my $channel = IRCd::Channel->new($channelInput);
+        $channel->initModes($client, $ircd);
         $channel->addClient($client);
         # some modes won't apply without the user in the channel, so apply after adding client
-        $channel->initModes($client, $ircd);
         $ircd->{channels}->{$channelInput} = $channel;
     }
 
@@ -448,7 +448,12 @@ sub mode {
         }
         if(@split < 3) {
             my $channelModes = $channel->getModeStrings("+");
-            $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $split[1] $channelModes->{characters} $channelModes->{args}\r\n");
+            if($channelModes->{args}) {
+                $client->write(":$ircd->{host} " . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $split[1] $channelModes->{characters} $channelModes->{args}");
+            } else {
+                $client->write(":$ircd->{host} " . IRCd::Constants::RPL_CHANNELMODEIS . " $client->{nick} $split[1] $channelModes->{characters}");
+            }
+            $client->write(":$ircd->{host} "  . IRCd::Constants::RPL_CREATIONTIME  . " $client->{nick} $channel->{name} " . time());
             $client->{log}->warn("[$client->{nick}] MODE $split[1] => $channelModes->{characters} $channelModes->{args}");
             return;
         }
@@ -463,7 +468,7 @@ sub mode {
         my $currentModifier = "";
         $split[2] =~ s/://;
         # Special case for just +b (ban list)
-        if($split[2] eq '+b' and !$split[3]) {
+        if($split[2] =~ /b/ and !$split[3]) {
             $client->{log}->debug("[$client->{nick}] Requested +b list for $split[1]");
             foreach(values($channel->{modes}->{b}->list()->%*)) {
                 my $banMask = $_->mask();

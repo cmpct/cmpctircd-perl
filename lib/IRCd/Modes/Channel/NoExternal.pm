@@ -33,6 +33,7 @@ sub grant {
     my $mode     = shift // "n";
     my $args     = shift // "";
     my $force    = shift // 0;
+    my $announce = shift // 1;
 
     return if($self->{set});
     if(!$force and !$self->{channel}->{clients}->{$client->{nick}}) {
@@ -46,7 +47,7 @@ sub grant {
         return;
     }
     my $mask = $client->getMask(1);
-    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args");
+    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args") if($announce);
     $self->{set} = 1;
 }
 sub revoke {
@@ -59,6 +60,7 @@ sub revoke {
     my $mode     = shift // "n";
     my $args     = shift // "";
     my $force    = shift // 0;
+    my $announce = shift // 1;
 
     return if(!$self->{set});
     if(!$self->{channel}->{clients}->{$client->{nick}}) {
@@ -73,7 +75,7 @@ sub revoke {
     }
     my $mask = $client->getMask(1);
     $self->{set} = 0;
-    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args");
+    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args") if($announce);
 }
 
 sub get {
