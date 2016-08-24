@@ -15,10 +15,14 @@ use constant {
     RPL_ISUPPORT => '005',
 
     RPL_UMODEIS       => 221,
+    RPL_RULES         => 232,
     RPL_AWAY          => 301,
     RPL_USERHOST      => 302,
     RPL_UNAWAY        => 305,
     RPL_NOWAWAY       => 306,
+    RPL_RULESSTART    => 308,
+    RPL_ENDOFRULES    => 309,
+
 
     RPL_WHOISUSER     => 311,
     RPL_WHOISSERVER   => 312,

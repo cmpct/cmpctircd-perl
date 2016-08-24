@@ -153,9 +153,31 @@ sub motd {
     open($motd, "<", $ircd->{motd_path});
     my @motd = <$motd>;
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTDSTART . " $self->{nick} :- $ircd->{host} Message of the Day -\r\n");
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTD      . " $self->{nick} :- " . $_ . "\r\n") foreach(@motd);
+    for (my $i = 0; $i < @motd; $i++) {
+        my $line = $motd[$i];
+        $line =~ s/\r?\n//;
+        last if ($i + 1 == @motd && $line =~ /^\s*$/);
+        $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTD     . " $self->{nick} :- " . $line . "\r\n");
+    }
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFMOTD . " $self->{nick} :End of /MOTD command.\r\n");
     close($motd);
+}
+
+sub rules {
+    my $self = shift;
+    my $ircd = $self->{ircd};
+    my $rules;
+    open($rules, "<", $ircd->{rules_path});
+    my @rules = <$rules>;
+    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_RULESSTART . " $self->{nick} :- $ircd->{host} server rules -\r\n");
+    for (my $i = 0; $i < @rules; $i++) {
+        my $line = $rules[$i];
+        $line =~ s/\r?\n//;
+        last if ($i + 1 == @rules && $line =~ /^\s*$/);
+        $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_RULES      . " $self->{nick} :- " . $line . "\r\n");
+    }
+    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFRULES . " $self->{nick} :End of RULES command.\r\n");
+    close($rules);
 }
 
 sub checkTimeout {
