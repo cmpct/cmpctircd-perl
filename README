@@ -9,7 +9,7 @@
 <p>For now, it is still under heavy development. It will be clear when it is production ready.
 <a href="https://bugs.cmpct.info/">Bugzilla</a> is a good indicator of progress.</p>
 
-<p>Checkout <em>master</em>, edit <code>ircd.xml</code>, and run <code>bin/ircd --config ircd.xml --motd ircd.motd</code> to test.
+<p>Checkout <em>master</em>, edit <code>ircd.xml</code>, and run <code>bin/ircd --config ircd.xml --motd ircd.motd --rules ircd.rules</code> to test.
 Windows is untested as of yet, but it should run with <code>select</code> as the socket provider  (<code>&lt;sockets:provider&gt;</code>). <code>epoll</code> is
 recommended on Linux.</p>
 

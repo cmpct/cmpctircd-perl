@@ -10,7 +10,7 @@ Status
 For now, it is still under heavy development. It will be clear when it is production ready. 
 [Bugzilla](https://bugs.cmpct.info/) is a good indicator of progress.
 
-Checkout *master*, edit `ircd.xml`, and run `bin/ircd --config ircd.xml --motd ircd.motd` to test.
+Checkout *master*, edit `ircd.xml`, and run `bin/ircd --config ircd.xml --motd ircd.motd --rules ircd.rules` to test.
 Windows is untested as of yet, but it should run with `select` as the socket provider  (`<sockets:provider>`). `epoll` is 
 recommended on Linux.
 

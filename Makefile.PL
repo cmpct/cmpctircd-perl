@@ -32,6 +32,7 @@ extra_install:
 	install -d $(DESTDIR)/etc/cmpctircd/
 	install -m 640 ircd.xml  $(DESTDIR)/etc/cmpctircd/ircd.xml.example
 	install -m 640 ircd.motd $(DESTDIR)/etc/cmpctircd/ircd.motd.example
+	install -m 640 ircd.rules $(DESTDIR)/etc/cmpctircd/ircd.rules.example
 END_OF_MAKEFILE
 
 WriteAll;
