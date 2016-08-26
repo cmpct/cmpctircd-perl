@@ -119,13 +119,13 @@ sub fire_event {
     my @handlers = keys($self->{events}->{$event}->%*);
     my $userArgs = \@_;
     my $found    = 0;
-    my %returnValues = {};
+    my $returnValues = {};
     # Execute all registered handlers for $event
     # Keep a list of all of the return values
     foreach(@handlers) {
         my $ref  = $_;
         my $args = $self->{events}->{$event}->{$_};
-        $returnValues{$ref} = $_->($args, $userArgs);
+        $returnValues->{$ref} = $_->($args, $userArgs);
         $found = 1;
     }
     # returns if we found a handler or not

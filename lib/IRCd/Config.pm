@@ -3,6 +3,7 @@ use strict;
 use warnings;
 no warnings "experimental::postderef"; # for older perls (<5.24)
 use feature 'postderef';
+use XML::Simple;
 
 use IRCd::Sockets::Epoll;
 use IRCd::Sockets::Select;
@@ -33,29 +34,26 @@ sub new {
 }
 
 sub parse {
-    my $self = shift;
-    do{
-        use XML::Simple;
-        my $parse  = XML::Simple->new();
-        my $xmlRef = $parse->XMLin("ircd.xml");
+    my $self   = shift;
+    my $parse  = XML::Simple->new();
+    my $xmlRef = $parse->XMLin("ircd.xml");
 
-        $self->{ip}          = $xmlRef->{'server'}->{'ip'};
-        $self->{port}        = $xmlRef->{'server'}->{'port'};
-        $self->{tls}         = $xmlRef->{'server'}->{'tls'};
-        $self->{tlsport}     = $xmlRef->{'server'}->{'tlsport'};
-        $self->{host}        = $xmlRef->{'ircd'}->{'host'};
-        $self->{network}     = $xmlRef->{'ircd'}->{'network'};
-        $self->{desc}        = $xmlRef->{'ircd'}->{'desc'};
-        $self->{channelmodes} = $xmlRef->{'channelmodes'};
-        $self->{usermodes}   = $xmlRef->{'usermodes'};
-        $self->{cloak_keys}  = $xmlRef->{'cloak'}->{'key'};
-        $self->{hidden_host} = $xmlRef->{'cloak'}->{'hiddenhost'};
-        $self->{socketprovider} = $xmlRef->{'sockets'}->{'provider'};
-        $self->{requirepong} = $xmlRef->{'advanced'}->{'requirepong'};
-        $self->{dns}         = $xmlRef->{'advanced'}->{'dns'};
-        $self->{pingtimeout} = $xmlRef->{'advanced'}->{'pingtimeout'};
-        $self->{maxtargets}  = $xmlRef->{'advanced'}->{'maxtargets'};
-    }
+    $self->{ip}             = $xmlRef->{'server'}->{'ip'};
+    $self->{port}           = $xmlRef->{'server'}->{'port'};
+    $self->{tls}            = $xmlRef->{'server'}->{'tls'};
+    $self->{tlsport}        = $xmlRef->{'server'}->{'tlsport'};
+    $self->{host}           = $xmlRef->{'ircd'}->{'host'};
+    $self->{network}        = $xmlRef->{'ircd'}->{'network'};
+    $self->{desc}           = $xmlRef->{'ircd'}->{'desc'};
+    $self->{channelmodes}   = $xmlRef->{'channelmodes'};
+    $self->{usermodes}      = $xmlRef->{'usermodes'};
+    $self->{cloak_keys}     = $xmlRef->{'cloak'}->{'key'};
+    $self->{hidden_host}    = $xmlRef->{'cloak'}->{'hiddenhost'};
+    $self->{socketprovider} = $xmlRef->{'sockets'}->{'provider'};
+    $self->{requirepong}    = $xmlRef->{'advanced'}->{'requirepong'};
+    $self->{dns}            = $xmlRef->{'advanced'}->{'dns'};
+    $self->{pingtimeout}    = $xmlRef->{'advanced'}->{'pingtimeout'};
+    $self->{maxtargets}     = $xmlRef->{'advanced'}->{'maxtargets'};
 }
 
 sub getSockProvider {

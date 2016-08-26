@@ -609,7 +609,7 @@ sub motd {
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
-    
+
     $client->motd();
   }
 
