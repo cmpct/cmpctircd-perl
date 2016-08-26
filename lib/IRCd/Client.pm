@@ -145,9 +145,9 @@ sub sendWelcome {
     # Set initial modes
     foreach (values($ircd->{config}->{usermodes}->%*)) {
         my $mode = $_->{name};
-        $self->{modes}->{$mode}->grant($self,  "+", $mode,  $_->{param} // undef, 0, 1);
-        $self->{modes}->{z}->grant() if ($self->{tls});
+        $self->{modes}->{$mode}->grant($self, "+", $mode, $_->{param} // undef, 0, 1);
     }
+    $self->{modes}->{z}->grant() if ($self->{tls});
 }
 
 sub motd {
@@ -215,7 +215,7 @@ sub checkResolve {
     my $mask = $self->getMask(1);
     my $sock = $self->{socket}->{sock};
     my $answer = 0;
-    
+
     if($answer = $self->{resolve}->read($self->{query}) and $answer ne 'ERROR') {
         # We got an answer to our query!
         $self->{log}->debug("[$self->{nick}] Got an answer to our DNS query for [$self->{ip}]: $answer");
@@ -241,6 +241,7 @@ sub disconnect {
     # parting messages.
     if($graceful) {
         foreach my $chan (keys($ircd->{channels}->%*)) {
+            next if(!$ircd->{channels}->{$chan}->{clients}->{$self});
             $ircd->{channels}->{$chan}->quit($self, $reason);
         }
         $self->{socket}->{sock}->write(":$mask QUIT :$reason\r\n");

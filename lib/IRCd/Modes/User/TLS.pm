@@ -37,7 +37,7 @@ sub grant {
     my $targetClient = undef;
     my $mask = $client->getMask(1);
 
-    return if (!$force or !$client->{tls});
+    return if (!$force and !$client->{tls});
     $self->{client}->{log}->debug("[$client->{nick}] setting +z");
     $self->{client}->write(":$mask MODE $client->{nick} $modifier$mode $args") if $announce;
     $self->{affects}->{$client} = 1;

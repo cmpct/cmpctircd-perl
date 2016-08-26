@@ -5,7 +5,7 @@ use inc::Module::Install;
 
 name            'cmpctircd';
 author          'sam <sam@cmpct.info>';
-version         '0.01';
+version         '0.1.2';
 license         'gpl';
 perl_version    '5.020';
 
