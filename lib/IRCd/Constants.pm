@@ -37,6 +37,7 @@ use constant {
     RPL_NOTOPIC       => 331,
     RPL_TOPIC         => 332,
     RPL_TOPICWHOTIME  => 333,
+    RPL_VERSION       => 351,
     RPL_WHOREPLY      => 352,
     RPL_NAMREPLY      => 353,
     RPL_ENDOFNAMES    => 366,
