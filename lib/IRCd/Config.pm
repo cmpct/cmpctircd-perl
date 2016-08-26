@@ -89,6 +89,7 @@ sub setupHandlers {
             'module' => $self->{module},
         )->init();
     }
+    closedir(DIR);
 }
 
 1;
