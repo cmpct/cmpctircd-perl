@@ -7,6 +7,7 @@ use feature 'postderef';
 use IRCd::Client::Packets;
 use IRCd::Constants;
 use IRCd::Modes::User::Cloak;
+use IRCd::Modes::User::TLS;
 
 package IRCd::Client;
 
@@ -46,6 +47,7 @@ sub new {
     $self->{log}        = $self->{ircd}->{log};
     $self->{resolve}    = IRCd::Resolve->new($self);
     $self->{modes}->{x} = IRCd::Modes::User::Cloak->new($self);
+    $self->{modes}->{z} = IRCd::Modes::User::TLS->new($self);
     return $self;
 }
 
@@ -154,8 +156,9 @@ sub sendWelcome {
     # Set initial modes
     foreach (values($ircd->{config}->{usermodes}->%*)) {
         my $mode = $_->{name};
-        $self->{modes}->{$mode}->grant($self,  "+", $mode,  $_->{param} // undef, 0, 1);
+        $self->{modes}->{$mode}->grant($self, "+", $mode, $_->{param} // undef, 0, 1);
     }
+    $self->{modes}->{z}->grant() if ($self->{tls});
 }
 
 sub motd {
@@ -249,6 +252,7 @@ sub disconnect {
     # parting messages.
     if($graceful) {
         foreach my $chan (keys($ircd->{channels}->%*)) {
+            next if(!$ircd->{channels}->{$chan}->{clients}->{$self});
             $ircd->{channels}->{$chan}->quit($self, $reason);
         }
         $self->{socket}->{sock}->write(":$mask QUIT :$reason\r\n");

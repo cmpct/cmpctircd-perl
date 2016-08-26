@@ -26,7 +26,7 @@ sub new {
 
 sub grant {
     my $self     = shift;
-    my $client   = $self->{client};
+    my $client   = shift;
     my $socket   = $client->{socket}->{sock};
     my $config   = $client->{config};
     my $ircd     = $client->{ircd};
@@ -55,9 +55,9 @@ sub grant {
     }
 
     $self->{client}->{log}->debug("[$client->{nick}] setting +x");
-    
+
     $self->{client}->write(":$ircd->{host} " . IRCd::Constants::RPL_HOSTHIDDEN . " $client->{nick} $client->{cloak} :is now your displayed host\r\n");
-    $self->{client}->write(":$mask MODE $client->{nick} $modifier$mode $args") if $announce;
+    $self->{client}->write(":$mask MODE $client->{nick} $modifier$mode") if $announce;
     $self->{affects}->{$client} = 1;
 
     # Rejoin all of our channels
