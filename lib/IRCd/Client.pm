@@ -79,7 +79,9 @@ sub parse {
     );
     my $requirePong = 0;
     $requirePong = 1 if ($ircd->{config}->{requirepong} and $self->{waitingForPong});
-    if (my $handlerRef = IRCd::Client::Packets->can(lc($splitPacket[0]))) {
+    my $foundEvent = $ircd->{module}->exec($splitPacket[0], $self, $msg);
+    my $handlerRef = IRCd::Client::Packets->can(lc($splitPacket[0]));
+    if($handlerRef) {
         # TODO: Registration Timeout error, rather than just ping timeout
         if($ircd->{dns} and $self->{query} and !$self->{host} and !$registrationCommands{uc($splitPacket[0])}) {
             $self->{log}->debug("[$self->{nick}] Waiting to resolve host, blocking");
@@ -108,7 +110,8 @@ sub parse {
             $self->{idle} = time();
         }
         $handlerRef->($self, $msg);
-    } else {
+    }
+    if(!$foundEvent and !$handlerRef) {
         $self->write(":$ircd->{host} " . IRCd::Constants::ERR_UNKNOWNCOMMAND . " $self->{nick} $splitPacket[0] :Unknown command");
         $self->{log}->warn("UNHANDLED PACKET: " . $splitPacket[0]);
     }

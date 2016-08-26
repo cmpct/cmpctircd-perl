@@ -29,6 +29,7 @@ Dependencies
 * String::Scanf (install with CPAN)
 * Term::ANSIColor (within core on Debian)
 * Getopt::Long (within core on Debian)
+* Tie::Refhash (within core on Debian)
 * `perl >= 5.20` for `postderef`
 
 Contact

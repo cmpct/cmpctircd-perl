@@ -6,6 +6,7 @@ use feature 'postderef';
 
 use IRCd::Sockets::Epoll;
 use IRCd::Sockets::Select;
+use IRCd::Module;
 
 package IRCd::Config;
 
@@ -64,6 +65,30 @@ sub getSockProvider {
     my $OS = $^O;
     return IRCd::Sockets::Epoll->new($listener)  if($self->{socketprovider} eq "epoll" and $OS eq 'linux');
     return IRCd::Sockets::Select->new($listener) if($self->{socketprovider} eq "select");
+}
+
+sub setupHandlers {
+    my $self  = shift;
+    my $ircd  = shift;
+    my $path  = 'lib/IRCd/Modules';
+
+    $self->{module} = IRCd::Module->new;
+    opendir (DIR, $path) or die $!;
+    while (my $file = readdir(DIR)) {
+        # return if the file ends with a '.'
+        # return if the file doesn't end with '.pm'
+        # instantiate the module
+        # execute its hook setup (->init())
+        next    if ($file    =~ m/^\./);
+        next    unless($file =~ m/.pm$/);
+        require $path . '/' . $file;
+        $file =~ s/.pm//;
+        $file = 'IRCd::Modules::' . $file;
+        $file->new(
+            'ircd'   => $ircd,
+            'module' => $self->{module},
+        )->init();
+    }
 }
 
 1;

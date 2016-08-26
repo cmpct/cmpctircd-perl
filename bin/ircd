@@ -37,15 +37,16 @@ sub new {
         'desc'      => undef,
         'ip'        => undef,
         'port'      => undef,
-        'version'   => '0.1.2',
+        'version'   => '0.2.0',
 
         # advanced config options
         'pingtimeout' => undef,
         'maxtargets'  => undef,
     };
+    bless $self, $class;
+    $self->{config}->setupHandlers($self);
     $self->{motd_path}  = shift;
     $self->{rules_path} = shift;
-    bless $self, $class;
     return $self;
 }
 
@@ -93,6 +94,7 @@ sub setup {
         sid      => {},
         name     => {},
     };
+    $self->{module}      = $self->{config}->{module};
     $self->{host}        = $self->{config}->{host};
     $self->{network}     = $self->{config}->{network};
     $self->{desc}        = $self->{config}->{desc};

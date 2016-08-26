@@ -5,7 +5,7 @@ use inc::Module::Install;
 
 name            'cmpctircd';
 author          'sam <sam@cmpct.info>';
-version         '0.01';
+version         '0.20';
 license         'gpl';
 perl_version    '5.020';
 
@@ -20,6 +20,7 @@ requires 'Path::Tiny';
 requires 'Getopt::Long';
 requires 'Module::Install';
 requires 'String::Scanf';
+requires 'Tie::Refhash';
 
 install_script 'bin/ircd';
 
