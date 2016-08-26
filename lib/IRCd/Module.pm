@@ -41,17 +41,24 @@ sub exec {
     my @handlers = keys($self->{handlers}->{$packet}->%*);
     my $userArgs = \@_;
     my $found    = 0;
+    my $returnValues = {};
     # Execute all registered handlers for $packet
     foreach(@handlers) {
         my $ref  = $_;
         my $args = $self->{handlers}->{$packet}->{$_};
-        $_->($args, $userArgs);
+        $returnValues->{$ref} = $_->($args, $userArgs);
         $found = 1;
     }
     # returns if we found a handler or not (for ERR_UNKNOWNCOMMAND)
-    return $found;
+    return {
+        'values' => $returnValues,
+        'found'  => $found,
+    };
 }
 
+#               #
+#    Modules    #
+#               #
 sub register_module {
     my $self          = shift;
     my $module_object = shift;
@@ -77,6 +84,21 @@ sub is_loaded_module {
     my $module = shift;
     return 1 if($self->{modules}->{$module});
     return 0;
+}
+
+#             #
+#  Utilities  #
+#             #
+sub can_process {
+    # Events can signal the ircd core to 'stop processing' the current command
+    # ...by returning a value < 0 (e.g. -1).
+    # This function checks if any of the events sent that signal.
+    # Returns 1 if ok to continue, 0 if not.
+    my $returnValues = shift;
+    foreach(values($returnValues->%*)) {
+        return 0 if($_ < 0);
+    }
+    return 1;
 }
 
 1;

@@ -36,8 +36,10 @@ sub pkt_version {
     } else {
         $client->write(":$client->{ircd}->{host} " . IRCd::Constants::RPL_VERSION . " $client->{nick} cmpctircd-$self->{ircd}->{version}");
     }
+    # We could return -1 to cease processing for this packet (after other events have executed).
+    # But there's no reason to do that, so...
+    return 1;
 }
-
 
 sub init {
     my $self = shift;

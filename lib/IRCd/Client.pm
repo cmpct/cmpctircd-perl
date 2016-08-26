@@ -79,7 +79,15 @@ sub parse {
     );
     my $requirePong = 0;
     $requirePong = 1 if ($ircd->{config}->{requirepong} and $self->{waitingForPong});
-    my $foundEvent = $ircd->{module}->exec($splitPacket[0], $self, $msg);
+
+    # Execute any command events for $splitPacket[0]
+    my $event      = $ircd->{module}->exec($splitPacket[0], $self, $msg);
+    my $foundEvent = $event->{found};
+    # Check if any of the events returned < 0; if so, return.
+    if(!IRCd::Module::can_process($event->{values})) {
+        $self->{log}->debug("[$self->{nick}] A handler for $splitPacket[0] returned 0. Bailing out.\r\n");
+        return;
+    }
     my $handlerRef = IRCd::Client::Packets->can(lc($splitPacket[0]));
     if($handlerRef) {
         # TODO: Registration Timeout error, rather than just ping timeout
@@ -215,7 +223,7 @@ sub checkResolve {
     my $mask = $self->getMask(1);
     my $sock = $self->{socket}->{sock};
     my $answer = 0;
-    
+
     if($answer = $self->{resolve}->read($self->{query}) and $answer ne 'ERROR') {
         # We got an answer to our query!
         $self->{log}->debug("[$self->{nick}] Got an answer to our DNS query for [$self->{ip}]: $answer");
