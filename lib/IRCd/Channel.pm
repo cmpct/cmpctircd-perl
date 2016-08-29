@@ -11,6 +11,7 @@ use IRCd::Modes::Channel::Limit;
 use IRCd::Modes::Channel::Moderated;
 use IRCd::Modes::Channel::NoExternal;
 use IRCd::Modes::Channel::Op;
+use IRCd::Modes::Channel::Oper;
 use IRCd::Modes::Channel::Topic;
 use IRCd::Modes::Channel::Voice;
 
@@ -33,6 +34,7 @@ sub new {
     $self->{modes}->{m} = IRCd::Modes::Channel::Moderated->new($self);
     $self->{modes}->{n} = IRCd::Modes::Channel::NoExternal->new($self);
     $self->{modes}->{o} = IRCd::Modes::Channel::Op->new($self);
+    $self->{modes}->{O} = IRCd::Modes::Channel::Oper->new($self);
     $self->{modes}->{t} = IRCd::Modes::Channel::Topic->new($self);
     $self->{modes}->{v} = IRCd::Modes::Channel::Voice->new($self);
     foreach(keys($self->{modes}->%*)) {
@@ -84,6 +86,11 @@ sub addClient {
     if($self->{modes}->{b}->has($client)) {
         $client->{log}->info("[$self->{name}] User (nick: $client->{nick}) is banned from the channel");
         $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_BANNEDFROMCHAN . " $client->{nick} $self->{name} :Cannot join channel (+b)\r\n");
+        return;
+    }
+    if($self->{modes}->{O}->get() and !$client->{modes}->{o}->has($client)) {
+        $client->{log}->info("[$self->{name}] User (nick: $client->{nick}) attempted to join oper-only (+O) channel $self->{name}");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_OPERONLY . " $client->{nick} $self->{name} :Cannot join channel $self->{name} (IRCops only)");
         return;
     }
     $self->{clients}->{$client->{nick}} = $client;

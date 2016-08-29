@@ -35,7 +35,12 @@ sub new {
 
 sub parse {
     my $self   = shift;
-    my $parse  = XML::Simple->new();
+    my $parse  = XML::Simple->new(
+        KeyAttr => {
+            mode => 'name',
+            oper => 'name',
+        },
+    );
     my $xmlRef = $parse->XMLin("ircd.xml");
 
     $self->{ip}             = $xmlRef->{'server'}->{'ip'};

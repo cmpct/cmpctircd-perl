@@ -32,10 +32,15 @@ sub pkt_oper {
 
     my ($c_name, $c_password, $c_hash, $c_type);
     my $got_match = 0;
+
+    # XXX: Workaround for XML::Simple modifying behaviour basted on number of elements (one oper || many)
+    if(!$opers->{$u_name}) {
+        $opers->{$u_name} = $ircd->{config}->{opers}->{oper};
+    }
     if(my $oper = $opers->{$u_name}) {
-        $c_password  = $opers->{$u_name}->{password};
-        $c_hash      = $opers->{$u_name}->{hash} . '_hex';
-        $c_type      = $opers->{$u_name}->{type};
+        $c_password  = $oper->{password};
+        $c_hash      = $oper->{hash} . '_hex';
+        $c_type      = $oper->{type};
         $ircd->{log}->debug("[$client->{nick}] Found ircop $u_name [$c_type]");
         # XXX: Support something other than SHA*
         if(my $hash_ref = Digest::SHA->can($c_hash)) {

@@ -67,6 +67,7 @@ use constant {
     ERR_BANNEDFROMCHAN   => 474,
     ERR_CHANOPRIVSNEEDED => 482,
     ERR_NOOPERHOST       => 491,
+    ERR_OPERONLY         => 520,
 };
 
 1;
