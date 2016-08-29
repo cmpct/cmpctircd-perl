@@ -75,7 +75,7 @@ sub getSockProvider {
 sub setupHandlers {
     my $self  = shift;
     my $ircd  = shift;
-    my $path  = 'lib/IRCd/Modules';
+    my $path  = shift;
 
     $self->{module} = IRCd::Module->new;
     opendir (DIR, $path) or die $!;

@@ -44,9 +44,9 @@ sub new {
         'maxtargets'  => undef,
     };
     bless $self, $class;
-    $self->{config}->setupHandlers($self);
     $self->{motd_path}  = shift;
     $self->{rules_path} = shift;
+    $self->{config}->setupHandlers($self, shift);
     return $self;
 }
 
@@ -288,12 +288,14 @@ if(!caller) {
     my $config = "/etc/cmpctircd/ircd.xml";
     my $motd   = "/etc/cmpctircd/ircd.motd";
     my $rules  = "/etc/cmpctircd/ircd.rules";
+    my $moddir = "lib/IRCd/Modules";
     my $log_level = "DEBUG";
     Getopt::Long::GetOptions(
-        "config=s"  => \$config,
-        "motd=s"    => \$motd,
-        "rules=s"   => \$rules,
-        "loglevel=s"  => \$log_level,
+        "config=s"   => \$config,
+        "motd=s"     => \$motd,
+        "rules=s"    => \$rules,
+        "loglevel=s" => \$log_level,
+        "moddir=s"   => \$moddir,
     );
     if(!-e $config) {
         die "Config file [$config] does not exist! Please create it or tell me where it is (--config) and try again.\r\n";
@@ -304,7 +306,10 @@ if(!caller) {
     if(!-e $rules) {
         die "RULES file [$rules] does not exist! Please create it or tell me where it is (--rules) and try again.\r\n";
     }
-    my $ircd = IRCd::Run->new($config, $motd, $rules);
+    if(!-d $moddir) {
+        die "MODDIR directory [$moddir] does not exist! Please tell me where it is (--moddir) and try again.\r\n";
+    }
+    my $ircd = IRCd::Run->new($config, $motd, $rules, $moddir);
     $ircd->setup($log_level);
     $ircd->run;
 };
