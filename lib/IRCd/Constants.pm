@@ -47,6 +47,7 @@ use constant {
     RPL_MOTDSTART     => 375,
     RPL_ENDOFMOTD     => 376,
     RPL_WHOISHOST     => 378,
+    RPL_YOUREOPER     => 381,
     RPL_HOSTHIDDEN    => 396,
     RPL_WHOISSECURE   => 671,
 
@@ -65,6 +66,7 @@ use constant {
     ERR_CHANNELISFULL    => 471,
     ERR_BANNEDFROMCHAN   => 474,
     ERR_CHANOPRIVSNEEDED => 482,
+    ERR_NOOPERHOST       => 491,
 };
 
 1;

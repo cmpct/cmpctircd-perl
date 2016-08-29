@@ -244,12 +244,12 @@ sub whois {
             push @presentChannels, $_->{name};
         }
     }
-    if($targetClient == $client) {
-        # TODO: when ircops are added, add an OR for them
+    if($targetClient == $client or $client->{modes}->{o}->has($client)) {
         $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISHOST . " $client->{nick} $targetNick :is connecting from $targetClient->{ident}\@$targetClient->{host} $targetClient->{ip}\r\n");
     }
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISCHANNELS . " $client->{nick} $targetNick :" . CORE::join(' ', @presentChannels) . "\r\n") if @presentChannels >= 1;
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISSERVER   . " $client->{nick} $targetNick $client->{server} :$ircd->{desc}\r\n");
+    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISOPERATOR . " $client->{nick} $targetNick :is an IRC operator\r\n") if $targetClient->{modes}->{o}->has($client);
     # we only state away if they are away
     if ($targetClient->{away} ne '') {
         $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_AWAY   . " $client->{nick} $targetNick :$targetClient->{away}\r\n");

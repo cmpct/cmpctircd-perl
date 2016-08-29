@@ -54,6 +54,7 @@ sub parse {
     $self->{dns}            = $xmlRef->{'advanced'}->{'dns'};
     $self->{pingtimeout}    = $xmlRef->{'advanced'}->{'pingtimeout'};
     $self->{maxtargets}     = $xmlRef->{'advanced'}->{'maxtargets'};
+    $self->{opers}          = $xmlRef->{'opers'};
 }
 
 sub getSockProvider {

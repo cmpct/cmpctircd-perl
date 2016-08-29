@@ -7,6 +7,7 @@ use feature 'postderef';
 use IRCd::Client::Packets;
 use IRCd::Constants;
 use IRCd::Modes::User::Cloak;
+use IRCd::Modes::User::IRCOp;
 use IRCd::Modes::User::TLS;
 
 package IRCd::Client;
@@ -46,6 +47,7 @@ sub new {
     bless $self, $class;
     $self->{log}        = $self->{ircd}->{log};
     $self->{resolve}    = IRCd::Resolve->new($self);
+    $self->{modes}->{o} = IRCd::Modes::User::IRCOp->new($self);
     $self->{modes}->{x} = IRCd::Modes::User::Cloak->new($self);
     $self->{modes}->{z} = IRCd::Modes::User::TLS->new($self);
     return $self;
