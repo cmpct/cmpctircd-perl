@@ -52,8 +52,9 @@ sub new {
 
 sub setup {
     my $self = shift;
-    $self->{log} = IRCd::Log->new();
+    $self->{log} = IRCd::Log->new($self);
     $self->{config}->parse();
+    $self->{log}->methods();
     # TODO: Make a listener hash so we can have many of each
     $self->{clientListener} = IO::Socket::INET->new(
         LocalHost => $self->{config}->{ip},

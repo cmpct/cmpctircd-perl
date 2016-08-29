@@ -55,6 +55,7 @@ sub parse {
     $self->{cloak_keys}     = $xmlRef->{'cloak'}->{'key'};
     $self->{hidden_host}    = $xmlRef->{'cloak'}->{'hiddenhost'};
     $self->{socketprovider} = $xmlRef->{'sockets'}->{'provider'};
+    $self->{log}            = $xmlRef->{'log'};
     $self->{requirepong}    = $xmlRef->{'advanced'}->{'requirepong'};
     $self->{dns}            = $xmlRef->{'advanced'}->{'dns'};
     $self->{pingtimeout}    = $xmlRef->{'advanced'}->{'pingtimeout'};

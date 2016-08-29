@@ -50,6 +50,12 @@
         <provider>epoll</provider>
     </sockets>
 
+    <log>
+        <!-- Add as many of the 'file' or 'irc' stanzas as you like. -->
+        <file name='cmpctircd.log' level='INFO'/>
+        <irc  name='#debug'        modes='+nO' level='DEBUG'/>
+    </log>
+
     <advanced>
         <requirepong>1</requirepong>
         <dns>1</dns>

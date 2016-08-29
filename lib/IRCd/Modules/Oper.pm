@@ -39,7 +39,7 @@ sub pkt_oper {
     if(my $oper = $opers->{$u_name}) {
         $c_password  = $oper->{password};
         $c_hash      = $oper->{hash} . '_hex';
-        $c_type      = $oper->{type};
+        $c_type      = $oper->{type} // 'UNIMPLEMENTED';
         $ircd->{log}->debug("[$client->{nick}] Found ircop $u_name [$c_type]");
         # XXX: Support something other than SHA*
         if(my $hash_ref = Digest::SHA->can($c_hash)) {
