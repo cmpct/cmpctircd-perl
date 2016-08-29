@@ -51,8 +51,9 @@ sub new {
 }
 
 sub setup {
-    my $self = shift;
-    $self->{log} = IRCd::Log->new($self);
+    my $self      = shift;
+    my $log_level = shift;
+    $self->{log} = IRCd::Log->new($self, 1, $log_level);
     $self->{config}->parse();
     $self->{log}->methods();
     # TODO: Make a listener hash so we can have many of each
@@ -287,10 +288,12 @@ if(!caller) {
     my $config = "/etc/cmpctircd/ircd.xml";
     my $motd   = "/etc/cmpctircd/ircd.motd";
     my $rules  = "/etc/cmpctircd/ircd.rules";
+    my $log_level = "DEBUG";
     Getopt::Long::GetOptions(
-        "config=s" => \$config,
-        "motd=s"   => \$motd,
-        "rules=s"  => \$rules,
+        "config=s"  => \$config,
+        "motd=s"    => \$motd,
+        "rules=s"   => \$rules,
+        "loglevel=s"  => \$log_level,
     );
     if(!-e $config) {
         die "Config file [$config] does not exist! Please create it or tell me where it is (--config) and try again.\r\n";
@@ -302,6 +305,6 @@ if(!caller) {
         die "RULES file [$rules] does not exist! Please create it or tell me where it is (--rules) and try again.\r\n";
     }
     my $ircd = IRCd::Run->new($config, $motd, $rules);
-    $ircd->setup;
+    $ircd->setup($log_level);
     $ircd->run;
 };

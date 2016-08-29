@@ -4,20 +4,18 @@ use warnings;
 no warnings "experimental::postderef"; # for older perls (<5.24)
 use feature 'postderef';
 use Term::ANSIColor qw(:constants);
-#use feature 'current_sub';
 
 package IRCd::Log;
 
 sub new {
     my $class = shift;
     my $self  = {
-        # TODO: write to file
+        # TODO: perl's current_sub feature
         # TODO: colour switches
         # TODO: Why not just prefix with the calling class and function?
         'ircd'     => shift,
-        'filename' => shift // 'cmpctircd.log',
         'colour'   => shift // 1,
-        'severity' => shift // 'DEBUG',
+        'severity' => uc(shift) // 'DEBUG',
 
         'levels'   => {
             'ERROR' => 1,
@@ -30,6 +28,7 @@ sub new {
         'file_loggers' => {},
     };
     bless  $self, $class;
+    $Term::ANSIColor::AUTORESET = 1;
     return $self;
 }
 

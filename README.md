@@ -11,8 +11,10 @@ For now, it is still under heavy development. It will be clear when it is produc
 [Bugzilla](https://bugs.cmpct.info/) is a good indicator of progress.
 
 Checkout *master*, edit `ircd.xml`, and run `bin/ircd --config ircd.xml --motd ircd.motd --rules ircd.rules` to test.
-Windows is untested as of yet, but it should run with `select` as the socket provider  (`<sockets:provider>`). `epoll` is 
+Windows is untested as of yet, but it should run with `select` as the socket provider  (`<sockets:provider>`). `epoll` is
 recommended on Linux.
+
+Use parameter `--loglevel $LEVEL` where $LEVEL is one of: DEBUG, WARN, INFO, ERROR to control the logging level.
 
 TLS certs and keys should be 'tls\_cert.pem' and 'tls\_key.pem' respectively. Install with `./Makefile.PL; make; sudo make
 install`.
