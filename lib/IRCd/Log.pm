@@ -66,49 +66,43 @@ sub log {
             close(LOGFILE);
         }
     }
-    $colour = Term::ANSIColor::colored($msg . "\r\n", $colour);
-    print $colour;
+    if($self->shouldLog(lc($level))) {
+        $colour = Term::ANSIColor::colored($msg . "\r\n", $colour);
+        print $colour;
+    }
 }
 sub error {
     my $self = shift;
     my $msg  = shift;
-    if($self->shouldLog('error')) {
-        my $callerClass    = caller;
-        my $callerFunction = (caller 1)[3];
-        my $prefix = IRCd::Log::getPrefix($callerClass, $callerFunction);
-        $self->log('ERROR', "$prefix $_", 'bold magenta') foreach(split("\r\n", $msg));
-    }
+    my $callerClass    = caller;
+    my $callerFunction = (caller 1)[3];
+    my $prefix = IRCd::Log::getPrefix($callerClass, $callerFunction);
+    $self->log('ERROR', "$prefix $_", 'bold magenta') foreach(split("\r\n", $msg));
 }
 sub warn {
     my $self = shift;
     my $msg  = shift;
-    if($self->shouldLog('warn')) {
-        my $callerClass    = caller;
-        my $callerFunction = (caller 1)[3];
-        my $prefix = IRCd::Log::getPrefix($callerClass, $callerFunction);
-        $self->log('WARN', "$prefix $_", 'bright_red') foreach(split("\r\n", $msg));
-    }
+    my $callerClass    = caller;
+    my $callerFunction = (caller 1)[3];
+    my $prefix = IRCd::Log::getPrefix($callerClass, $callerFunction);
+    $self->log('WARN', "$prefix $_", 'bright_red') foreach(split("\r\n", $msg));
 }
 
 sub info {
     my $self = shift;
     my $msg  = shift;
-    if($self->shouldLog('info')) {
-        my $callerClass    = caller;
-        my $callerFunction = (caller 1)[3];
-        my $prefix = IRCd::Log::getPrefix($callerClass, $callerFunction);
-        $self->log('INFO', "$prefix $_", 'bright_blue') foreach(split("\r\n", $msg));
-    }
+    my $callerClass    = caller;
+    my $callerFunction = (caller 1)[3];
+    my $prefix = IRCd::Log::getPrefix($callerClass, $callerFunction);
+    $self->log('INFO', "$prefix $_", 'bright_blue') foreach(split("\r\n", $msg));
 }
 sub debug {
     my $self = shift;
     my $msg  = shift;
-    if($self->shouldLog('debug')) {
-        my $callerClass    = caller;
-        my $callerFunction = (caller 1)[3];
-        my $prefix = IRCd::Log::getPrefix($callerClass, $callerFunction);
-        $self->log('DEBUG', "$prefix $_", 'bright_cyan') foreach(split("\r\n", $msg));
-    }
+    my $callerClass    = caller;
+    my $callerFunction = (caller 1)[3];
+    my $prefix = IRCd::Log::getPrefix($callerClass, $callerFunction);
+    $self->log('DEBUG', "$prefix $_", 'bright_cyan') foreach(split("\r\n", $msg));
 }
 
 sub getPrefix {
