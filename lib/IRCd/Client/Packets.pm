@@ -400,6 +400,7 @@ sub mode {
     my $mask   = $client->getMask(1);
     my @split  = split(" ", $msg, 4);
     my $type   = "";
+    my $force  = shift // 0;
     my %argmodes = ();
 
     $type   = "user"    if($split[1] !~ /^#/);
@@ -429,8 +430,8 @@ sub mode {
             }
             $client->{log}->debug("[$client->{nick}] MODE: $currentModifier$_");
             if($client->{modes}->{$_}) {
-                $client->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, 0)  if $currentModifier eq "+";
-                $client->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, 0)  if $currentModifier eq "-";
+                $client->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, 1, $force)  if $currentModifier eq "+";
+                $client->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, 1, $force)  if $currentModifier eq "-";
                 if($argmodes{$_}) {
                     $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_ $parameters[$const]");
                     $const++ if $argmodes{$_};
@@ -487,8 +488,8 @@ sub mode {
             }
             $client->{log}->debug("[$client->{nick}] MODE: $currentModifier$_");
             if($channel->{modes}->{$_}) {
-                $channel->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, 0, 1)  if $currentModifier eq "+";
-                $channel->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, 0, 1)  if $currentModifier eq "-";
+                $channel->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, 1, $force)  if $currentModifier eq "+";
+                $channel->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, 1, $force)  if $currentModifier eq "-";
                 if($argmodes{$_}) {
                     $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_ $parameters[$const]");
                     $const++ if $argmodes{$_};

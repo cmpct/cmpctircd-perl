@@ -19,7 +19,6 @@ sub new {
     return $self;
 }
 
-
 sub pkt_oper {
     my $self         = $_[0]->[0];
     my $client       = $_[1]->[0];
@@ -72,9 +71,31 @@ sub pkt_oper {
     return 1;
 }
 
+sub pkt_samode {
+    my $self         = $_[0]->[0];
+    my $client       = $_[1]->[0];
+    my $msg          = $_[1]->[1];
+    my $ircd         = $client->{ircd};
+    my $opers        = $ircd->{config}->{opers}->{oper};
+    my @splitMessage = split(" ", $msg);
+    my $u_name       = $splitMessage[1];
+    my $u_password   = $splitMessage[2];
+
+    if(!$client->{modes}->{o}->has($client)) {
+        $client->{log}->warn("[$client->{nick}] User attempted to use SAMODE ($msg) when not an ircop!");
+        return -1;
+    }
+    $client->{log}->info("[$client->{nick}] User used SAMODE ($msg)");
+    IRCd::Client::Packets::mode($client, $msg, 1);
+    # We could return -1 to cease processing for this packet (after other events have executed).
+    # But there's no reason to do that, so...
+    return 1;
+}
+
 sub init {
     my $self = shift;
-    $self->{module}->register_cmd("OPER", \&pkt_oper, $self);
+    $self->{module}->register_cmd("OPER",   \&pkt_oper,   $self);
+    $self->{module}->register_cmd("SAMODE", \&pkt_samode, $self);
 }
 
 1;
