@@ -195,7 +195,9 @@ sub clientLoop {
                 $socket->{client}->{buffer} =~ s/(.*?)\r?\n//g;
                 foreach(@result) {
                     next if($_ eq '');
-                    $self->{log}->debug("RECV: " . $_);
+                    $self->{log}->debug("RECV: " . $_) if(uc($_) !~ /NOTICE/ and uc($_) !~ /PRIVMSG/
+                                                        and uc($_) !~ /PASS/ and uc($_) !~ /OPER/
+                                                    );
                     $socket->{client}->parse($_);
                 }
             }

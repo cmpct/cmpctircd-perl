@@ -329,10 +329,13 @@ sub privmsg {
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
 
-    my @splitPacket = split(" ", $msg);
-    my $target = $splitPacket[1];
-    @splitPacket = split(":", $msg, 2);
-    my $realmsg = $splitPacket[1];
+    my @splitPacket = split(" ", $msg, 3);
+    my $target   = $splitPacket[1];
+    my $realmsg  = $splitPacket[2];
+    if($msg =~ /:/) {
+        @splitPacket = split(":", $msg, 2);
+        $realmsg = $splitPacket[1];
+    }
 
     if($target =~ /^#/) {
         # Target was a channel
