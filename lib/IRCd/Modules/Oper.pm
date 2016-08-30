@@ -29,7 +29,7 @@ sub pkt_oper {
     my $u_name       = $splitMessage[1];
     my $u_password   = $splitMessage[2];
 
-    my ($c_name, $c_password, $c_hash, $c_type);
+    my ($c_name, $c_password, $c_hash, $c_type, $c_tls);
     my $got_match = 0;
 
     # XXX: Workaround for XML::Simple modifying behaviour basted on number of elements (one oper || many)
@@ -40,6 +40,7 @@ sub pkt_oper {
         $c_password  = $oper->{password};
         $c_hash      = $oper->{hash} . '_hex';
         $c_type      = $oper->{type} // 'UNIMPLEMENTED';
+        $c_tls       = $oper->{tls}  // 0;
         $ircd->{log}->debug("[$client->{nick}] Found ircop $u_name [$c_type]");
         # XXX: Support something other than SHA*
         if(my $hash_ref = Digest::SHA->can($c_hash)) {
@@ -49,6 +50,10 @@ sub pkt_oper {
             }
         } else {
             $ircd->{log}->warn("[$client->{nick}] No such hash function as $c_hash! EDIT YOUR CONFIG FILE.");
+        }
+        if($c_tls and !$client->{modes}->{z}->has($client)) {
+            $ircd->{log}->warn("[$client->{nick}] User tried to authenicate as $u_name [$c_type] [tls: $c_tls] without using TLS!");
+            $got_match = 0;
         }
     }
     if(!$got_match) {
