@@ -233,8 +233,6 @@ sub whois {
     my $targetRealName = $targetClient->{realname};
     my $targetHost     = $targetClient->{host} // $targetClient->{ip};
     my $targetIdle     = time() - $client->{idle};
-    # TODO: RPL_WHOISOPERATOR => 313,
-    # TODO: ircops will see '.. actually connected from'
     my @presentChannels = ();
     $targetHost         = $targetClient->{cloak} if($targetClient->{modes}->{x}->has($targetClient));
 

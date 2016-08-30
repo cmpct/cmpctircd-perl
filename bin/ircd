@@ -275,7 +275,7 @@ sub getClientByNick {
     # First attempt a local search...
     return $self->{clients}->{nick}->{$nick} if($self->{clients}->{nick}->{$nick});
     # Then check our connected servers...
-    # XXX: we'll need a hunt_server in time for hops > 0
+    # XXX: we'll need a hunt_server in time for hops > 1
     foreach(values($self->{servers}->{sid}->%*)) {
         return $_->{clients}->{nick}->{$nick} if($_->{clients}->{nick}->{$nick});
     }
