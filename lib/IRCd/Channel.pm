@@ -93,7 +93,7 @@ sub addClient {
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_OPERONLY . " $client->{nick} $self->{name} :Cannot join channel $self->{name} (IRCops only)");
         return;
     }
-    $self->{clients}->{$client->{nick}} = $client;
+    $self->{clients}->{lc($client->{nick})} = $client;
     $self->sendToRoom($client, ":$mask JOIN :$self->{name}");
     if($self->size() == 1) {
         # Grant the founding user op
@@ -123,12 +123,12 @@ sub quit {
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
     my $msg    = shift // "Leaving.";
-    if($self->{clients}->{$client->{nick}} // "") {
+    if($self->{clients}->{lc($client->{nick})} // "") {
         # We should be in the room b/c of the caller but let's be safe.
         $client->{log}->info("[$self->{name}] Removed (QUIT) a client (nick: $client->{nick}) from channel");
         $self->stripModes($client, 0);
         $self->sendToRoom($client, ":$mask QUIT :$msg", 0, 1);
-        delete $self->{clients}->{$client->{nick}};
+        delete $self->{clients}->{lc($client->{nick})};
         return;
     }
 
@@ -140,11 +140,11 @@ sub part {
     my $mask   = $client->getMask(1);
     my $msg    = shift;
     my $forCloak = shift // 0;
-    if($self->{clients}->{$client->{nick}}) {
+    if($self->{clients}->{lc($client->{nick})}) {
         $client->{log}->info("[$self->{name}] Removed (PART) a client (nick: $client->{nick}) from channel");
         $self->sendToRoom($client, ":$mask PART $self->{name} :$msg", 1, 1);
         $self->stripModes($client, 0) if(!$forCloak);
-        delete $self->{clients}->{$client->{nick}};
+        delete $self->{clients}->{lc($client->{nick})};
     } else {
         $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
     }
@@ -166,15 +166,15 @@ sub kick {
     my $targetClient = shift;
     my $kickReason   = shift // "Kicked.";
 
-    if(!$self->{clients}->{$client->{nick}}) {
+    if(!$self->{clients}->{lc($client->{nick})}) {
         $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
         return;
     }
     if($self->getStatus($client) >= 3) {
-        if(($targetClient = $self->{clients}->{$targetUser})) {
+        if(($targetClient = $self->{clients}->{lc($targetUser)})) {
             $self->stripModes($targetClient, 0);
             $self->sendToRoom($client, ":$mask KICK $self->{name} $targetUser :$kickReason");
-            delete $self->{clients}->{$targetUser};
+            delete $self->{clients}->{lc($targetUser)};
         } else {
             $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_USERNOTINCHANNEL . " $client->{nick} $self->{name} :They aren't on that channel\r\n");
             return;
@@ -192,7 +192,7 @@ sub topic {
     my $mask   = $client->getMask(1);
     my $topic  = shift;
 
-    if(!$self->{clients}->{$client->{nick}}) {
+    if(!$self->{clients}->{lc($client->{nick})}) {
         $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
         return;
     }
@@ -280,7 +280,7 @@ sub resides {
     my $client = shift;
     my $mask   = $client->getMask(1);
     my $msg    = shift;
-    return 1 if ($self->{clients}->{$client->{nick}});
+    return 1 if ($self->{clients}->{lc($client->{nick})});
     return 0;
 }
 sub sendToRoom {
@@ -309,7 +309,7 @@ sub sendToRoom {
             $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CANNOTSENDTOCHAN . " $client->{nick} $self->{name} :Cannot send to channel (+m)");
             return;
         }
-        if($self->{modes}->{n}->get() and !$self->{clients}->{$client->{nick}}) {
+        if($self->{modes}->{n}->get() and !$self->{clients}->{lc($client->{nick})}) {
             $client->{log}->info("[$self->{name}] User (nick: $client->{nick}) tried to externally message $self->{name}");
             $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CANNOTSENDTOCHAN . " $client->{nick} $self->{name} :Cannot send to channel (no external messages)\r\n");
             return;

@@ -240,7 +240,7 @@ sub whois {
 
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISUSER     . " $client->{nick} $targetNick $targetIdent $targetHost * :$targetRealName\r\n");
     foreach(values($ircd->{channels}->%*)) {
-        if($_->{clients}->{$targetNick}) {
+        if($_->{clients}->{lc($targetNick)}) {
             push @presentChannels, $_->{name};
         }
     }
