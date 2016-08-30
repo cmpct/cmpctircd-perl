@@ -561,18 +561,21 @@ sub topic {
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
+    my $force  = shift // 0;
 
-    my @splitPacket  = split(" ", $msg);
+    my @splitPacket  = split(" ", $msg, 3);
     my $topicChannel = $splitPacket[1];
     my $topicText    = $splitPacket[2] // "";
 
-    if($topicText) {
+    # Splitting on the colon is tempting, but some IRC clients and most IRCds
+    # will take one without a colon, so handle both
+    if($topicText && $topicText =~ /^:/) {
         @splitPacket = split(":", $msg, 2);
         $topicText   = $splitPacket[1];
     }
 
     if($ircd->{channels}->{$topicChannel}) {
-        $ircd->{channels}->{$topicChannel}->topic($client, $topicText);
+        $ircd->{channels}->{$topicChannel}->topic($client, $topicText, $force);
     } else {
         $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $topicChannel :No such nick/channel\r\n");
     }
