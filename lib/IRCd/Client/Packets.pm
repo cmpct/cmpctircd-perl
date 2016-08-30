@@ -249,7 +249,7 @@ sub whois {
     }
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISCHANNELS . " $client->{nick} $targetNick :" . CORE::join(' ', @presentChannels) . "\r\n") if @presentChannels >= 1;
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISSERVER   . " $client->{nick} $targetNick $client->{server} :$ircd->{desc}\r\n");
-    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISOPERATOR . " $client->{nick} $targetNick :is an IRC operator\r\n") if $targetClient->{modes}->{o}->has($client);
+    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISOPERATOR . " $client->{nick} $targetNick :is an IRC operator\r\n") if $targetClient->{modes}->{o}->has($targetClient);
     # we only state away if they are away
     if ($targetClient->{away} ne '') {
         $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_AWAY   . " $client->{nick} $targetNick :$targetClient->{away}\r\n");
