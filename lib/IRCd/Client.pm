@@ -109,18 +109,18 @@ sub parse {
             $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTREGISTERED . " * :You have not registered\r\n");
             return;
         }
-        # If we're registered and not waiting on a PONG/DNS query...
-        # For the sake of simplicity, any non-ping action should discount idling
         my %idleCommands = (
             'PONG'  => 1,
             'PING'  => 1,
             'WHOIS' => 1,
             'WHO'   => 1,
-            'NAMES' => 1
+            'NAMES' => 1,
+            'AWAY'  => 1,
         );
         if (!$idleCommands{uc($splitPacket[0])}) {
             $self->{idle} = time();
         }
+        # If we're registered and not waiting on a PONG/DNS query...
         $handlerRef->($self, $msg);
     }
     if(!$foundEvent and !$handlerRef) {
