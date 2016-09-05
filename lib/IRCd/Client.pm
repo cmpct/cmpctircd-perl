@@ -54,6 +54,7 @@ sub new {
 }
 
 sub getMask {
+    # XXX: become get_mask
     my $self  = shift;
     my $nick  = $self->{nick}  // "";
     my $ident = $self->{ident} // "";
@@ -62,6 +63,16 @@ sub getMask {
 
     $host = $self->{cloak} if($cloak and $self->{modes}->{x}->has($self));
     return $nick . '!' . $ident . '@' . $host;
+}
+
+sub get_host {
+    my $self  = shift;
+    my $cloak = shift // 0;
+    if($cloak) {
+        return $self->{cloak} // $self->{host} // $self->{ip};
+    } else {
+        return $self->{host} // $self->{ip};
+    }
 }
 
 sub parse {
@@ -136,7 +147,7 @@ sub sendWelcome {
     my $create_str  = sprintf("%s %u %u at %s", $create_time->month_abbr(),
                         $create_time->day(), $create_time->year(),
                         $create_time->hms);
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_WELCOME  . " $self->{nick} :Welcome to the $ircd->{network} IRC Network $self->{nick}!$self->{ident}\@$self->{ip}\r\n");
+    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_WELCOME  . " $self->{nick} :Welcome to the $ircd->{network} IRC Network $self->{nick}!$self->{ident}\@" . $self->get_host() . "\r\n");
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_YOURHOST . " $self->{nick} :Your host is $ircd->{host}, running version cmpctircd-$ircd->{version}\r\n");
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_CREATED  . " $self->{nick} :This server was created $create_str\r\n");
     # XXX: Generate the user/chan modes programatically
