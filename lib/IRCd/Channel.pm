@@ -105,7 +105,7 @@ sub addClient {
     my $userModes = "";
     foreach(values($self->{clients}->%*)) {
         my $userSymbol = $self->{privilege}->{$self->getStatus($_)} // "";
-        $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_NAMREPLY      . " $client->{nick} \@ $self->{name} :$userSymbol$_->{nick}\r\n");
+        $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_NAMREPLY      . " $client->{nick} = $self->{name} :$userSymbol$_->{nick}\r\n");
     }
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_ENDOFNAMES    . " $client->{nick} $self->{name} :End of /NAMES list.\r\n");
     $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :" . $self->{topic}->get() . "\r\n") if($self->{topic}->get() ne "");

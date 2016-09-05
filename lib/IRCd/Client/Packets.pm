@@ -511,7 +511,7 @@ sub userhost {
         if($targetClient eq $client) {
             $host = $targetClient->get_host(0);
         } else {
-            $host = $targetClient->get_host(1));
+            $host = $targetClient->get_host(1);
         }
         $client->write(":$ircd->{host} " . IRCd::Constants::RPL_USERHOST . " $client->{nick} $targetNick=$away$user\@$host");
     }
