@@ -32,7 +32,7 @@ sub read {
     my $socket = shift;
     return  0 if(!$self->{resolver}->bgisready($socket));
     my $packet = $self->{resolver}->bgread($socket);
-    return  0 if(!$packet);
+    return  0 if(!$packet || !$packet->{answer}->[0]);
     my $host   = $packet->{answer}->[0]->ptrdname() // join('.', $packet->{answer}->[0]->{ptrdname}->{label}->@*);
     return $host;
 }
