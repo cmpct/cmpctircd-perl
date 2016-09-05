@@ -257,7 +257,7 @@ sub disconnect {
             next if(!$ircd->{channels}->{$chan}->{clients}->{lc($self->{nick})});
             $ircd->{channels}->{$chan}->quit($self, $reason);
         }
-        $self->{socket}->{sock}->write(":$mask QUIT :$reason\r\n");
+        $self->write(":$mask QUIT :$reason\r\n");
     }
     $self->{socket}->{sock}->close();
     delete $ircd->{clients}->{id}->{$self->{socket}->{fd}};

@@ -265,14 +265,11 @@ sub quit {
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
 
-    my @splitPacket = split(" ", $msg);
-    my $quitReason  = $splitPacket[1];
-    @splitPacket    = split(":", $quitReason, 2);
-    $quitReason     = $splitPacket[1];
+    my @splitPacket    = split(":", $msg, 2);
+    my $quitReason     = $splitPacket[1];
 
     # TODO: Max length
     $client->disconnect(1, "Quit: " . $quitReason);
-    # XXX: Let anyone who we're PMIng know? is that a thing?
 }
 sub part {
     my $client = shift;
@@ -285,14 +282,9 @@ sub part {
     # TODO: Need target support (recursion) here
     my @splitPacket = split(" ", $msg);
     my $partChannel = $splitPacket[1];
-    my $partReason  = $splitPacket[2];
 
-    if($partReason // 0) {
-        @splitPacket = split(":", $partReason, 2);
-        $partReason = $splitPacket[1];
-    } else {
-        $partReason = "";
-    }
+    @splitPacket   = split(":", $msg, 2);
+    my $partReason = $splitPacket[1] // "";
 
     if($ircd->{channels}->{$partChannel}) {
         $ircd->{channels}->{$partChannel}->part($client, $partReason);
