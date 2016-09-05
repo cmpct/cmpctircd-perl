@@ -254,7 +254,7 @@ sub disconnect {
     # parting messages.
     if($graceful) {
         foreach my $chan (keys($ircd->{channels}->%*)) {
-            next if(!$ircd->{channels}->{$chan}->{clients}->{$self});
+            next if(!$ircd->{channels}->{$chan}->{clients}->{lc($self->{nick})});
             $ircd->{channels}->{$chan}->quit($self, $reason);
         }
         $self->{socket}->{sock}->write(":$mask QUIT :$reason\r\n");
