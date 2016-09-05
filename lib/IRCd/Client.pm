@@ -152,7 +152,7 @@ sub sendWelcome {
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_CREATED  . " $self->{nick} :This server was created $create_str\r\n");
     # XXX: Generate the user/chan modes programatically
     #$self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MYINFO   . " $self->{nick} $ircd->{host} cmpctircd-$ircd->{version} x ntlo\r\n");
-    # bhttps://github.com/grawity/irc-docs/blob/master/client/RPL_ISUPPORT/draft-hardy-irc-isupport-00.txt#L462-L475
+    # https://github.com/grawity/irc-docs/blob/master/client/RPL_ISUPPORT/draft-hardy-irc-isupport-00.txt#L462-L475
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ISUPPORT . " $self->{nick} CASEMAPPING=rfc1459 PREFIX=(ov)\@+ STATUSMSG=\@+ NETWORK=$ircd->{network} MAXTARGETS=$ircd->{maxtargets} :are supported by this server\r\n");
     $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ISUPPORT . " $self->{nick} CHANTYPES=# CHANMODES=b,,l,ntm :are supported by this server" . "\r\n");
     $self->motd();
