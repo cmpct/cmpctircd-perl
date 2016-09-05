@@ -235,7 +235,7 @@ sub checkResolve {
         $self->{host} = $answer;
         $sock->write(":$ircd->{host} NOTICE * :*** Found your hostname\r\n");
         $self->sendWelcome() if($self->{ident} and $self->{nick} and !$self->{registered});
-    } elsif($answer eq 'ERROR') {
+    } elsif($self->{query} eq 'ERROR') {
         $self->{log}->debug("[$self->{nick}] Query for [$self->{ip}] failed");
         $self->{host} = $self->{ip};
         $sock->write(":$ircd->{host} NOTICE * :*** Could not resolve your hostname: Domain name not found; using your IP address ($self->{ip}) instead.\r\n");

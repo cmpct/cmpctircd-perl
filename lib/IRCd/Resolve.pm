@@ -23,7 +23,7 @@ sub new {
 sub fire {
     my $self   = shift;
     my $ip     = shift;
-    my $socket = $self->{resolver}->bgsend($ip);
+    my $socket = $self->{resolver}->bgsend($ip) || $self->{resolver}->errorstring;
     return $socket;
 }
 
@@ -33,9 +33,8 @@ sub read {
     return  0 if(!$self->{resolver}->bgisready($socket));
     my $packet = $self->{resolver}->bgread($socket);
     return  0 if(!$packet);
-    return 'ERROR' if($self->{resolver}->errorstring ne "NOERROR");
-    my $resolvedHost = join('.', $packet->{answer}->[0]->{ptrdname}->{label}->@*);
-    return $resolvedHost;
+    my $host   = $packet->{answer}->[0]->ptrdname() // join('.', $packet->{answer}->[0]->{ptrdname}->{label}->@*);
+    return $host;
 }
 
 
