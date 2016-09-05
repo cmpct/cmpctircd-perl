@@ -231,10 +231,9 @@ sub whois {
     }
     my $targetIdent    = $targetClient->{ident};
     my $targetRealName = $targetClient->{realname};
-    my $targetHost     = $targetClient->{host} // $targetClient->{ip};
+    my $targetHost     = $targetClient->get_host(1);
     my $targetIdle     = time() - $client->{idle};
     my @presentChannels = ();
-    $targetHost         = $targetClient->{cloak} if($targetClient->{modes}->{x}->has($targetClient));
 
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISUSER     . " $client->{nick} $targetNick $targetIdent $targetHost * :$targetRealName\r\n");
     foreach(values($ircd->{channels}->%*)) {
@@ -510,9 +509,9 @@ sub userhost {
         my $user = $targetClient->{ident};
         my $host = "";
         if($targetClient eq $client) {
-            $host = $targetClient->{host} // $targetClient->{ip};
+            $host = $targetClient->get_host(0);
         } else {
-            $host = $targetClient->{cloak} // $targetClient->{host} // $targetClient->{ip};
+            $host = $targetClient->get_host(1));
         }
         $client->write(":$ircd->{host} " . IRCd::Constants::RPL_USERHOST . " $client->{nick} $targetNick=$away$user\@$host");
     }
