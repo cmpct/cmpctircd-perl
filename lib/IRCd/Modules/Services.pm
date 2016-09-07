@@ -25,8 +25,12 @@ sub pkt_sjoin {
     my $ircd   = $self->{ircd};
     my $client;
 
+    if(ref($srv) eq 'IRCd::Client') {
+        # No users (clients) allowed! Servers only.
+        # Could also check by looking at if ->{server} eq ->{ircd}->{host}
+        return -1;
+    }
     my @splitPacket = split(" ", $msg, 5);
-
     my $timestamp    = $splitPacket[2];
     my $channelInput = $splitPacket[3];
 
@@ -65,7 +69,7 @@ sub evt_sjoin {
         # Push the SJOIN to all the servers
         # :001 SJOIN 1473257992 #services :@001YIMH01
         $srv = $ircd->{servers}->{sid}->{$_};
-	next if(!$srv->{socket}->{sock});
+        next if(!$srv->{socket}->{sock});
         $srv->{socket}->{sock}->write(":042 SJOIN " . time() . " $chan->{name} :\@$client->{nick}\r\n");
     }
 
