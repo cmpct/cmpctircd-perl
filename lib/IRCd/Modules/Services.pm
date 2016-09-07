@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+no warnings "experimental::postderef"; # for older perls (<5.24)
+use feature 'postderef';
 use IRCd::Constants;
 
 package IRCd::Modules::Services;
