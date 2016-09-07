@@ -37,7 +37,7 @@ sub new {
         'desc'      => undef,
         'ip'        => undef,
         'port'      => undef,
-        'version'   => '0.2.1',
+        'version'   => '0.2.2',
 
         # advanced config options
         'pingtimeout' => undef,
@@ -167,7 +167,8 @@ sub clientLoop {
             $socket->{client}->{server} = $self->{host};
             if($self->{dns}) {
                 $socket->{sock}->write(":$self->{host} NOTICE * :*** Looking up your hostname...\r\n");
-                $socket->{client}->{query} = $socket->{client}->{resolve}->fire($socket->{client}->{ip});
+                $socket->{client}->{dns_time} = time();
+                $socket->{client}->{query}    = $socket->{client}->{resolve}->fire($socket->{client}->{ip});
             } else {
                 # TODO: Could have a 'no DNS resolve enabled' message here.
                 # TODO: I think some servers do it?

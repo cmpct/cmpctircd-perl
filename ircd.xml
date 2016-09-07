@@ -6,7 +6,8 @@
     </ircd>
 
     <server>
-        <ip>127.0.0.1</ip>
+        <!--<ip>127.0.0.1</ip>-->
+        <ip>192.168.0.170</ip>
         <port>6667</port>
         <tls>1</tls>
         <tlsport>6697</tlsport>
@@ -59,6 +60,7 @@
     <advanced>
         <requirepong>1</requirepong>
         <dns>1</dns>
+        <dnstimeout>5</dnstimeout>
         <pingtimeout>120</pingtimeout>
         <maxtargets>200</maxtargets>
     </advanced>

@@ -58,6 +58,7 @@ sub parse {
     $self->{log}            = $xmlRef->{'log'};
     $self->{requirepong}    = $xmlRef->{'advanced'}->{'requirepong'};
     $self->{dns}            = $xmlRef->{'advanced'}->{'dns'};
+    $self->{dnstimeout}     = $xmlRef->{'advanced'}->{'dnstimeout'};
     $self->{pingtimeout}    = $xmlRef->{'advanced'}->{'pingtimeout'};
     $self->{maxtargets}     = $xmlRef->{'advanced'}->{'maxtargets'};
     $self->{opers}          = $xmlRef->{'opers'};

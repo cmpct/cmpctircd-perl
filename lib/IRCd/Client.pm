@@ -241,13 +241,14 @@ sub checkResolve {
     my $sock = $self->{socket}->{sock};
     my $answer = 0;
 
+    return if($self->{registered});
     if($answer = $self->{resolve}->read($self->{query}) and $answer ne 'ERROR') {
         # We got an answer to our query!
         $self->{log}->debug("[$self->{nick}] Got an answer to our DNS query for [$self->{ip}]: $answer");
         $self->{host} = $answer;
         $sock->write(":$ircd->{host} NOTICE * :*** Found your hostname\r\n");
         $self->sendWelcome() if($self->{ident} and $self->{nick} and !$self->{registered});
-    } elsif($self->{query} eq 'ERROR') {
+    } elsif(((time() - $self->{dns_time}) > $self->{ircd}->{config}->{dnstimeout}) or ($self->{query} eq 'ERROR')) {
         $self->{log}->debug("[$self->{nick}] Query for [$self->{ip}] failed");
         $self->{host} = $self->{ip};
         $sock->write(":$ircd->{host} NOTICE * :*** Could not resolve your hostname: Domain name not found; using your IP address ($self->{ip}) instead.\r\n");
