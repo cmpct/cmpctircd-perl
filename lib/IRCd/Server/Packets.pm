@@ -142,29 +142,81 @@ sub uid {
     $server->{log}->info("Introducing: $pNickname!$pUser\@$pHost [$pUID]");
 }
 
-sub notice {
+sub privmsg {
     my $server = shift;
     my $msg    = shift;
     my $socket = $server->{socket}->{sock};
     my $config = $server->{config};
     my $ircd   = $server->{ircd};
+    my $mask;
 
     my @splitPacket   = split(" ", $msg);
     my $source        = $splitPacket[0];
     my $target        = $splitPacket[2];
     my @splitMessage  = split(":", $msg, 3);
     my $message       = $splitMessage[2];
+
     $source =~ s/://;
-    # Do we need a findByUID?
-    $source = $server->{clients}->{uid}->{$source};
-    # Special case
-    if($target eq "0") {
-        foreach(values($ircd->{clients}->{nick}->%*)) {
-            $_->{socket}->{sock}->write(":$source->{nick}!$source->{nick}\@$source->{host} NOTICE $_->{nick} :$splitMessage[2]\r\n");
+    $source = $server->{clients}->{uid}->{$source} // $server->{clients}->{nick}->{lc($source)};
+    $mask   = $source->getMask(1);
+
+    if($target =~ /^#/) {
+        # Target was a channel
+        my $channel = $ircd->{channels}->{$target};
+        if(!$channel) {
+            $source->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $source->{nick} $target :No such nick/channel\r\n");
+            return;
         }
+        $channel->sendToRoom($source, ":$mask PRIVMSG $channel->{name} :$message", 0);
     } else {
+        my $user = $ircd->getClientByNick($target);
+        if($user == 0) {
+            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $source->{nick} $target :No such nick/channel\r\n");
+            return;
+        }
+        $target->write(":$mask PRIVMSG $target :$splitMessage[2]\r\n");
+    }
+}
+
+sub notice {
+    my $server = shift;
+    my $msg    = shift;
+    my $socket = $server->{socket}->{sock};
+    my $config = $server->{config};
+    my $ircd   = $server->{ircd};
+    my $mask;
+
+    my @splitPacket   = split(" ", $msg);
+    my $source        = $splitPacket[0];
+    my $target        = $splitPacket[2];
+    my @splitMessage  = split(":", $msg, 3);
+    my $message       = $splitMessage[2];
+
+    $source =~ s/://;
+    $source = $server->{clients}->{uid}->{$source};
+    $mask   = $source->getMask(1);
+
+    if($target eq "0") {
+        # Special case
+        foreach(values($ircd->{clients}->{nick}->%*)) {
+            $_->{socket}->{sock}->write(":$mask NOTICE $_->{nick} :$splitMessage[2]\r\n");
+        }
+    } elsif($target !~ /^#/) {
+        # Target was not a channel
         $target = $ircd->getClientByUID($target);
-        $target->write(":$source->{nick}!$source->{nick}\@$source->{host} NOTICE $target->{nick} :$splitMessage[2]\r\n");
+        if($target == 0) {
+            $source->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $source->{nick} $target :No such nick/channel\r\n");
+            return;
+        }
+        $target->write(":$mask NOTICE $target->{nick} :$splitMessage[2]\r\n");
+    } else {
+        # Target was a channel
+        my $channel = $ircd->{channels}->{$target};
+        if(!$channel) {
+            $source->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $source->{nick} $target :No such nick/channel\r\n");
+            return;
+        }
+        $channel->sendToRoom($source, ":$mask PRIVMSG $channel->{name} :$message", 0);
     }
     # XXX: We need to handle the non-special case too
     # XXX: Ditto for PRIVMSG

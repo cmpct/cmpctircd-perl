@@ -299,15 +299,42 @@ sub createCookie {
 sub write {
     my $self = shift;
     my $msg  = shift;
-    # XXX: differentiate between $self->{server} and the server we reside on?
+    my $sock;
+
+    if($self->{disconnected}) {
+        $self->{log}->debug(caller . " attempted to write on a dead client\r\n");
+        return;
+    }
     $msg .= "\r\n" if($msg !~ /\r\n/);
+
+    # Write on the appropriate socket
     if(ref($self->{server}) eq "IRCd::Server") {
-        # Write on the appropriate socket
-        # XXX: We need UID translation?
-        $self->{server}->{socket}->{sock}->write($msg);
+        # UID translation (change nicks -> UIDs)
+        my @splitMessage = split(" ", $msg);
+        if($splitMessage[0] !~ /^:0/) {
+            $self->{log}->debug("$splitMessage[0] needs to be translated to a UID...\r\n");
+
+            # Delete everything after the ! to get a nick
+            $splitMessage[0] =~ s/!.*//s;
+            $splitMessage[0] =~ s/://;
+            if($splitMessage[0] ne $self->{ircd}->{host}) {
+                $self->{log}->debug("Looking for the client named $splitMessage[0]\r\n");
+                $splitMessage[0] = $self->{ircd}->getClientByNick($splitMessage[0]);
+
+                return 0 if(!$splitMessage[0]);
+                $splitMessage[0] = $splitMessage[0]->{uid};
+                $msg = join(' ', @splitMessage) . "\r\n";
+            }
+        }
+        $sock = $self->{server}->{socket}->{sock};
     } else {
         # Dispatch locally
-        $self->{socket}->{sock}->write($msg);
+        $sock = $self->{socket}->{sock};
+    }
+    my $bytes_written = $sock->write($msg);
+    if(!$bytes_written) {
+        $self->{ircd}->{log}->debug("Looks like a client (in IRCd::Client) has gone away (no bytes written)");
+        $self->{disconnect} = 1;
     }
 }
 

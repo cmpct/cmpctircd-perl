@@ -33,22 +33,35 @@ sub new {
 
 sub parse {
     my $self = shift;
+    my $ircd = $self->{ircd};
     my $msg  = shift;
     my $sock = shift;
 
     my @splitPacket = split(" ", $msg);
 
-    # TODO: Modular system
+    # Execute any command events for $splitPacket[0]
+    my $event      = $ircd->{module}->exec($splitPacket[0], $self, $msg);
+    my $foundEvent = $event->{found};
+
+    if(!$foundEvent) {
+        $event       = $ircd->{module}->exec($splitPacket[1], $self, $msg);
+        $foundEvent  = $event->{found};
+    }
+    # Check if any of the events returned < 0; if so, return.
+    if(!IRCd::Module::can_process($event->{values})) {
+        $self->{log}->debug("[$self->{nick}] A handler for $splitPacket[0] returned 0. Bailing out.\r\n");
+        return;
+    }
+
+    # Once we've checked the events, check for a standard function
     # Check if function exists, and if so, call it
-    if (my $handlerRef = IRCd::Server::Packets->can(lc($splitPacket[0]))) {
+    # If client is a server, we'll receive packets like :SID cmd
+    my $handlerRef = IRCd::Server::Packets->can(lc($splitPacket[0])) || IRCd::Server::Packets->can(lc($splitPacket[1]));
+    if ($handlerRef) {
         $handlerRef->($self, $msg);
-    } else {
-        # If client is a server, we'll receive packets like :SID cmd
-        if(my $handlerRef = IRCd::Server::Packets->can(lc($splitPacket[1]))) {
-            $handlerRef->($self, $msg);
-        } else {
-            $self->{log}->warn("UNHANDLED PACKET: " . $splitPacket[0]);
-        }
+    }
+    if(!$foundEvent and !$handlerRef) {
+        $self->{log}->warn("UNHANDLED PACKET: $msg");
     }
 }
 
