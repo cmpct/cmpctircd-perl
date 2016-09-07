@@ -38,6 +38,7 @@ sub new {
         'ip'             => $args{ip}             // 0,
         'host'           => $args{host}           // 0,
         'uid'            => $args{uid}            // IRCd::Client::createUID(),
+        'disconnect'     => $args{disconnect}     // 0,
 
         'resolve'        => $args{resolve} // undef,
         'query'          => $args{query}   // undef,
@@ -263,6 +264,7 @@ sub disconnect {
     my $mask     = $self->getMask(1);
     my $graceful = shift // 0;
     my $reason   = shift // "Leaving.";
+
     # Callers are expected to handle the graceful QUIT, or any other
     # parting messages.
     if($graceful) {
@@ -272,6 +274,11 @@ sub disconnect {
         }
         $self->write(":$mask QUIT :$reason\r\n");
     }
+
+    if(ref($self->{server}) eq "IRCd::Server") {
+        delete $self->{server}->{clients}->{nick}->{lc($self->{nick})};
+    }
+    $self->{ircd}->{clientSelector}->del($self->{socket}->{sock});
     $self->{socket}->{sock}->close();
     delete $ircd->{clients}->{id}->{$self->{socket}->{fd}};
     delete $ircd->{clients}->{nick}->{lc($self->{nick})};

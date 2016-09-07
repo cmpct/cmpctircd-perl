@@ -312,18 +312,13 @@ sub sendToRoom {
         }
         if($self->{modes}->{n}->get() and !$self->{clients}->{lc($client->{nick})}) {
             $client->{log}->info("[$self->{name}] User (nick: $client->{nick}) tried to externally message $self->{name}");
-            $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CANNOTSENDTOCHAN . " $client->{nick} $self->{name} :Cannot send to channel (no external messages)\r\n");
+            $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CANNOTSENDTOCHAN . " $client->{nick} $self->{name} :Cannot send to channel (no external messages)");
             return;
         }
     }
     foreach(values($self->{clients}->%*)) {
         next if(($_ eq $client) and !$sendToSelf);
-        if($msg =~ /\r\n/) {
-            # TODO: carp
-            warn caller . " is misbehaving and sending a newline!";
-            $msg =~ s/\r\n//;
-        }
-        $_->{socket}->{sock}->write($msg . "\r\n");
+        $_->write($msg);
     }
 }
 

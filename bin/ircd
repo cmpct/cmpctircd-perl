@@ -179,8 +179,10 @@ sub clientLoop {
             my $socket   = $self->{clients}->{id}->{$event};
             return if(!$socket);
 
-            sysread($socket->{sock}, $buffer, $bytes);
-            if($buffer eq "") {
+            my $bytes_read = sysread($socket->{sock}, $buffer, $bytes);
+            if($buffer eq "" || !$bytes_read) {
+                $self->{log}->debug("Looks like a client has gone away (no bytes read)");
+                $socket->{client}->disconnect(1, "Connection reset by peer");
                 $selector->del($socket->{sock});
             } else {
                 $socket->{client}->{ip} = $socket->{sock}->peerhost();
@@ -245,9 +247,10 @@ sub serverLoop {
             my $socket   = $self->{servers}->{id}->{$event};
             return if(!$socket);
 
-            sysread($socket->{sock}, $buffer, $bytes);
-            if($buffer eq "") {
-                $selector->del($socket->{sock});
+            my $bytes_read = sysread($socket->{sock}, $buffer, $bytes);
+            if($buffer eq "" || $bytes_read eq undef) {
+                $self->{log}->debug("Looks like a server has gone away (no bytes read)");
+                $socket->{client}->disconnect();
             } else {
                 $socket->{client}->{ip} = $socket->{sock}->peerhost();
 
@@ -264,6 +267,14 @@ sub serverLoop {
                     $self->{log}->debug("RECV: " . $_);
                     $socket->{client}->parse($_);
                 }
+            }
+        }
+    }
+    foreach my $server_iter (values($self->{servers}->{id}->%*)) {
+        my $client_iter = $server_iter->{client}->{clients}->{nick};
+        foreach(values($client_iter->%*)) {
+            if($_->{disconnect}) {
+                $_->disconnect(1, "Broken pipe");
             }
         }
     }

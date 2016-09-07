@@ -333,6 +333,7 @@ sub privmsg {
             $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $target :No such nick/channel\r\n");
             return;
         }
+
         $channel->sendToRoom($client, ":$mask PRIVMSG $channel->{name} :$realmsg", 0);
     } else {
         my $user = $ircd->getClientByNick($target);

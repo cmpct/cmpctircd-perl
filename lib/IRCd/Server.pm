@@ -94,6 +94,35 @@ sub syncUser {
 }
 
 sub checkTimeout {}
-sub disconnect {}
+sub disconnect {
+    my $self = shift;
+    $self->{log}->error("Server shutting down?");
+    $self->{ircd}->{serverSelector}->del($self->{socket}->{sock});
+    $self->{socket}->{sock}->close();
+}
+
+sub write {
+    my $self = shift;
+    my $msg  = shift;
+    my $sock;
+    my $type;
+    $msg .= "\r\n" if($msg !~ /\r\n/);
+    if(ref($self->{server}) eq "IRCd::Server") {
+        # Write on the appropriate socket
+        # XXX: We need UID translation?
+        $type = 'server';
+        $sock = $self->{server}->{socket}->{sock};
+    } else {
+        # Dispatch locally
+        $type = 'client';
+        $sock = $self->{socket}->{sock};
+    }
+    my $bytes_written = $sock->write($msg);
+    if(!$bytes_written) {
+        $self->{ircd}->{log}->debug("Looks like a $type (in IRCd::Server) has gone away (no bytes written)");
+        $self->disconnect();
+    }
+}
+
 
 1;
