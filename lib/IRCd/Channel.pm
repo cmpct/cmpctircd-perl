@@ -116,6 +116,8 @@ sub addClient {
     } else {
         $client->write(":$ircd->{host} MODE $self->{name} $modes->{characters}");
     }
+
+    $ircd->{module}->fire_event("user_join_room_done", $client, $self);
 }
 sub quit {
     my $self   = shift;
