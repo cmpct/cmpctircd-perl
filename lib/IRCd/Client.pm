@@ -37,7 +37,7 @@ sub new {
 
         'ip'             => $args{ip}             // 0,
         'host'           => $args{host}           // 0,
-        'uid'            => $args{uid}            // 0,
+        'uid'            => $args{uid}            // IRCd::Client::createUID(),
 
         'resolve'        => $args{resolve} // undef,
         'query'          => $args{query}   // undef,
@@ -45,6 +45,7 @@ sub new {
         'modes'          => $args{modes}   // {},
     };
     bless $self, $class;
+    $self->{ircd}->{clients}->{uid}->{lc($self->{uid})} = $self;
     $self->{log}        = $self->{ircd}->{log};
     $self->{resolve}    = IRCd::Resolve->new($self);
     $self->{modes}->{o} = IRCd::Modes::User::IRCOp->new($self);
@@ -323,5 +324,45 @@ sub getModeStrings {
         'args'       => $args,
     };
 }
+
+sub createUID {
+    use 5.010;
+    state $uid_counter = 0;
+    $uid_counter++;
+
+    if($uid_counter == 36 ** 2) {
+        $uid_counter = 0;
+    }
+
+    my $rand = sub {
+        my $data;
+        for(my $i = 0; $i < 8; $i++) {
+            $data .= chr(int(rand() * 256));
+        }
+        return $data;
+    };
+    my $UID = sprintf("%s%c%c%c%c%c%c",
+        0, # unrealircd's 'me.id'
+        IRCd::Client::uid_int_to_char($rand % 36),
+        IRCd::Client::uid_int_to_char($rand % 36),
+        IRCd::Client::uid_int_to_char($rand % 36),
+        IRCd::Client::uid_int_to_char($rand % 36),
+        IRCd::Client::uid_int_to_char($uid_counter / 36),
+        IRCd::Client::uid_int_to_char($uid_counter % 36),
+    );
+    return $UID;
+}
+
+sub uid_int_to_char {
+    my $char = shift;
+    # XXX: This is so wrong.
+    # XXX: https://github.com/unrealircd/unrealircd/blob/8da3e3e1bc8e582b8696a9411c7de3abbe382893/src/uid.c#L32
+    if($char < 10) {
+        return ord('0') + $char;
+    } else {
+        return (ord('A') + $char) - 10;
+    }
+}
+
 
 1;

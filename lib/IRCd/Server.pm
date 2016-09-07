@@ -73,18 +73,18 @@ sub syncUser {
     my $ircd   = $self->{ircd};
     my $user   = shift;
     my $client = $self->{ircd}->{clients}->{nick}->{lc($user)};
-    
+
     return -1 if(!$client);
     my $sNick  = $client->{nick};
     my $sHop   = 0;
     my $sTime  = time();
     my $sUser  = $client->{ident};
-    my $sHost  = $client->{ip};
-    my $sUID   = $client->{uid} // 0;
+    my $sHost  = $client->{host};
+    my $sUID   = $client->{uid};
     my $sServiceStamp = 0;
     my $sUmodes    = "+i";
     my $sVirtHost  = $client->{ip};
-    my $sCloakHost = $client->{ip};
+    my $sCloakHost = $client->{cloak} // $client->{host};
     my $sIP        = $client->{ip};
     my $sGECOS     = $client->{realname};
     # TODO: $self->{sid}

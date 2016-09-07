@@ -345,7 +345,11 @@ sub privmsg {
             $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_AWAY . " $client->{nick} $target :$user->{away}\r\n");
         }
         # Send the message to the target user
-        $user->write(":$mask PRIVMSG $user->{nick} :$realmsg\r\n");
+        if($user->{server} eq $ircd->{host}) {
+            $user->write(":$mask PRIVMSG $user->{nick} :$realmsg\r\n");
+        } else {
+            $user->write(":$client->{uid} PRIVMSG $user->{nick} :$realmsg\r\n");
+        }
     }
 }
 sub notice {

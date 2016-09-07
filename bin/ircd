@@ -282,6 +282,21 @@ sub getClientByNick {
     return 0;
 }
 
+sub getClientByUID {
+    my $self = shift;
+    my $uid  = lc(shift);
+    # First attempt a local search...
+    return $self->{clients}->{uid}->{$uid} if($self->{clients}->{uid}->{$uid});
+    # Then check our connected servers...
+    # XXX: we'll need a hunt_server in time for hops > 1
+    foreach(values($self->{servers}->{sid}->%*)) {
+        return $_->{clients}->{uid}->{uid} if($_->{clients}->{uid}->{$uid});
+    }
+    return 0;
+}
+
+
+
 
 if(!caller) {
     $SIG{PIPE} = sub {

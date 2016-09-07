@@ -152,7 +152,7 @@ sub notice {
     my @splitPacket   = split(" ", $msg);
     my $source        = $splitPacket[0];
     my $target        = $splitPacket[2];
-    my @splitMessage  = split(":", $msg, 2);
+    my @splitMessage  = split(":", $msg, 3);
     my $message       = $splitMessage[2];
     $source =~ s/://;
     # Do we need a findByUID?
@@ -162,6 +162,9 @@ sub notice {
         foreach(values($ircd->{clients}->{nick}->%*)) {
             $_->{socket}->{sock}->write(":$source->{nick}!$source->{nick}\@$source->{host} NOTICE $_->{nick} :$splitMessage[2]\r\n");
         }
+    } else {
+        $target = $ircd->getClientByUID($target);
+        $target->write(":$source->{nick}!$source->{nick}\@$source->{host} NOTICE $target->{nick} :$splitMessage[2]\r\n");
     }
     # XXX: We need to handle the non-special case too
     # XXX: Ditto for PRIVMSG
