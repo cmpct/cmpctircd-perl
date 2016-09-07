@@ -21,6 +21,8 @@ sub new {
         'lastPong'       => $args{lastPong}       // time(),
         'waitingForPong' => $args{waitingForPong} // 0,
         'sentcaps'       => $args{sentcaps}       // 0,
+        'name'           => $args{name}           // "unidentified",
+        'sid'            => $args{sid}            // 0,
         # sid?
     };
     $self->{log} = $self->{ircd}->{log};

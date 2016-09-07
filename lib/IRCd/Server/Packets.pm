@@ -101,7 +101,7 @@ sub ping {
 sub uid {
     my $server = shift;
     my $msg    = shift;
-    my $socket = $server->{socket}->{sock};
+    my $socket = $server->{socket};
     my $config = $server->{config};
     my $ircd   = $server->{ircd};
 

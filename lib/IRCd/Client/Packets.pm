@@ -177,7 +177,7 @@ sub who {
     # https://bitbucket.org/pidgin/main/src/1cf07b94c6ca44814ad456de985947be66a391c8/libpurple/protocols/irc/msgs.c?at=default&fileviewer=file-view-default#msgs.c-942
     foreach(values($channel->{clients}->%*)) {
         my $user = $_->{ident};
-        my $host = $_->{cloak} if($_->{modes}->{x}->has($_));
+        my $host = $_->get_host($_->{modes}->{x}->has($_));
         my $nick = $_->{nick};
         my $real = $_->{realname};
         # XXX: include '*' for ircop

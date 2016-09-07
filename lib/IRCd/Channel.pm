@@ -80,12 +80,12 @@ sub addClient {
         # Channel is full
         # XXX: Does Pidgin recognise this?
         $client->{log}->info("[$self->{name}] Channel is full");
-        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANNELISFULL  . " $client->{nick} $self->{name} :Cannot join channel (+l)\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANNELISFULL  . " $client->{nick} $self->{name} :Cannot join channel (+l)");
         return;
     }
     if($self->{modes}->{b}->has($client)) {
         $client->{log}->info("[$self->{name}] User (nick: $client->{nick}) is banned from the channel");
-        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_BANNEDFROMCHAN . " $client->{nick} $self->{name} :Cannot join channel (+b)\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_BANNEDFROMCHAN . " $client->{nick} $self->{name} :Cannot join channel (+b)");
         return;
     }
     if($self->{modes}->{O}->get() and !$client->{modes}->{o}->has($client)) {
@@ -105,10 +105,10 @@ sub addClient {
     my $userModes = "";
     foreach(values($self->{clients}->%*)) {
         my $userSymbol = $self->{privilege}->{$self->getStatus($_)} // "";
-        $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_NAMREPLY      . " $client->{nick} = $self->{name} :$userSymbol$_->{nick}\r\n");
+        $client->write(":$ircd->{host} "  . IRCd::Constants::RPL_NAMREPLY      . " $client->{nick} = $self->{name} :$userSymbol$_->{nick}");
     }
-    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_ENDOFNAMES    . " $client->{nick} $self->{name} :End of /NAMES list.\r\n");
-    $client->{socket}->{sock}->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :" . $self->{topic}->get() . "\r\n") if($self->{topic}->get() ne "");
+    $client->write(":$ircd->{host} "  . IRCd::Constants::RPL_ENDOFNAMES    . " $client->{nick} $self->{name} :End of /NAMES list.");
+    $client->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :" . $self->{topic}->get() . "\r\n") if($self->{topic}->get() ne "");
 
     my $modes = $self->getModeStrings("+");
     if($modes->{args}) {
@@ -146,7 +146,7 @@ sub part {
         $self->stripModes($client, 0) if(!$forCloak);
         delete $self->{clients}->{lc($client->{nick})};
     } else {
-        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel");
     }
     my $chanSize = keys($self->{clients}->%*);
     if($chanSize == 0 and !$forCloak) {
@@ -167,7 +167,7 @@ sub kick {
     my $kickReason   = shift // "Kicked.";
 
     if(!$self->{clients}->{lc($client->{nick})}) {
-        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel");
         return;
     }
     if($self->getStatus($client) >= 3) {
@@ -176,11 +176,11 @@ sub kick {
             $self->sendToRoom($client, ":$mask KICK $self->{name} $targetUser :$kickReason");
             delete $self->{clients}->{lc($targetUser)};
         } else {
-            $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_USERNOTINCHANNEL . " $client->{nick} $self->{name} :They aren't on that channel\r\n");
+            $client->write(":$ircd->{host} " . IRCd::Constants::ERR_USERNOTINCHANNEL . " $client->{nick} $self->{name} :They aren't on that channel");
             return;
         }
     } else {
-        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator");
         return;
     }
 }
@@ -194,7 +194,7 @@ sub topic {
     my $force  = shift // 0;
 
     if(!$self->{clients}->{lc($client->{nick})}) {
-        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel");
         return;
     }
     # XXX: +t/-t
@@ -205,15 +205,15 @@ sub topic {
         my $topicMask = $self->{topic}->metadata()->{who};
         my $topicTime = $self->{topic}->metadata()->{time};
         if($topicText ne "") {
-            $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_TOPIC        . " $client->{nick} $self->{name} :$topicText\r\n");
-            $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_TOPICWHOTIME . " $client->{nick} $self->{name} $topicMask $topicTime\r\n");
+            $client->write(":$ircd->{host} " . IRCd::Constants::RPL_TOPIC        . " $client->{nick} $self->{name} :$topicText");
+            $client->write(":$ircd->{host} " . IRCd::Constants::RPL_TOPICWHOTIME . " $client->{nick} $self->{name} $topicMask $topicTime");
         } else {
-            $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_NOTOPIC      . " $client->{nick} $self->{name} :No topic is set\r\n");
+            $client->write(":$ircd->{host} " . IRCd::Constants::RPL_NOTOPIC      . " $client->{nick} $self->{name} :No topic is set");
         }
     } else {
         if($force == 0 && $self->{modes}->{t}->get()) {
             if($self->getStatus($client) < 3) {
-                $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
+                $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator");
                 return;
             }
         }
@@ -302,7 +302,7 @@ sub sendToRoom {
     if($client) {
         if($self->{modes}->{b}->has($client) and $self->getStatus($client) < $self->{modes}->{o}->level()) {
             $client->{log}->info("[$self->{name}] User (nick: $client->{nick}) is banned from the channel $self->{name}");
-            $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_CANNOTSENDTOCHAN . " $client->{nick} $self->{name} :Cannot send to channel (you're banned)\r\n");
+            $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CANNOTSENDTOCHAN . " $client->{nick} $self->{name} :Cannot send to channel (you're banned)");
             return;
         }
         if($msg =~ /(PRIVMSG|NOTICE)/ and $self->{modes}->{m}->get() and $self->getStatus($client) < $self->{modes}->{v}->level()) {
