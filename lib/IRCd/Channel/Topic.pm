@@ -19,7 +19,6 @@ sub new {
 sub set {
     my $self     = shift;
     my $client   = shift;
-    my $socket   = $client->{socket}->{sock};
     my $config   = $client->{config};
     my $ircd     = $client->{ircd};
     my $mask     = $client->getMask(1);

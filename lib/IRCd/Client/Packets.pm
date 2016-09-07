@@ -13,7 +13,6 @@ package IRCd::Client::Packets;
 sub nick {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -23,7 +22,7 @@ sub nick {
     $msg =~ s/://;
     my @splitPacket = split(" ", $msg);
     if(scalar(@splitPacket) < 2) {
-        $socket->write(":$config->{host} " . IRCd::Constants::ERR_NEEDMOREPARAMS . " * NICK :Not enough parameters\r\n");
+        $client->write(":$config->{host} " . IRCd::Constants::ERR_NEEDMOREPARAMS . " * NICK :Not enough parameters");
         return;
     }
 
@@ -32,14 +31,14 @@ sub nick {
         if(my $nickObj = $ircd->{clients}->{nick}->{lc($splitPacket[1])}) {
             if($nickObj ne $client) {
                 $client->{log}->info("[$client->{nick}] NICK in use!");
-                $socket->write(":$config->{host} " . IRCd::Constants::ERR_NICKNAMEINUSE . " * $splitPacket[1] :Nickname is already in use\r\n");
+                $client->write(":$config->{host} " . IRCd::Constants::ERR_NICKNAMEINUSE . " * $splitPacket[1] :Nickname is already in use");
                 return;
             }
         }
     }
     # Check for invalid nick
     if ($splitPacket[1] !~ /[A-Za-z{}\[\]_\\^|`][A-Za-z{}\[\]_\-\\^|`0-9]*/) {
-        $socket->write(":$config->{host} " . IRCd::Constants::ERR_ERRONEUSNICKNAME . " * NICK :Erroneous nickname: Illegal characters\r\n");
+        $client->write(":$config->{host} " . IRCd::Constants::ERR_ERRONEUSNICKNAME . " * NICK :Erroneous nickname: Illegal characters");
         return;
     }
     # Notify channels of the change
@@ -52,7 +51,7 @@ sub nick {
     }
     delete $ircd->{clients}->{nick}->{lc($client->{nick})} if $client->{nick} ne "";
     $client->{nick} = $splitPacket[1];
-    $socket->write(":$mask NICK :$client->{nick}\r\n");
+    $client->write(":$mask NICK :$client->{nick}");
     $client->{log}->debug("NICK: $client->{nick}");
 
     $ircd->{clients}->{nick}->{lc($client->{nick})} = $client;
@@ -61,7 +60,6 @@ sub nick {
 sub user {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -69,13 +67,13 @@ sub user {
     my @splitPacket = split(" ", $msg);
 
     if(scalar(@splitPacket) < 4) {
-        $socket->write(":$config->{host} " . IRCd::Constants::ERR_NEEDMOREPARAMS . " * USER :Not enough parameters\r\n");
+        $client->write(":$config->{host} " . IRCd::Constants::ERR_NEEDMOREPARAMS . " * USER :Not enough parameters");
         return;
     }
 
     # validate nick
     if ($splitPacket[1] !~ /[A-Za-z0-9_\-\.]/) {
-        $socket->write("ERROR :Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.\r\n");
+        $client->write("ERROR :Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
         $client->disconnect(1);
         return;
     }
@@ -91,7 +89,6 @@ sub user {
 sub cap {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -101,7 +98,6 @@ sub cap {
 sub join {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -115,11 +111,11 @@ sub join {
     if($recurs == 0) {
         @splitPacket = split(" ", $msg);
         if(scalar(@splitPacket) < 2) {
-            $socket->write(":$config->{host} " . IRCd::Constants::ERR_NEEDMOREPARAMS . " * JOIN :Not enough parameters\r\n");
+            $client->write(":$config->{host} " . IRCd::Constants::ERR_NEEDMOREPARAMS . " * JOIN :Not enough parameters");
             return;
         }
         if($splitPacket[1] !~ /^#/){
-            $client->{log}->debug("JOIN param didn't begin w/ a #\r\n");
+            $client->{log}->debug("JOIN param didn't begin w/ a #");
             return;
         }
         $channelInput = $splitPacket[1];
@@ -138,11 +134,11 @@ sub join {
 
     # Need a list of server channels
     if($ircd->{channels}->{$channelInput}) {
-        $client->{log}->info("[$channelInput] Channel already exists.\r\n");
+        $client->{log}->info("[$channelInput] Channel already exists.");
         # Have them "JOIN", announce to other users
         $ircd->{channels}->{$channelInput}->addClient($client);
     } else {
-        $client->{log}->info("[$channelInput] Creating channel..\r\n");
+        $client->{log}->info("[$channelInput] Creating channel..");
         my $channel = IRCd::Channel->new($channelInput);
         $channel->initModes($client, $ircd);
         $channel->addClient($client);
@@ -154,7 +150,6 @@ sub join {
 sub who {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -169,7 +164,7 @@ sub who {
     # XXX: support user targets (insp does)
     my $channel = $ircd->{channels}->{$target};
     if(!$channel) {
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $target :No such nick/channel\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $target :No such nick/channel");
         return;
     }
 
@@ -183,14 +178,13 @@ sub who {
         # XXX: include '*' for ircop
         my $away = $_->{away} // '' ne '' ? "G" : "H";
         my $userSymbol = $channel->{privilege}->{$channel->getStatus($_)} // "";
-        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOREPLY . " $client->{nick} $channel->{name} $user $host $config->{host} $nick $away$userSymbol :0 $real\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOREPLY . " $client->{nick} $channel->{name} $user $host $config->{host} $nick $away$userSymbol :0 $real");
     }
-    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHO . " $client->{nick} $channel->{name} :End of /WHO list.\r\n");
+    $client->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHO . " $client->{nick} $channel->{name} :End of /WHO list.");
 }
 sub names {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -202,7 +196,7 @@ sub names {
     # Get the channel obj
     my $channel = $ircd->{channels}->{$target};
     if(!$channel) {
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $target :No such nick/channel\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $target :No such nick/channel");
         return;
     }
 
@@ -210,14 +204,13 @@ sub names {
     foreach(values($channel->{clients}->%*)) {
         my $nick       = $_->{nick};
         my $userSymbol = $channel->{privilege}->{$channel->getStatus($_)} // "";
-        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_NAMREPLY . " $client->{nick} = $channel->{name} :$userSymbol$nick\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::RPL_NAMREPLY . " $client->{nick} = $channel->{name} :$userSymbol$nick");
     }
-    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFNAMES . " $client->{nick} $channel->{name} :End of /NAMES list.\r\n");
+    $client->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFNAMES . " $client->{nick} $channel->{name} :End of /NAMES list.");
 }
 sub whois {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -226,7 +219,7 @@ sub whois {
     my $targetNick    = $splitMessage[1];
     my $targetClient  = $ircd->getClientByNick($targetNick);
     if($targetClient == 0) {
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $client->{nick} $target :No such nick/channel\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $client->{nick} $target :No such nick/channel");
         return;
     }
     my $targetIdent    = $targetClient->{ident};
@@ -235,31 +228,30 @@ sub whois {
     my $targetIdle     = time() - $client->{idle};
     my @presentChannels = ();
 
-    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISUSER     . " $client->{nick} $targetNick $targetIdent $targetHost * :$targetRealName\r\n");
+    $client->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISUSER     . " $client->{nick} $targetNick $targetIdent $targetHost * :$targetRealName");
     foreach(values($ircd->{channels}->%*)) {
         if($_->{clients}->{lc($targetNick)}) {
             push @presentChannels, $_->{name};
         }
     }
     if($targetClient == $client or $client->{modes}->{o}->has($client)) {
-        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISHOST . " $client->{nick} $targetNick :is connecting from $targetClient->{ident}\@$targetClient->{host} $targetClient->{ip}\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISHOST . " $client->{nick} $targetNick :is connecting from $targetClient->{ident}\@$targetClient->{host} $targetClient->{ip}");
     }
-    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISCHANNELS . " $client->{nick} $targetNick :" . CORE::join(' ', @presentChannels) . "\r\n") if @presentChannels >= 1;
-    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISSERVER   . " $client->{nick} $targetNick $client->{server} :$ircd->{desc}\r\n");
-    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISOPERATOR . " $client->{nick} $targetNick :is an IRC operator\r\n") if $targetClient->{modes}->{o}->has($targetClient);
+    $client->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISCHANNELS . " $client->{nick} $targetNick :" . CORE::join(' ', @presentChannels) . "") if @presentChannels >= 1;
+    $client->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISSERVER   . " $client->{nick} $targetNick $client->{server} :$ircd->{desc}");
+    $client->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISOPERATOR . " $client->{nick} $targetNick :is an IRC operator") if $targetClient->{modes}->{o}->has($targetClient);
     # we only state away if they are away
     if ($targetClient->{away} ne '') {
-        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_AWAY   . " $client->{nick} $targetNick :$targetClient->{away}\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::RPL_AWAY   . " $client->{nick} $targetNick :$targetClient->{away}");
     }
     # XXX: Some IRCds (ircd-hybrid) use 275?
-    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISSECURE   . " $client->{nick} $targetNick :is connected via TLS (secure line)\r\n") if($targetClient->{modes}->{z}->has($targetClient));
-    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISIDLE     . " $client->{nick} $targetNick $targetIdle $client->{signonTime} :seconds idle, signon time\r\n");
-    $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHOIS    . " $client->{nick} $targetNick :End of /WHOIS list\r\n");
+    $client->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISSECURE   . " $client->{nick} $targetNick :is connected via TLS (secure line)") if($targetClient->{modes}->{z}->has($targetClient));
+    $client->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISIDLE     . " $client->{nick} $targetNick $targetIdle $client->{signonTime} :seconds idle, signon time");
+    $client->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFWHOIS    . " $client->{nick} $targetNick :End of /WHOIS list");
 }
 sub quit {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -273,7 +265,6 @@ sub quit {
 sub part {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -288,13 +279,12 @@ sub part {
     if($ircd->{channels}->{$partChannel}) {
         $ircd->{channels}->{$partChannel}->part($client, $partReason);
     } else {
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $partChannel :No such nick/channel\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $partChannel :No such nick/channel");
     }
 }
 sub away {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
 
@@ -305,15 +295,14 @@ sub away {
     $client->{away} = $awayMessage;
 
     if($awayMessage ne '') {
-        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_NOWAWAY . " $client->{nick} :You have been marked as being away\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::RPL_NOWAWAY . " $client->{nick} :You have been marked as being away");
     } else {
-        $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_UNAWAY . " $client->{nick} :You are no longer marked as being away\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::RPL_UNAWAY . " $client->{nick} :You are no longer marked as being away");
     }
 }
 sub privmsg {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -330,7 +319,7 @@ sub privmsg {
         # Target was a channel
         my $channel = $ircd->{channels}->{$target};
         if(!$channel) {
-            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $target :No such nick/channel\r\n");
+            $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $target :No such nick/channel");
             return;
         }
 
@@ -338,25 +327,24 @@ sub privmsg {
     } else {
         my $user = $ircd->getClientByNick($target);
         if($user == 0) {
-            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $client->{nick} $target :No such nick/channel\r\n");
+            $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $client->{nick} $target :No such nick/channel");
             return;
         }
         # Warn the sender if the user is idle
         if ($user->{away} ne '') {
-            $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_AWAY . " $client->{nick} $target :$user->{away}\r\n");
+            $client->write(":$ircd->{host} " . IRCd::Constants::RPL_AWAY . " $client->{nick} $target :$user->{away}");
         }
         # Send the message to the target user
         if($user->{server} eq $ircd->{host}) {
-            $user->write(":$mask PRIVMSG $user->{nick} :$realmsg\r\n");
+            $user->write(":$mask PRIVMSG $user->{nick} :$realmsg");
         } else {
-            $user->write(":$client->{uid} PRIVMSG $user->{nick} :$realmsg\r\n");
+            $user->write(":$client->{uid} PRIVMSG $user->{nick} :$realmsg");
         }
     }
 }
 sub notice {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -370,28 +358,27 @@ sub notice {
         # Target was a channel
         my $channel = $ircd->{channels}->{$target};
         if(!$channel) {
-            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $target :No such nick/channel\r\n");
+            $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $target :No such nick/channel");
             return;
         }
         $channel->sendToRoom($client, ":$client->{nick} NOTICE $channel->{name} :$realmsg", 0);
     } else {
         my $user = $ircd->getClientByNick($target);
         if($user == 0) {
-            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $client->{nick} $target :No such nick/channel\r\n");
+            $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $client->{nick} $target :No such nick/channel");
             return;
         }
         # Warn the sender if the user is idle
         if ($user->{away} ne '') {
-            $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_AWAY . " $client->{nick} $target :$user->{away}\r\n");
+            $client->write(":$ircd->{host} " . IRCd::Constants::RPL_AWAY . " $client->{nick} $target :$user->{away}");
         }
         # Send the message to the target user
-        $user->write(":$mask NOTICE $user->{nick} :$realmsg\r\n");
+        $user->write(":$mask NOTICE $user->{nick} :$realmsg");
     }
 }
 sub mode {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -441,7 +428,7 @@ sub mode {
         # Lookup channel
         my $channel = $ircd->{channels}->{$split[1]};
         if(!$channel) {
-            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $split[1] :No such nick/channel\r\n");
+            $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $split[1] :No such nick/channel");
             return;
         }
         if(@split < 3) {
@@ -500,7 +487,6 @@ sub mode {
 sub userhost {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -525,18 +511,16 @@ sub userhost {
 sub ping {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
     my @splitPacket = split(" ", $msg);
     $splitPacket[1] =~ s/://;
-    $socket->write(":$ircd->{host} PONG $ircd->{host} :" . $splitPacket[1] . "\r\n");
+    $client->write(":$ircd->{host} PONG $ircd->{host} :" . $splitPacket[1] . "");
 }
 sub pong {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -544,7 +528,7 @@ sub pong {
     my @splitPacket = split(" ", $msg, 2);
     $splitPacket[1] =~ s/://;
     if($splitPacket[1] eq $client->{pingcookie}) {
-        $client->{log}->info("[$client->{nick}] Resetting PING clock\r\n");
+        $client->{log}->info("[$client->{nick}] Resetting PING clock");
         $client->{waitingForPong} = 0;
         $client->{lastPong} = time();
     }
@@ -553,7 +537,6 @@ sub pong {
 sub topic {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -573,7 +556,7 @@ sub topic {
     if($ircd->{channels}->{$topicChannel}) {
         $ircd->{channels}->{$topicChannel}->topic($client, $topicText, $force);
     } else {
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $topicChannel :No such nick/channel\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $topicChannel :No such nick/channel");
     }
 }
 
@@ -584,7 +567,6 @@ sub topic {
 sub kick {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -593,7 +575,7 @@ sub kick {
     my @splitPacket   = split(" ", $msg);
     my $targetChannel = $ircd->{channels}->{$splitPacket[1]};
     if(!$targetChannel) {
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $splitPacket[1] :No such nick/channel\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $client->{nick} $splitPacket[1] :No such nick/channel");
         return;
     }
 
@@ -606,7 +588,6 @@ sub kick {
 sub motd {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);
@@ -617,7 +598,6 @@ sub motd {
 sub rules {
     my $client = shift;
     my $msg    = shift;
-    my $socket = $client->{socket}->{sock};
     my $config = $client->{config};
     my $ircd   = $client->{ircd};
     my $mask   = $client->getMask(1);

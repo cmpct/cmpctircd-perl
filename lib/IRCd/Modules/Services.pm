@@ -45,7 +45,7 @@ sub pkt_sjoin {
         if($ircd->{channels}->{$channelInput}) {
             $ircd->{channels}->{$channelInput}->addClient($client);
         } else {
-            $client->{log}->info("[$channelInput] Creating channel..\r\n");
+            $client->{log}->info("[$channelInput] Creating channel..");
             my $channel = IRCd::Channel->new($channelInput);
             $channel->initModes($client, $ircd);
             $channel->addClient($client);
@@ -70,7 +70,7 @@ sub evt_sjoin {
         # :001 SJOIN 1473257992 #services :@001YIMH01
         $srv = $ircd->{servers}->{sid}->{$_};
         next if(!$srv->{socket}->{sock});
-        $srv->{socket}->{sock}->write(":042 SJOIN " . time() . " $chan->{name} :\@$client->{nick}\r\n");
+        $srv->write(":042 SJOIN " . time() . " $chan->{name} :\@$client->{nick}");
     }
 
     return 1;

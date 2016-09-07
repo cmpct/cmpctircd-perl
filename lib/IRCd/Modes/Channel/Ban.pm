@@ -29,7 +29,6 @@ sub new {
 sub grant {
     my $self     = shift;
     my $client   = shift;
-    my $socket   = $client->{socket}->{sock};
     my $config   = $client->{config};
     my $ircd     = $client->{ircd};
     my $modifier = shift // "+";
@@ -41,7 +40,7 @@ sub grant {
 
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
         $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator");
         return;
     }
     my $mask = $client->getMask(1);
@@ -83,7 +82,6 @@ sub grant {
 sub revoke {
     my $self     = shift;
     my $client   = shift;
-    my $socket   = $client->{socket}->{sock};
     my $config   = $client->{config};
     my $ircd     = $client->{ircd};
     my $modifier = shift // "-";
@@ -95,7 +93,7 @@ sub revoke {
 
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
         $client->{log}->info("[$self->{channel}->{name}] No permission for client (nick: $client->{nick})!");
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator");
         return;
     }
     my($nick, $user, $host) = ('*', '*', '*');

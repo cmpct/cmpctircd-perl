@@ -26,7 +26,6 @@ sub new {
 sub grant {
     my $self     = shift;
     my $client   = shift;
-    my $socket   = $client->{socket}->{sock};
     my $config   = $client->{config};
     my $ircd     = $client->{ircd};
     my $modifier = shift // "+";
@@ -39,12 +38,12 @@ sub grant {
     return if(!$client->{modes}->{o}->has($client));
     if(!$force and !$self->{channel}->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel");
         return;
     }
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
         $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator");
         return;
     }
     my $mask = $client->getMask(1);
@@ -54,7 +53,6 @@ sub grant {
 sub revoke {
     my $self     = shift;
     my $client   = shift;
-    my $socket   = $client->{socket}->{sock};
     my $config   = $client->{config};
     my $ircd     = $client->{ircd};
     my $modifier = shift // "-";
@@ -67,12 +65,12 @@ sub revoke {
     return if(!$client->{modes}->{O}->has($client));
     if(!$self->{channel}->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
-        $client->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel");
         return;
     }
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
         $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
-        $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator\r\n");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator");
         return;
     }
     my $mask = $client->getMask(1);

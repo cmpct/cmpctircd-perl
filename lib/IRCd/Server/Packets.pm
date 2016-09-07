@@ -11,19 +11,17 @@ package IRCd::Server::Packets;
 sub pass {
     my $server = shift;
     my $msg    = shift;
-    my $socket = $server->{socket}->{sock};
     my $config = $server->{config};
     my $ircd   = $server->{ircd};
     my @splitMessage = split(" ", $msg);
     $server->{log}->debug("[$server->{name}] Got a password!");
     # ACK it for now
-    $socket->write("PASS :$splitMessage[1]\r\n");
+    $server->write("PASS :$splitMessage[1]");
 }
 
 sub protoctl {
     my $server = shift;
     my $msg    = shift;
-    my $socket = $server->{socket}->{sock};
     my $config = $server->{config};
     my $ircd   = $server->{ircd};
     $server->{log}->debug("[$server->{name}] Got a PROTOCTL!");
@@ -66,10 +64,10 @@ sub protoctl {
     # "I'll show you what I'm capable of!"
     # (capability negotiation)
     return if($server->{sentcaps});
-    $socket->write("PROTOCTL NOQUIT NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 TKLEXT TKLEXT2 NICKIP ESVID\r\n");
-    $socket->write("PROTOCTL CHANMODES=beI,kLf,l,psmntirzMQNRTOVKDdGPZSCc NICKCHARS= SID=042 MLOCK TS=1470591491 EXTSWHOIS\r\n");
-    $socket->write("SERVER $ircd->{host} 1 :U4000-Fhin6OoEM-042 $ircd->{desc}\r\n");
-    $socket->write("NETINFO 0 " . time() . " 4000 MD5:2978762380c4474b73dd6c51aed84815 0 0 0 :cmpct\r\n");
+    $server->write("PROTOCTL NOQUIT NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 TKLEXT TKLEXT2 NICKIP ESVID");
+    $server->write("PROTOCTL CHANMODES=beI,kLf,l,psmntirzMQNRTOVKDdGPZSCc NICKCHARS= SID=042 MLOCK TS=1470591491 EXTSWHOIS");
+    $server->write("SERVER $ircd->{host} 1 :U4000-Fhin6OoEM-042 $ircd->{desc}");
+    $server->write("NETINFO 0 " . time() . " 4000 MD5:2978762380c4474b73dd6c51aed84815 0 0 0 :cmpct");
     $server->{sentcaps} = 1;
 
     # Sync
@@ -80,22 +78,19 @@ sub protoctl {
 sub server {
     my $server = shift;
     my $msg    = shift;
-    my $socket = $server->{socket}->{sock};
     my $config = $server->{config};
     my $ircd   = $server->{ircd};
-
 }
 
 sub ping {
     my $server = shift;
     my $msg    = shift;
-    my $socket = $server->{socket}->{sock};
     my $config = $server->{config};
     my $ircd   = $server->{ircd};
     my @splitPacket = split(" ", $msg);
     $splitPacket[1] =~ s/://;
     #:irc.cmpct.info PONG irc.cmpct.info :00A
-    $socket->write(":$ircd->{host} PONG $ircd->{host} :$splitPacket[1]\r\n");
+    $server->write(":$ircd->{host} PONG $ircd->{host} :$splitPacket[1]");
 }
 
 sub uid {
@@ -145,7 +140,6 @@ sub uid {
 sub privmsg {
     my $server = shift;
     my $msg    = shift;
-    my $socket = $server->{socket}->{sock};
     my $config = $server->{config};
     my $ircd   = $server->{ircd};
     my $mask;
@@ -164,24 +158,23 @@ sub privmsg {
         # Target was a channel
         my $channel = $ircd->{channels}->{$target};
         if(!$channel) {
-            $source->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $source->{nick} $target :No such nick/channel\r\n");
+            $source->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $source->{nick} $target :No such nick/channel");
             return;
         }
         $channel->sendToRoom($source, ":$mask PRIVMSG $channel->{name} :$message", 0);
     } else {
         my $user = $ircd->getClientByNick($target);
         if($user == 0) {
-            $socket->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $source->{nick} $target :No such nick/channel\r\n");
+            $server->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $source->{nick} $target :No such nick/channel");
             return;
         }
-        $target->write(":$mask PRIVMSG $target :$splitMessage[2]\r\n");
+        $target->write(":$mask PRIVMSG $target :$splitMessage[2]");
     }
 }
 
 sub notice {
     my $server = shift;
     my $msg    = shift;
-    my $socket = $server->{socket}->{sock};
     my $config = $server->{config};
     my $ircd   = $server->{ircd};
     my $mask;
@@ -199,21 +192,21 @@ sub notice {
     if($target eq "0") {
         # Special case
         foreach(values($ircd->{clients}->{nick}->%*)) {
-            $_->{socket}->{sock}->write(":$mask NOTICE $_->{nick} :$splitMessage[2]\r\n");
+            $_->write(":$mask NOTICE $_->{nick} :$splitMessage[2]");
         }
     } elsif($target !~ /^#/) {
         # Target was not a channel
         $target = $ircd->getClientByUID($target);
         if($target == 0) {
-            $source->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $source->{nick} $target :No such nick/channel\r\n");
+            $source->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHNICK . " $source->{nick} $target :No such nick/channel");
             return;
         }
-        $target->write(":$mask NOTICE $target->{nick} :$splitMessage[2]\r\n");
+        $target->write(":$mask NOTICE $target->{nick} :$splitMessage[2]");
     } else {
         # Target was a channel
         my $channel = $ircd->{channels}->{$target};
         if(!$channel) {
-            $source->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $source->{nick} $target :No such nick/channel\r\n");
+            $source->write(":$ircd->{host} " . IRCd::Constants::ERR_NOSUCHCHANNEL . " $source->{nick} $target :No such nick/channel");
             return;
         }
         $channel->sendToRoom($source, ":$mask PRIVMSG $channel->{name} :$message", 0);

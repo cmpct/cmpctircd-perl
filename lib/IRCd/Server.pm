@@ -49,7 +49,7 @@ sub parse {
     }
     # Check if any of the events returned < 0; if so, return.
     if(!IRCd::Module::can_process($event->{values})) {
-        $self->{log}->debug("[$self->{nick}] A handler for $splitPacket[0] returned 0. Bailing out.\r\n");
+        $self->{log}->debug("[$self->{nick}] A handler for $splitPacket[0] returned 0. Bailing out.");
         return;
     }
 
@@ -67,7 +67,6 @@ sub parse {
 
 sub sync {
     my $self   = shift;
-    my $socket = $self->{socket}->{sock};
     my $config = $self->{config};
     my $ircd   = $self->{ircd};
 
@@ -75,7 +74,7 @@ sub sync {
     foreach(keys($self->{ircd}->{clients}->{nick}->%*)) {
         $self->syncUser($_);
     }
-    $socket->write(":042 EOS\r\n");
+    $self->write(":042 EOS");
     # TODO: sync-on-join/quit/etc
     # TODO: sjoin
     # TODO: and join
@@ -83,7 +82,6 @@ sub sync {
 
 sub syncUser {
     my $self   = shift;
-    my $socket = $self->{socket}->{sock};
     my $config = $self->{config};
     my $ircd   = $self->{ircd};
     my $user   = shift;
@@ -103,7 +101,7 @@ sub syncUser {
     my $sIP        = $client->{ip};
     my $sGECOS     = $client->{realname};
     # TODO: $self->{sid}
-    $socket->write(":042 UID $sNick $sHop $sTime $sUser $sHost $sUID $sServiceStamp $sUmodes $sVirtHost $sCloakHost $sIP $sGECOS\r\n");
+    $self->write(":042 UID $sNick $sHop $sTime $sUser $sHost $sUID $sServiceStamp $sUmodes $sVirtHost $sCloakHost $sIP $sGECOS");
 }
 
 sub checkTimeout {}
@@ -119,6 +117,7 @@ sub write {
     my $msg  = shift;
     my $sock;
     my $type;
+
     $msg .= "\r\n" if($msg !~ /\r\n/);
     if(ref($self->{server}) eq "IRCd::Server") {
         # Write on the appropriate socket

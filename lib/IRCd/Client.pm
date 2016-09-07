@@ -102,7 +102,7 @@ sub parse {
     my $foundEvent = $event->{found};
     # Check if any of the events returned < 0; if so, return.
     if(!IRCd::Module::can_process($event->{values})) {
-        $self->{log}->debug("[$self->{nick}] A handler for $splitPacket[0] returned 0. Bailing out.\r\n");
+        $self->{log}->debug("[$self->{nick}] A handler for $splitPacket[0] returned 0. Bailing out.");
         return;
     }
     my $handlerRef = IRCd::Client::Packets->can(lc($splitPacket[0]));
@@ -114,12 +114,12 @@ sub parse {
         }
         if(!$self->{registered} and $requirePong and !$registrationCommands{uc($splitPacket[0])}) {
             $self->{log}->debug("[$self->{nick}] User attempted to register without PONG");
-            $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTREGISTERED . " * :You have not registered\r\n");
+            $self->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTREGISTERED . " * :You have not registered");
             return;
         }
         if(!$self->{registered} and !$registrationCommands{uc($splitPacket[0])}) {
             $self->{log}->debug("[$self->{nick}] User sent command [$splitPacket[0]] pre-registration");
-            $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTREGISTERED . " * :You have not registered\r\n");
+            $self->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTREGISTERED . " * :You have not registered");
             return;
         }
         my %idleCommands = (
@@ -149,14 +149,14 @@ sub sendWelcome {
     my $create_str  = sprintf("%s %u %u at %s", $create_time->month_abbr(),
                         $create_time->day(), $create_time->year(),
                         $create_time->hms);
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_WELCOME  . " $self->{nick} :Welcome to the $ircd->{network} IRC Network $self->{nick}!$self->{ident}\@" . $self->get_host() . "\r\n");
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_YOURHOST . " $self->{nick} :Your host is $ircd->{host}, running version cmpctircd-$ircd->{version}\r\n");
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_CREATED  . " $self->{nick} :This server was created $create_str\r\n");
+    $self->write(":$ircd->{host} " . IRCd::Constants::RPL_WELCOME  . " $self->{nick} :Welcome to the $ircd->{network} IRC Network $self->{nick}!$self->{ident}\@" . $self->get_host());
+    $self->write(":$ircd->{host} " . IRCd::Constants::RPL_YOURHOST . " $self->{nick} :Your host is $ircd->{host}, running version cmpctircd-$ircd->{version}");
+    $self->write(":$ircd->{host} " . IRCd::Constants::RPL_CREATED  . " $self->{nick} :This server was created $create_str");
     # XXX: Generate the user/chan modes programatically
-    #$self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MYINFO   . " $self->{nick} $ircd->{host} cmpctircd-$ircd->{version} x ntlo\r\n");
+    #$self->write(":$ircd->{host} " . IRCd::Constants::RPL_MYINFO   . " $self->{nick} $ircd->{host} cmpctircd-$ircd->{version} x ntlo\r\n");
     # https://github.com/grawity/irc-docs/blob/master/client/RPL_ISUPPORT/draft-hardy-irc-isupport-00.txt#L462-L475
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ISUPPORT . " $self->{nick} CASEMAPPING=rfc1459 PREFIX=(ov)\@+ STATUSMSG=\@+ NETWORK=$ircd->{network} MAXTARGETS=$ircd->{maxtargets} :are supported by this server\r\n");
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ISUPPORT . " $self->{nick} CHANTYPES=# CHANMODES=b,,l,ntm :are supported by this server" . "\r\n");
+    $self->write(":$ircd->{host} " . IRCd::Constants::RPL_ISUPPORT . " $self->{nick} CASEMAPPING=rfc1459 PREFIX=(ov)\@+ STATUSMSG=\@+ NETWORK=$ircd->{network} MAXTARGETS=$ircd->{maxtargets} :are supported by this server");
+    $self->write(":$ircd->{host} " . IRCd::Constants::RPL_ISUPPORT . " $self->{nick} CHANTYPES=# CHANMODES=b,,l,ntm :are supported by this server");
     $self->motd();
     $self->{registered} = 1;
 
@@ -183,14 +183,14 @@ sub motd {
     my $motd;
     open($motd, "<", $ircd->{motd_path});
     my @motd = <$motd>;
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTDSTART . " $self->{nick} :- $ircd->{host} Message of the Day -\r\n");
+    $self->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTDSTART . " $self->{nick} :- $ircd->{host} Message of the Day -");
     for (my $i = 0; $i < @motd; $i++) {
         my $line = $motd[$i];
         $line =~ s/\r?\n//;
         last if ($i + 1 == @motd && $line =~ /^\s*$/);
-        $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTD     . " $self->{nick} :- " . $line . "\r\n");
+        $self->write(":$ircd->{host} " . IRCd::Constants::RPL_MOTD     . " $self->{nick} :- " . $line);
     }
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFMOTD . " $self->{nick} :End of /MOTD command.\r\n");
+    $self->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFMOTD . " $self->{nick} :End of /MOTD command.");
     close($motd);
 }
 
@@ -200,14 +200,14 @@ sub rules {
     my $rules;
     open($rules, "<", $ircd->{rules_path});
     my @rules = <$rules>;
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_RULESSTART . " $self->{nick} :- $ircd->{host} server rules -\r\n");
+    $self->write(":$ircd->{host} " . IRCd::Constants::RPL_RULESSTART . " $self->{nick} :- $ircd->{host} server rules -");
     for (my $i = 0; $i < @rules; $i++) {
         my $line = $rules[$i];
         $line =~ s/\r?\n//;
         last if ($i + 1 == @rules && $line =~ /^\s*$/);
-        $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_RULES      . " $self->{nick} :- " . $line . "\r\n");
+        $self->write(":$ircd->{host} " . IRCd::Constants::RPL_RULES      . " $self->{nick} :- " . $line);
     }
-    $self->{socket}->{sock}->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFRULES . " $self->{nick} :End of RULES command.\r\n");
+    $self->write(":$ircd->{host} " . IRCd::Constants::RPL_ENDOFRULES . " $self->{nick} :End of RULES command.");
     close($rules);
 }
 
@@ -216,13 +216,12 @@ sub checkTimeout {
     my $ircd   = $self->{ircd};
     my $mask   = $self->getMask(1);
     my $period = $self->{lastPong} + $ircd->{pingtimeout};
-    my $socket = $self->{socket}->{sock};
 
     my $requirePong = 0;
     $requirePong = 1 if ($ircd->{config}->{requirepong} and !$self->{lastPing});
     if($requirePong or (time() > $period and !$self->{waitingForPong})) {
         $self->{pingcookie} = $self->createCookie();
-        $socket->write("PING :$self->{pingcookie}\r\n");
+        $self->write("PING :$self->{pingcookie}");
         $self->{lastPing} = time();
         $self->{waitingForPong} = 1;
     } else {
@@ -247,12 +246,12 @@ sub checkResolve {
         # We got an answer to our query!
         $self->{log}->debug("[$self->{nick}] Got an answer to our DNS query for [$self->{ip}]: $answer");
         $self->{host} = $answer;
-        $sock->write(":$ircd->{host} NOTICE * :*** Found your hostname\r\n");
+        $self->write(":$ircd->{host} NOTICE * :*** Found your hostname");
         $self->sendWelcome() if($self->{ident} and $self->{nick} and !$self->{registered});
     } elsif($self->{query} eq 'ERROR') {
         $self->{log}->debug("[$self->{nick}] Query for [$self->{ip}] failed");
         $self->{host} = $self->{ip};
-        $sock->write(":$ircd->{host} NOTICE * :*** Could not resolve your hostname: Domain name not found; using your IP address ($self->{ip}) instead.\r\n");
+        $self->write(":$ircd->{host} NOTICE * :*** Could not resolve your hostname: Domain name not found; using your IP address ($self->{ip}) instead.");
         $self->sendWelcome() if($self->{ident} and $self->{nick} and !$self->{registered});
     }
 }
@@ -272,7 +271,7 @@ sub disconnect {
             next if(!$ircd->{channels}->{$chan}->{clients}->{lc($self->{nick})});
             $ircd->{channels}->{$chan}->quit($self, $reason);
         }
-        $self->write(":$mask QUIT :$reason\r\n");
+        $self->write(":$mask QUIT :$reason");
     }
 
     if(ref($self->{server}) eq "IRCd::Server") {
@@ -302,7 +301,7 @@ sub write {
     my $sock;
 
     if($self->{disconnected}) {
-        $self->{log}->debug(caller . " attempted to write on a dead client\r\n");
+        $self->{log}->debug(caller . " attempted to write on a dead client");
         return;
     }
     $msg .= "\r\n" if($msg !~ /\r\n/);
@@ -312,13 +311,13 @@ sub write {
         # UID translation (change nicks -> UIDs)
         my @splitMessage = split(" ", $msg);
         if($splitMessage[0] !~ /^:0/) {
-            $self->{log}->debug("$splitMessage[0] needs to be translated to a UID...\r\n");
+            $self->{log}->debug("$splitMessage[0] needs to be translated to a UID...");
 
             # Delete everything after the ! to get a nick
             $splitMessage[0] =~ s/!.*//s;
             $splitMessage[0] =~ s/://;
             if($splitMessage[0] ne $self->{ircd}->{host}) {
-                $self->{log}->debug("Looking for the client named $splitMessage[0]\r\n");
+                $self->{log}->debug("Looking for the client named $splitMessage[0]");
                 $splitMessage[0] = $self->{ircd}->getClientByNick($splitMessage[0]);
 
                 return 0 if(!$splitMessage[0]);
