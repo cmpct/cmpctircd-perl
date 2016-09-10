@@ -82,7 +82,7 @@ sub evt_sjoin {
 sub init {
     my $self = shift;
     $self->{module}->register_cmd("SJOIN", \&pkt_sjoin, $self);
-    $self->{module}->register_event("user_join_room_done", \&evt_sjoin, $self);
+    $self->{module}->register_event("channel_join_done", \&evt_join, $self);
 }
 
 1;
