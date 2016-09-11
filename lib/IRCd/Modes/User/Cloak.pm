@@ -38,7 +38,7 @@ sub grant {
     my $targetClient = undef;
     my $mask = $client->getMask(1);
 
-    return if($self->{affects}->{$client});
+    return 0 if($self->{affects}->{$client});
     # Generate a cloak
     # if the IP matches the host, then use IP cloaking, otherwise fall back to DNS
     if ($client->{ip} eq $client->{host}) {
@@ -66,6 +66,7 @@ sub grant {
         $ircd->{channels}->{$chan}->part($client, "Changing host", 1);
         $ircd->{channels}->{$chan}->addClient($client);
     }
+    return 1;
 }
 sub revoke {
     my $self     = shift;
@@ -80,7 +81,7 @@ sub revoke {
     my $announce = shift // 1;
     my $targetClient = undef;
 
-    return if(!$self->{affects}->{$client});
+    return 0 if(!$self->{affects}->{$client});
     my $mask = $client->getMask(0);
     $self->{client}->{log}->debug("[$client->{nick}] unsetting +x");
     $client->{cloak} = $client->{host};
@@ -94,6 +95,7 @@ sub revoke {
         $ircd->{channels}->{$chan}->part($client, "Changing host", 1);
         $ircd->{channels}->{$chan}->addClient($client);
     }
+    return 1;
 }
 sub get {
     my $self = shift;

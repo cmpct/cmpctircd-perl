@@ -6,8 +6,7 @@
     </ircd>
 
     <server>
-        <!--<ip>127.0.0.1</ip>-->
-        <ip>192.168.0.170</ip>
+        <ip>127.0.0.1</ip>
         <port>6667</port>
         <tls>1</tls>
         <tlsport>6697</tlsport>

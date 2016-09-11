@@ -177,7 +177,7 @@ sub who {
     # https://bitbucket.org/pidgin/main/src/1cf07b94c6ca44814ad456de985947be66a391c8/libpurple/protocols/irc/msgs.c?at=default&fileviewer=file-view-default#msgs.c-942
     foreach(values($channel->{clients}->%*)) {
         my $user = $_->{ident};
-        my $host = $_->{cloak} if($_->{modes}->{x}->has($_));
+        my $host = $_->get_host(1);
         my $nick = $_->{nick};
         my $real = $_->{realname};
         # XXX: include '*' for ircop
@@ -412,25 +412,42 @@ sub mode {
         my @parameters      = split(' ', $split[3] // "");
         my $const           = 0;
         my $currentModifier = "";
+        my $modeChars       = "";
+        my $modeArgs        = "";
+        my $modeString      = "";
+        my $success         = 0;
         foreach(@modes) {
             if($_ eq "+") {
                 $currentModifier = "+";
+                $modeChars      .= $currentModifier;
                 next;
             } elsif($_ eq "-") {
                 $currentModifier = "-";
+                $modeChars      .= $currentModifier;
                 next;
             }
             $client->{log}->debug("[$client->{nick}] MODE: $currentModifier$_");
             if($client->{modes}->{$_}) {
-                $client->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, $force, 1)  if $currentModifier eq "+";
-                $client->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, $force, 1)  if $currentModifier eq "-";
+                if($currentModifier eq '+' and ($success = $client->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, $force, 0))) {
+                    # Mode was successful, push it on the stack
+                    $modeChars .= $_;
+                    $modeArgs  .= $parameters[$const] . " " if($argmodes{$_});
+                }
+                if($currentModifier eq '-' and ($success = $client->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, $force, 0))) {
+                    # Mode was successful, push it on the stack
+                    $modeChars .= $_;
+                    $modeArgs  .= $parameters[$const] . " " if($argmodes{$_});
+                }
                 if($argmodes{$_}) {
                     $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_ $parameters[$const]");
                     $const++ if $argmodes{$_};
                 } else {
                     $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_");
                 }
+                $success = 0;
             }
+            $modeString = $modeChars . " " . $modeArgs;
+            $client->write(":$mask MODE $client->{nick} $modeString") if($modeString ne "");
         }
     } elsif($type eq "channel") {
         # Lookup channel
@@ -459,6 +476,10 @@ sub mode {
         my @parameters      = split(' ', $split[3] // "");
         my $const           = 0;
         my $currentModifier = "";
+        my $modeChars       = "";
+        my $modeArgs        = "";
+        my $modeString      = "";
+        my $success         = 0;
         $split[2] =~ s/://;
         # Special case for just +b (ban list)
         if($split[2] =~ /b/ and !$split[3]) {
@@ -473,23 +494,36 @@ sub mode {
         foreach(@modes) {
             if($_ eq "+") {
                 $currentModifier = "+";
+                $modeChars      .= $currentModifier;
                 next;
             } elsif($_ eq "-") {
                 $currentModifier = "-";
+                $modeChars      .= $currentModifier;
                 next;
             }
             $client->{log}->debug("[$client->{nick}] MODE: $currentModifier$_");
             if($channel->{modes}->{$_}) {
-                $channel->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, $force, 1)  if $currentModifier eq "+";
-                $channel->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, $force, 1)  if $currentModifier eq "-";
+                if($currentModifier eq '+' and ($success = $channel->{modes}->{$_}->grant($client,  $currentModifier, $_,  $parameters[$const] // undef, $force, 0))) {
+                    # Mode was successful, push it on the stack
+                    $modeChars .= $_;
+                    $modeArgs  .= $parameters[$const] . " " if($argmodes{$_});
+                }
+                if($currentModifier eq '-' and ($success = $channel->{modes}->{$_}->revoke($client, $currentModifier, $_,  $parameters[$const] // undef, $force, 0))) {
+                    # Mode was successful, push it on the stack
+                    $modeChars .= $_;
+                    $modeArgs  .= $parameters[$const] . " " if($argmodes{$_});
+                }
                 if($argmodes{$_}) {
                     $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_ $parameters[$const]");
                     $const++ if $argmodes{$_};
                 } else {
                     $client->{log}->debug("[$client->{nick}] Need to find a handler for: MODE $currentModifier$_");
                 }
+                $success = 0;
             }
         }
+        $modeString = $modeChars . " " . $modeArgs;
+        $channel->sendToRoom($client, ":$mask MODE $channel->{name} $modeString") if($modeString ne "");
     }
 }
 sub userhost {
