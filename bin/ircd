@@ -285,9 +285,9 @@ sub getClientByNick {
 
 
 if(!caller) {
-    $SIG{PIPE} = sub {
-        print STDERR "SIGPIPE @_\n";
-    };
+    # The conditions causing a SIGPIPE are handled elsewhere (see write and read code)
+    # so make this a noop
+    $SIG{PIPE} = sub {};
     my $config = "/etc/cmpctircd/ircd.xml";
     my $motd   = "/etc/cmpctircd/ircd.motd";
     my $rules  = "/etc/cmpctircd/ircd.rules";
