@@ -446,8 +446,10 @@ sub mode {
                 }
                 $success = 0;
             }
+        }
+        if($modeChars ne '+' and $modeChars ne '-') {
             $modeString = $modeChars . " " . $modeArgs;
-            $client->write(":$mask MODE $client->{nick} $modeString") if($modeString ne "");
+            $client->write(":$mask MODE $client->{nick} $modeString");
         }
     } elsif($type eq "channel") {
         # Lookup channel
@@ -522,8 +524,10 @@ sub mode {
                 $success = 0;
             }
         }
-        $modeString = $modeChars . " " . $modeArgs;
-        $channel->sendToRoom($client, ":$mask MODE $channel->{name} $modeString") if($modeString ne "");
+        if($modeChars ne '+' and $modeChars ne '-') {
+            $modeString = $modeChars . " " . $modeArgs;
+            $channel->sendToRoom($client, ":$mask MODE $channel->{name} $modeString");
+        }
     }
 }
 sub userhost {
