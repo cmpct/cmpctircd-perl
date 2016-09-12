@@ -168,9 +168,27 @@ sub sendWelcome {
     }
 
     # Set initial modes
-    foreach (values($ircd->{config}->{usermodes}->%*)) {
-        my $mode = $_->{name};
-        $self->{modes}->{$mode}->grant($self, "+", $mode, $_->{param} // undef, 0, 1);
+    # anonymous function to set, is independent of the XML hash logic
+    my $setter = sub {
+        my $self  = shift;
+        my $name  = shift;
+        my $param = shift;
+        if(ref($param) eq 'HASH') {
+            $param = "";
+        }
+        # we need to pass the client, otherwise the mode setting won't have a user to ref to
+        $self->{modes}->{$name}->grant($self, "+", $name, $param // undef, 1, 1);
+    };
+    # Set initial modes
+    foreach my $userModes (values($ircd->{config}->{usermodes}->%*)) {
+        # XXX: if there's only one mode, XML::Simple doesn't make 'name' the key (workaround)
+        if($userModes->{name}) {
+            $setter->($self, $userModes->{name}, $userModes->{param});
+        } else {
+            foreach(keys($userModes->%*)) {
+                $setter->($self, $_, $userModes->{$_}->{param});
+            }
+        }
     }
     $self->{modes}->{z}->grant() if ($self->{tls});
 }

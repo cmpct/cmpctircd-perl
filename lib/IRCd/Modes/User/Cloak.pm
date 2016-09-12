@@ -26,13 +26,13 @@ sub new {
 
 sub grant {
     my $self     = shift;
-    my $client   = shift;
+    my $client   = shift // $self->{client};
     my $socket   = $client->{socket}->{sock};
     my $config   = $client->{config};
     my $ircd     = $client->{ircd};
     my $modifier = shift // "+";
     my $mode     = shift // "x";
-    my $args     = shift // $client->{nick};
+    my $args     = shift;
     my $force    = shift // 0;
     my $announce = shift // 1;
     my $targetClient = undef;
