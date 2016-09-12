@@ -259,6 +259,7 @@ sub checkResolve {
     my $sock = $self->{socket}->{sock};
     my $answer = 0;
 
+    return if($self->{host} eq $self->{ip});
     return if($self->{registered});
     if($answer = $self->{resolve}->read($self->{query}) and $answer ne 'ERROR') {
         # We got an answer to our query!
