@@ -53,9 +53,9 @@ sub grant {
         # XXX: should this be ircd->hidden_host?
         $client->{cloak} = IRCd::Cloak::unreal_cloak_dns($client->{host}, $config->{hidden_host}, $ircd->{cloak_keys}[0], $ircd->{cloak_keys}[1], $ircd->{cloak_keys}[2]);
     }
-
     $self->{client}->{log}->debug("[$client->{nick}] setting +x");
 
+    $mask = $client->getMask(1);
     $self->{client}->write(":$ircd->{host} " . IRCd::Constants::RPL_HOSTHIDDEN . " $client->{nick} $client->{cloak} :is now your displayed host\r\n");
     $self->{client}->write(":$mask MODE $client->{nick} $modifier$mode") if $announce;
     $self->{affects}->{$client} = 1;
