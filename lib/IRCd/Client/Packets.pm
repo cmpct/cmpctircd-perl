@@ -232,7 +232,7 @@ sub whois {
     my $targetIdent    = $targetClient->{ident};
     my $targetRealName = $targetClient->{realname};
     my $targetHost     = $targetClient->get_host(1);
-    my $targetIdle     = time() - $client->{idle};
+    my $targetIdle     = time() - $targetClient->{idle};
     my @presentChannels = ();
 
     $socket->write(":$ircd->{host} " . IRCd::Constants::RPL_WHOISUSER     . " $client->{nick} $targetNick $targetIdent $targetHost * :$targetRealName\r\n");
