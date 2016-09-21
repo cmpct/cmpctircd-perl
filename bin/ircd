@@ -168,6 +168,11 @@ sub clientLoop {
             if($self->{dns}) {
                 $socket->{sock}->write(":$self->{host} NOTICE * :*** Looking up your hostname...\r\n");
                 $socket->{client}->{dns_time} = time();
+                # XXX: See bug 114
+                if(!$socket->{client}->{ip}) {
+                    $self->{log}->debug("BUG! Got a client without an IP.");
+                    return;
+                }
                 $socket->{client}->{query}    = $socket->{client}->{resolve}->fire($socket->{client}->{ip});
             } else {
                 # TODO: Could have a 'no DNS resolve enabled' message here.
@@ -182,6 +187,7 @@ sub clientLoop {
 
             sysread($socket->{sock}, $buffer, $bytes);
             if($buffer eq "") {
+                $self->{log}->debug("Removing a client because they sent an empty packet");
                 $selector->del($socket->{sock});
             } else {
                 $socket->{client}->{ip} = $socket->{sock}->peerhost();
