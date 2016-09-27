@@ -8,7 +8,6 @@ use feature 'postderef';
 use Path::Tiny qw(path);
 use lib path($0)->absolute->parent->sibling('lib')->stringify;
 use Getopt::Long;
-use IO::Epoll;
 use IO::Socket::INET;
 use DateTime;
 
@@ -143,7 +142,7 @@ sub clientLoop {
     my $bytes    = shift // 1024;
     my $tls      = shift // 0;
 
-    my @readable = $selector->readable(100);
+    my @readable = $selector->readable(0.5);
     foreach my $event (@readable) {
         # This is needed because of the way that IO::Epoll vs IO::Socket return handles (or fds)
         $event = fileno($event) if(ref($event) eq 'IO::Socket::INET');
@@ -224,7 +223,7 @@ sub serverLoop {
     my $bytes    = shift // 1024;
     my $tls      = shift // 0;
 
-    my @readable = $selector->readable(100);
+    my @readable = $selector->readable(0.5);
     foreach my $event (@readable) {
         # This is needed because of the way that IO::Epoll vs IO::Socket return handles (or fds)
         $event = fileno($event) if(ref($event) eq 'IO::Socket::INET');

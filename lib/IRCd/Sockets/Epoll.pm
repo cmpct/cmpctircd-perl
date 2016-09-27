@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 use diagnostics;
-use IO::Epoll;
 
 package IRCd::Sockets::Epoll;
 
