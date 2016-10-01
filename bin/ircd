@@ -24,7 +24,7 @@ package IRCd::Run;
 sub new {
     my $class = shift;
     my $self  = {
-        'config'    => IRCd::Config->new(shift),
+        'config'    => undef,
         'listener'  => undef,
         'epoll'     => undef,
         'clients'   => undef,
@@ -43,9 +43,11 @@ sub new {
         'maxtargets'  => undef,
     };
     bless $self, $class;
+    $self->{config} = IRCd::Config->new($self, shift);
     $self->{motd_path}  = shift;
     $self->{rules_path} = shift;
-    $self->{config}->setupHandlers($self, shift);
+    $self->{mod_path}   = shift;
+    $self->{config}->setupHandlers($self, $self->{mod_path});
     return $self;
 }
 

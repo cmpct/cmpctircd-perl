@@ -14,6 +14,7 @@ package IRCd::Config;
 sub new {
     my $class = shift;
     my $self = {
+        'ircd'     => shift,
         'filename' => shift,
         # <ircd>
         'host'     => undef,
@@ -67,10 +68,15 @@ sub parse {
 sub getSockProvider {
     my $self     = shift;
     my $listener = shift;
-    # Honour their preference until we can't.
+    my $ircd     = $self->{ircd};
+    # Honour their preference until we can't
     my $OS = $^O;
     return IRCd::Sockets::Epoll->new($listener)  if($self->{socketprovider} eq "epoll" and $OS eq 'linux');
     return IRCd::Sockets::Select->new($listener) if($self->{socketprovider} eq "select");
+
+    # Default if we can't match the preferences
+    $ircd->{log}->error("Couldn't honour socket provider preference: $self->{socketprovider}. Falling back to select().");
+    return IRCd::Sockets::Select->new($listener);
 }
 
 sub setupHandlers {
