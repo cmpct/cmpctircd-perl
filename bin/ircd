@@ -20,6 +20,8 @@ use IRCd::Sockets::Epoll;
 use IRCd::Socket;
 
 package IRCd::Run;
+# Try::Tiny has to be beneath the package definition, it seems.
+use Try::Tiny;
 
 sub new {
     my $class = shift;
@@ -115,26 +117,37 @@ sub setup {
 
 sub run {
     my $self = shift;
-    while(1) {
-        ###               ###
-        ###  Client loop  ###
-        ###               ###
-        $self->clientLoop($self->{clientListener}, $self->{clientSelector}, 1024);
+    try {
+        while(1) {
+            ###               ###
+            ###  Client loop  ###
+            ###               ###
+            $self->clientLoop($self->{clientListener}, $self->{clientSelector}, 1024);
+            ###              ###
+            ### Client (TLS) ###
+            ###     loop     ###
+            ###              ###
+            if($self->{clientTLSListener}) {
+                # http://search.cpan.org/~sullr/IO-Socket-SSL-2.036/lib/IO/Socket/SSL.pod#Common_Usage_Errors
+                $self->clientLoop($self->{clientTLSListener}, $self->{clientTLSSelector}, 16000, 1);
+            };
 
-        ###              ###
-        ### Client (TLS) ###
-        ###     loop     ###
-        ###              ###
-        if($self->{clientTLSListener}) {
-            # http://search.cpan.org/~sullr/IO-Socket-SSL-2.036/lib/IO/Socket/SSL.pod#Common_Usage_Errors
-            $self->clientLoop($self->{clientTLSListener}, $self->{clientTLSSelector}, 16000, 1);
-        }
-
-        ###               ###
-        ###  Server loop  ###
-        ###               ###
-        $self->serverLoop($self->{serverListener}, $self->{serverSelector}, 1024);
-    }
+            ###               ###
+            ###  Server loop  ###
+            ###               ###
+            $self->serverLoop($self->{serverListener}, $self->{serverSelector}, 1024);
+        };
+    } catch {
+        $self->{log}->error("Caught a fatal exception: $_");
+        # Tell the users
+        my $host = $self->{host};
+        foreach(values($self->{clients}->{id}->%*)) {
+            my $mask = $_->{client}->getMask(1);
+            $_->{client}->write(":$self->{host} NOTICE $self->{host} :A fatal error occurred, causing the server to shutdown.");
+            $_->{client}->write(":$self->{host} NOTICE $self->{host} :Please contact the server administrator if you cannot reconnect within a few minutes.");
+            $_->{client}->write(":$self->{host} NOTICE $self->{host} :Server administrators: report this to https://bugs.cmpct.info/ if it persists.");
+        };
+    };
 }
 
 sub clientLoop {
