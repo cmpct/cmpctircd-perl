@@ -28,14 +28,13 @@ install</code>.</p>
 <li>Datetime (libdatetime-perl)</li>
 <li>Path::Tiny (libpath-tiny-perl)</li>
 <li>Module::Install (libmodule-install-perl)</li>
+<li>Try::Tiny (libtry-tiny-perl)</li>
 <li>String::Scanf (install with CPAN)</li>
 <li>Term::ANSIColor (within core on Debian)</li>
 <li>Getopt::Long (within core on Debian)</li>
 <li>Tie::Refhash (within core on Debian)</li>
 <li><code>perl &gt;= 5.20</code> for <code>postderef</code></li>
 </ul>
-
 <h2>Contact</h2>
-
 <p>Email me at sam@cmpct.info if you wish to contribute or you have questions.
 An IRC server will be created once <em>cmpctircd</em> is ready to self-host -- <strong>soon</strong>.</p>

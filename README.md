@@ -28,6 +28,7 @@ Dependencies
 * Datetime (libdatetime-perl)
 * Path::Tiny (libpath-tiny-perl)
 * Module::Install (libmodule-install-perl)
+* Try::Tiny (libtry-tiny-perl)
 * String::Scanf (install with CPAN)
 * Term::ANSIColor (within core on Debian)
 * Getopt::Long (within core on Debian)

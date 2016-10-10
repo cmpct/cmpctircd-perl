@@ -5,7 +5,7 @@ use inc::Module::Install;
 
 name            'cmpctircd';
 author          'sam <sam@cmpct.info>';
-version         '0.22';
+version         '0.23';
 license         'gpl';
 perl_version    '5.020';
 
@@ -19,6 +19,7 @@ requires 'Datetime';
 requires 'Path::Tiny';
 requires 'Getopt::Long';
 requires 'Module::Install';
+requires 'Try::Tiny';
 requires 'String::Scanf';
 requires 'Tie::Refhash';
 
