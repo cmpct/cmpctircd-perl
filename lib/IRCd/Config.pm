@@ -71,8 +71,8 @@ sub getSockProvider {
     my $ircd     = $self->{ircd};
     # Honour their preference until we can't
     my $OS = $^O;
-    return IRCd::Sockets::Epoll->new($listener)  if($self->{socketprovider} eq "epoll" and $OS eq 'linux');
-    return IRCd::Sockets::Select->new($listener) if($self->{socketprovider} eq "select");
+    return IRCd::Sockets::Epoll->new($listener, $ircd->{log})  if($self->{socketprovider} eq "epoll" and $OS eq 'linux');
+    return IRCd::Sockets::Select->new($listener, $ircd->{log}) if($self->{socketprovider} eq "select");
 
     # Default if we can't match the preferences
     $ircd->{log}->error("Couldn't honour socket provider preference: $self->{socketprovider}. Falling back to select().");

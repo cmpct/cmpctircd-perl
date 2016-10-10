@@ -11,6 +11,7 @@ sub new {
     my $self = {
             select       => IO::Select->new(),
             listenerSock => shift,
+            log          => shift,
     };
     bless $self, $class;
     $self->add($self->{listenerSock});

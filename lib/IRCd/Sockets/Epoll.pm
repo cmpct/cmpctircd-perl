@@ -11,6 +11,7 @@ sub new {
     my $self = {
             epoll        => IO::Epoll::epoll_create(10),
             listenerSock => shift,
+            log          => shift,
     };
     bless $self, $class;
     $self->add($self->{listenerSock});
@@ -31,6 +32,10 @@ sub del {
 sub readable {
     my $self = shift;
     my $result = IO::Epoll::epoll_wait($self->{epoll}, 1024, shift);
+    if(!$result) {
+        $self->{ircd}->{log}->error("epoll_wait returned undef. errno: $!");
+        return ();
+    }
     return @$result;
 }
 
