@@ -23,7 +23,8 @@ Dependencies
 ------------
 * Net::DNS (libnet-dns-perl, only if `<advanced:dns>` is enabled)
 * IO::Socket::SSL (libio-socket-ssl-perl, only if `<server:tls>` is enabled)
-* IO::Epoll (libio-epoll-perl)
+* IO::Epoll (libio-epoll-perl, only if `<sockets:provider>` is `epoll`)
+* IO::KQueue (N/A, only if `<sockets:provider>` is `kqueue`)
 * XML::Simple (libxml-simple-perl)
 * Datetime (libdatetime-perl)
 * Path::Tiny (libpath-tiny-perl)

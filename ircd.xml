@@ -46,7 +46,11 @@
     </cloak>
 
     <sockets>
-        <!-- Can be one of: epoll, select -->
+        <!-- Can be one of:
+             * epoll  (Linux)
+             * kqueue (*BSD)
+             * select (most of anything)
+        -->
         <provider>epoll</provider>
     </sockets>
 
