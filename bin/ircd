@@ -84,7 +84,6 @@ sub setup {
             Listen        => 5,
             ReuseAddr     => 1,
         ) or die $!;
-        $self->{clientTLSListener}->blocking(0);
         $self->{clientTLSSelector} = $self->{config}->getSockProvider($self->{clientTLSListener});
     }
     $self->{clientSelector} = $self->{config}->getSockProvider($self->{clientListener});
@@ -164,7 +163,7 @@ sub clientLoop {
     my @readable = $selector->readable(0);
     foreach my $event (@readable) {
         # This is needed because of the way that IO::Epoll vs IO::Socket return handles (or fds)
-        $event = fileno($event) if(ref($event) eq 'IO::Socket::INET');
+        $event = fileno($event) if(ref($event) =~ /IO::Socket::(INET|SSL)/);
         $event = $event->[0]    if(ref($event) eq 'ARRAY');
         if($event == fileno($listener)) {
             # Accept a new client
