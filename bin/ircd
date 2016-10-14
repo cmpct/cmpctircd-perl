@@ -113,6 +113,9 @@ sub setup {
     $self->{log}->info("Starting cmpctircd");
     $self->{log}->info("==> Host: $self->{host}");
     $self->{log}->info("==> Listening on: $self->{ip}:$self->{port}");
+    if($self->{config}->{tls}) {
+        $self->{log}->info("==> Listening on: $self->{ip}:$self->{config}->{tlsport} (TLS)");
+    }
 }
 
 sub run {
