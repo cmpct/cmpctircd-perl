@@ -30,8 +30,16 @@ sub del {
     }
 }
 sub readable {
-    my $self = shift;
-    my $result = IO::Epoll::epoll_wait($self->{epoll}, 1024, shift);
+    my $self    = shift;
+    my $timeout = shift;
+
+    # We don't want to ever block, but IO::Select/Epoll do not have the same
+    # behaviour as others. Some assume 0 = block, others assume 0 = immediate return.
+    # Therefore, we always set a (very low) timeout if $timeout <= 0.
+    # http://perldoc.perl.org/IO/Select.html#METHODS
+    $timeout = 0.1 if $timeout <= 0;
+
+    my $result = IO::Epoll::epoll_wait($self->{epoll}, 1024, $timeout);
     if(!$result) {
         $self->{ircd}->{log}->error("epoll_wait returned undef. errno: $!");
         return ();

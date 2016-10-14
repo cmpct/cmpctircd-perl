@@ -32,8 +32,16 @@ sub del {
 }
 
 sub readable {
-    my $self   = shift;
-    my @result = $self->{select}->can_read(shift);
+    my $self    = shift;
+    my $timeout = shift;
+
+    # We don't want to ever block, but IO::Select/Epoll do not have the same
+    # behaviour as others. Some assume 0 = block, others assume 0 = immediate return.
+    # Therefore, we always set a (very low) timeout if $timeout <= 0.
+    # http://perldoc.perl.org/IO/Select.html#METHODS
+    $timeout = 0.1 if $timeout <= 0;
+
+    my @result = $self->{select}->can_read($timeout);
     return @result;
 }
 
