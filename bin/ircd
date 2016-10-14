@@ -67,13 +67,13 @@ sub setup {
         ReuseAddr => 1,
     ) or die $!;
     $self->{clientListener}->blocking(0);
-    $self->{serverListener} = IO::Socket::INET->new(
-        LocalHost => $self->{config}->{ip},
-        LocalPort => 6661,
-        Listen    => 5,
-        ReuseAddr => 1,
-    ) or die $!;
-    $self->{serverListener}->blocking(0);
+    #$self->{serverListener} = IO::Socket::INET->new(
+    #    LocalHost => $self->{config}->{ip},
+    #    LocalPort => 6661,
+    #    Listen    => 5,
+    #    ReuseAddr => 1,
+    #) or die $!;
+    #$self->{serverListener}->blocking(0);
     if($self->{config}->{tls}) {
         require IO::Socket::SSL;
         $self->{clientTLSListener} = IO::Socket::SSL->new(
@@ -88,7 +88,7 @@ sub setup {
         $self->{clientTLSSelector} = $self->{config}->getSockProvider($self->{clientTLSListener});
     }
     $self->{clientSelector} = $self->{config}->getSockProvider($self->{clientListener});
-    $self->{serverSelector} = $self->{config}->getSockProvider($self->{serverListener});
+    #$self->{serverSelector} = $self->{config}->getSockProvider($self->{serverListener});
     $self->{clients} = {
         id       => {},
         uid      => {},
@@ -139,7 +139,7 @@ sub run {
             ###               ###
             ###  Server loop  ###
             ###               ###
-            $self->serverLoop($self->{serverListener}, $self->{serverSelector}, 1024);
+            #$self->serverLoop($self->{serverListener}, $self->{serverSelector}, 1024);
         };
     } catch {
         $self->{log}->error("Caught a fatal exception: $_");
