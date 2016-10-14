@@ -124,13 +124,14 @@ sub list {
 }
 
 sub level {
+    # TODO: -1 => ban?
     # 0 => normal
     # 1 => voice
     # 2 => halfop
     # 3 => op
     # 4 => admin
     # 5 => owner
-    return 3;
+    return 0;
 }
 sub symbol {
     return '@';
