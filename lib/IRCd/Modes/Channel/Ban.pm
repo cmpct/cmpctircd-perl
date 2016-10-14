@@ -134,7 +134,7 @@ sub level {
     return 0;
 }
 sub symbol {
-    return '@';
+    return '';
 }
 
 1;
