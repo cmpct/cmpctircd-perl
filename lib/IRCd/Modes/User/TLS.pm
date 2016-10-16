@@ -25,23 +25,23 @@ sub new {
 
 sub grant {
     my $self     = shift;
-    my $client   = $self->{client};
+    my $client   = shift // $self->{client};
     my $socket   = $client->{socket}->{sock};
     my $config   = $client->{config};
     my $ircd     = $client->{ircd};
     my $modifier = shift // "+";
     my $mode     = shift // "z";
-    my $args     = shift // "";
+    my $args     = shift;
     my $force    = shift // 0;
     my $announce = shift // 1;
     my $targetClient = undef;
     my $mask = $client->getMask(1);
 
-    return if (!$force and !$client->{tls});
+    return 0 if (!$force and !$client->{tls});
     $self->{client}->{log}->debug("[$client->{nick}] setting +z");
-    $self->{client}->write(":$mask MODE $client->{nick} $modifier$mode $args") if $announce;
+    $self->{client}->write(":$mask MODE $client->{nick} $modifier$mode") if $announce;
     $self->{affects}->{$client} = 1;
-
+    return 1;
 }
 sub revoke {
     my $self     = shift;
@@ -57,10 +57,11 @@ sub revoke {
     my $targetClient = undef;
     my $mask = $client->getMask(0);
 
-    return if(!$force);
+    return 0 if(!$force);
     $self->{client}->{log}->debug("[$client->{nick}] unsetting +z");
     $self->{client}->write(":$mask MODE $client->{nick} $modifier$mode $args") if $announce;
     delete $self->{affects}->{$client};
+    return 1;
 }
 sub get {
     my $self = shift;

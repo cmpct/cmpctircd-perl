@@ -1,41 +1,32 @@
 <h1>cmpctircd</h1>
-
 <h2>About</h2>
-
 <p>The aim of this project is to provide a stable, fast, and <em>modern</em> ircd.</p>
-
 <h2>Status</h2>
-
 <p>For now, it is still under heavy development. It will be clear when it is production ready. 
 <a href="https://bugs.cmpct.info/">Bugzilla</a> is a good indicator of progress.</p>
-
 <p>Checkout <em>master</em>, edit <code>ircd.xml</code>, and run <code>bin/ircd --config ircd.xml --motd ircd.motd --rules ircd.rules</code> to test.
 Windows is untested as of yet, but it should run with <code>select</code> as the socket provider  (<code>&lt;sockets:provider&gt;</code>). <code>epoll</code> is
 recommended on Linux.</p>
-
 <p>Use parameter <code>--loglevel $LEVEL</code> where $LEVEL is one of: DEBUG, WARN, INFO, ERROR to control the logging level.</p>
-
 <p>TLS certs and keys should be 'tls_cert.pem' and 'tls_key.pem' respectively. Install with <code>./Makefile.PL; make; sudo make
 install</code>.</p>
-
 <h2>Dependencies</h2>
-
 <ul>
 <li>Net::DNS (libnet-dns-perl, only if <code>&lt;advanced:dns&gt;</code> is enabled)</li>
 <li>IO::Socket::SSL (libio-socket-ssl-perl, only if <code>&lt;server:tls&gt;</code> is enabled)</li>
-<li>IO::Epoll (libio-epoll-perl)</li>
+<li>IO::Epoll (libio-epoll-perl, only if <code>&lt;sockets:provider&gt;</code> is <code>epoll</code>)</li>
+<li>IO::KQueue (N/A, only if <code>&lt;sockets:provider&gt;</code> is <code>kqueue</code>)</li>
 <li>XML::Simple (libxml-simple-perl)</li>
 <li>Datetime (libdatetime-perl)</li>
 <li>Path::Tiny (libpath-tiny-perl)</li>
 <li>Module::Install (libmodule-install-perl)</li>
+<li>Try::Tiny (libtry-tiny-perl)</li>
 <li>String::Scanf (install with CPAN)</li>
 <li>Term::ANSIColor (within core on Debian)</li>
 <li>Getopt::Long (within core on Debian)</li>
 <li>Tie::Refhash (within core on Debian)</li>
 <li><code>perl &gt;= 5.20</code> for <code>postderef</code></li>
 </ul>
-
 <h2>Contact</h2>
-
 <p>Email me at sam@cmpct.info if you wish to contribute or you have questions.
 An IRC server will be created once <em>cmpctircd</em> is ready to self-host -- <strong>soon</strong>.</p>

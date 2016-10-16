@@ -37,22 +37,23 @@ sub grant {
     if(!$force and !$self->{channel}->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel");
-        return;
+        return 0;
     }
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
         $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator");
-        return;
+        return 0;
     }
     # TODO: Only one arg of type integer
     my $mask = $client->getMask(1);
     if($self->{limit} eq $args) {
         # Is the same as before, ignore.
-        return;
+        return 0;
     } else {
         $self->{limit} = $args;
     }
     $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args") if($announce);
+    return 1;
 }
 sub revoke {
     my $self     = shift;
@@ -69,18 +70,20 @@ sub revoke {
     if(!$self->{channel}->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel");
-        return;
+        return 0;
     }
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
         $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
-        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator");
-        return;
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be 
+a channel operator");
+        return 0;
     }
     my $mask = $client->getMask(1);
     # TODO: Should we check that their arg matches the current mode?
     # I don't think so.
     $self->{limit} = 0;
     $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args") if($announce);
+    return 1;
 }
 
 sub get {

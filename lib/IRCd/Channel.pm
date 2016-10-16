@@ -54,16 +54,27 @@ sub initModes {
     my $client = shift;
     my $ircd   = shift;
 
+    # anonymous function to set, is independent of the XML hash logic
+    my $setter = sub {
+        my $self  = shift;
+        my $name  = shift;
+        my $param = shift;
+        if(ref($param) eq 'HASH') {
+            $param = "";
+        }
+        # we need to pass the client, otherwise the mode setting won't have a user to ref to
+        $self->{modes}->{$name}->grant($client, "+", $name, $param // undef, 1, 0);
+    };
+
     # Set initial modes
     foreach my $chanModes (values($ircd->{config}->{channelmodes}->%*)) {
-        foreach(keys($chanModes->%*)) {
-            my $name  = $_;
-            my $param = $chanModes->{$name}->{param};
-            if(ref($param) eq 'HASH') {
-                $param = "";
+        # XXX: if there's only one mode, XML::Simple doesn't make 'name' the key (workaround)
+        if($chanModes->{name}) {
+            $setter->($self, $chanModes->{name}, $chanModes->{param});
+        } else {
+            foreach(keys($chanModes->%*)) {
+                $setter->($self, $_, $chanModes->{$_}->{param});
             }
-            # we need to pass the client, otherwise the mode setting won't have a user to ref to
-            $self->{modes}->{$name}->grant($client,  "+", $name, $param // undef, 1, 0);
         }
     }
 }

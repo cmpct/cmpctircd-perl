@@ -7,11 +7,11 @@ package IRCd::Ban;
 sub new {
     my ($class, %args) = @_;
     my $self  = {
-        'nick'   => $args{nick}   // '*',
-        'user'   => $args{user}   // '*',
-        'host'   => $args{host}   // '*',
-        'setter' => $args{setter} // '*',
-        'time'   => $args{time}   // time(),
+        'nick'   => lc($args{nick}) // '*',
+        'user'   => lc($args{user}) // '*',
+        'host'   => lc($args{host}) // '*',
+        'setter' => $args{setter}   // '*',
+        'time'   => $args{time}     // time(),
     };
     bless $self, $class;
     return $self;
@@ -27,11 +27,11 @@ sub match {
     $user =~ s/\*/\.*/;
     $host =~ s/\*/\.*/;
 
-    return 0 if($client->{nick}  !~ $nick);
-    return 0 if($client->{ident} !~ $user);
-    return 0 if($client->{cloak}     !~ $host
-                and $client->{host}  !~ $host
-                and $client->{ip}    !~ $host);
+    return 0 if(lc($client->{nick})     !~ $nick);
+    return 0 if(lc($client->{ident})    !~ $user);
+    return 0 if(lc($client->{cloak})    !~ $host
+                and lc($client->{host}) !~ $host
+                and lc($client->{ip})   !~ $host);
     return 1;
 }
 

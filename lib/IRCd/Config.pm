@@ -6,6 +6,7 @@ use feature 'postderef';
 use XML::Simple;
 
 use IRCd::Sockets::Epoll;
+use IRCd::Sockets::Kqueue;
 use IRCd::Sockets::Select;
 use IRCd::Module;
 
@@ -14,6 +15,7 @@ package IRCd::Config;
 sub new {
     my $class = shift;
     my $self = {
+        'ircd'     => shift,
         'filename' => shift,
         # <ircd>
         'host'     => undef,
@@ -58,6 +60,7 @@ sub parse {
     $self->{log}            = $xmlRef->{'log'};
     $self->{requirepong}    = $xmlRef->{'advanced'}->{'requirepong'};
     $self->{dns}            = $xmlRef->{'advanced'}->{'dns'};
+    $self->{dnstimeout}     = $xmlRef->{'advanced'}->{'dnstimeout'};
     $self->{pingtimeout}    = $xmlRef->{'advanced'}->{'pingtimeout'};
     $self->{maxtargets}     = $xmlRef->{'advanced'}->{'maxtargets'};
     $self->{opers}          = $xmlRef->{'opers'};
@@ -66,10 +69,16 @@ sub parse {
 sub getSockProvider {
     my $self     = shift;
     my $listener = shift;
-    # Honour their preference until we can't.
+    my $ircd     = $self->{ircd};
+    # Honour their preference until we can't
     my $OS = $^O;
-    return IRCd::Sockets::Epoll->new($listener)  if($self->{socketprovider} eq "epoll" and $OS eq 'linux');
-    return IRCd::Sockets::Select->new($listener) if($self->{socketprovider} eq "select");
+    return IRCd::Sockets::Epoll->new($listener, $ircd->{log})  if($self->{socketprovider} eq "epoll"  and $OS eq 'linux');
+    return IRCd::Sockets::Kqueue->new($listener, $ircd->{log}) if($self->{socketprovider} eq "kqueue" and $OS =~ /bsd/);
+    return IRCd::Sockets::Select->new($listener, $ircd->{log}) if($self->{socketprovider} eq "select");
+
+    # Default if we can't match the preferences
+    $ircd->{log}->error("Couldn't honour socket provider preference: $self->{socketprovider}. Falling back to select().");
+    return IRCd::Sockets::Select->new($listener);
 }
 
 sub setupHandlers {

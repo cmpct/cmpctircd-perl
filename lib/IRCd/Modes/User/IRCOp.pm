@@ -36,12 +36,13 @@ sub grant {
     my $targetClient = undef;
     my $mask = $client->getMask(1);
 
-    return if($self->{affects}->{$client});
-    return if(!$force);
+    return 0 if($self->{affects}->{$client});
+    return 0 if(!$force);
 
     $self->{client}->{log}->info("[$client->{nick}] setting +o (ircop)");
     $self->{client}->write(":$mask MODE $client->{nick} $modifier$mode $args") if $announce;
     $self->{affects}->{$client} = 1;
+    return 1;
 }
 sub revoke {
     my $self     = shift;
@@ -56,12 +57,13 @@ sub revoke {
     my $announce = shift // 1;
     my $targetClient = undef;
 
-    return if(!$self->{affects}->{$client});
+    return 0 if(!$self->{affects}->{$client});
 
     my $mask = $client->getMask(0);
     $self->{client}->{log}->info("[$client->{nick}] unsetting +o (ircop)");
     $self->{client}->write(":$mask MODE $client->{nick} $modifier$mode $args") if $announce;
     delete $self->{affects}->{$client};
+    return 1;
 }
 sub get {
     my $self = shift;

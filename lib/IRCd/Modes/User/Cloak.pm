@@ -26,19 +26,19 @@ sub new {
 
 sub grant {
     my $self     = shift;
-    my $client   = shift;
+    my $client   = shift // $self->{client};
     my $socket   = $client->{socket}->{sock};
     my $config   = $client->{config};
     my $ircd     = $client->{ircd};
     my $modifier = shift // "+";
     my $mode     = shift // "x";
-    my $args     = shift // $client->{nick};
+    my $args     = shift;
     my $force    = shift // 0;
     my $announce = shift // 1;
     my $targetClient = undef;
     my $mask = $client->getMask(1);
 
-    return if($self->{affects}->{$client});
+    return 0 if($self->{affects}->{$client});
     # Generate a cloak
     # if the IP matches the host, then use IP cloaking, otherwise fall back to DNS
     if ($client->{ip} eq $client->{host}) {
@@ -53,9 +53,9 @@ sub grant {
         # XXX: should this be ircd->hidden_host?
         $client->{cloak} = IRCd::Cloak::unreal_cloak_dns($client->{host}, $config->{hidden_host}, $ircd->{cloak_keys}[0], $ircd->{cloak_keys}[1], $ircd->{cloak_keys}[2]);
     }
-
     $self->{client}->{log}->debug("[$client->{nick}] setting +x");
 
+    $mask = $client->getMask(1);
     $self->{client}->write(":$ircd->{host} " . IRCd::Constants::RPL_HOSTHIDDEN . " $client->{nick} $client->{cloak} :is now your displayed host\r\n");
     $self->{client}->write(":$mask MODE $client->{nick} $modifier$mode") if $announce;
     $self->{affects}->{$client} = 1;
@@ -66,6 +66,7 @@ sub grant {
         $ircd->{channels}->{$chan}->part($client, "Changing host", 1);
         $ircd->{channels}->{$chan}->addClient($client);
     }
+    return 1;
 }
 sub revoke {
     my $self     = shift;
@@ -80,7 +81,7 @@ sub revoke {
     my $announce = shift // 1;
     my $targetClient = undef;
 
-    return if(!$self->{affects}->{$client});
+    return 0 if(!$self->{affects}->{$client});
     my $mask = $client->getMask(0);
     $self->{client}->{log}->debug("[$client->{nick}] unsetting +x");
     $client->{cloak} = $client->{host};
@@ -94,6 +95,7 @@ sub revoke {
         $ircd->{channels}->{$chan}->part($client, "Changing host", 1);
         $ircd->{channels}->{$chan}->addClient($client);
     }
+    return 1;
 }
 sub get {
     my $self = shift;

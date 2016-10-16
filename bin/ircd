@@ -8,7 +8,6 @@ use feature 'postderef';
 use Path::Tiny qw(path);
 use lib path($0)->absolute->parent->sibling('lib')->stringify;
 use Getopt::Long;
-use IO::Epoll;
 use IO::Socket::INET;
 use DateTime;
 
@@ -21,11 +20,13 @@ use IRCd::Sockets::Epoll;
 use IRCd::Socket;
 
 package IRCd::Run;
+# Try::Tiny has to be beneath the package definition, it seems.
+use Try::Tiny;
 
 sub new {
     my $class = shift;
     my $self  = {
-        'config'    => IRCd::Config->new(shift),
+        'config'    => undef,
         'listener'  => undef,
         'epoll'     => undef,
         'clients'   => undef,
@@ -44,9 +45,11 @@ sub new {
         'maxtargets'  => undef,
     };
     bless $self, $class;
+    $self->{config} = IRCd::Config->new($self, shift);
     $self->{motd_path}  = shift;
     $self->{rules_path} = shift;
-    $self->{config}->setupHandlers($self, shift);
+    $self->{mod_path}   = shift;
+    $self->{config}->setupHandlers($self, $self->{mod_path});
     return $self;
 }
 
@@ -64,13 +67,13 @@ sub setup {
         ReuseAddr => 1,
     ) or die $!;
     $self->{clientListener}->blocking(0);
-    $self->{serverListener} = IO::Socket::INET->new(
-        LocalHost => $self->{config}->{ip},
-        LocalPort => 6661,
-        Listen    => 5,
-        ReuseAddr => 1,
-    ) or die $!;
-    $self->{serverListener}->blocking(0);
+    #$self->{serverListener} = IO::Socket::INET->new(
+    #    LocalHost => $self->{config}->{ip},
+    #    LocalPort => 6661,
+    #    Listen    => 5,
+    #    ReuseAddr => 1,
+    #) or die $!;
+    #$self->{serverListener}->blocking(0);
     if($self->{config}->{tls}) {
         require IO::Socket::SSL;
         $self->{clientTLSListener} = IO::Socket::SSL->new(
@@ -81,11 +84,10 @@ sub setup {
             Listen        => 5,
             ReuseAddr     => 1,
         ) or die $!;
-        $self->{clientTLSListener}->blocking(0);
         $self->{clientTLSSelector} = $self->{config}->getSockProvider($self->{clientTLSListener});
     }
     $self->{clientSelector} = $self->{config}->getSockProvider($self->{clientListener});
-    $self->{serverSelector} = $self->{config}->getSockProvider($self->{serverListener});
+    #$self->{serverSelector} = $self->{config}->getSockProvider($self->{serverListener});
     $self->{clients} = {
         id       => {},
         uid      => {},
@@ -110,30 +112,45 @@ sub setup {
     $self->{log}->info("Starting cmpctircd");
     $self->{log}->info("==> Host: $self->{host}");
     $self->{log}->info("==> Listening on: $self->{ip}:$self->{port}");
+    if($self->{config}->{tls}) {
+        $self->{log}->info("==> Listening on: $self->{ip}:$self->{config}->{tlsport} (TLS)");
+    }
 }
 
 sub run {
     my $self = shift;
-    while(1) {
-        ###               ###
-        ###  Client loop  ###
-        ###               ###
-        $self->clientLoop($self->{clientListener}, $self->{clientSelector}, 1024);
+    try {
+        while(1) {
+            ###               ###
+            ###  Client loop  ###
+            ###               ###
+            $self->clientLoop($self->{clientListener}, $self->{clientSelector}, 1024);
 
-        ###              ###
-        ### Client (TLS) ###
-        ###     loop     ###
-        ###              ###
-        if($self->{clientTLSListener}) {
-            # http://search.cpan.org/~sullr/IO-Socket-SSL-2.036/lib/IO/Socket/SSL.pod#Common_Usage_Errors
-            $self->clientLoop($self->{clientTLSListener}, $self->{clientTLSSelector}, 16000, 1);
-        }
+            ###              ###
+            ### Client (TLS) ###
+            ###     loop     ###
+            ###              ###
+            if($self->{clientTLSListener}) {
+                # http://search.cpan.org/~sullr/IO-Socket-SSL-2.036/lib/IO/Socket/SSL.pod#Common_Usage_Errors
+                $self->clientLoop($self->{clientTLSListener}, $self->{clientTLSSelector}, 16000, 1);
+            };
 
-        ###               ###
-        ###  Server loop  ###
-        ###               ###
-        $self->serverLoop($self->{serverListener}, $self->{serverSelector}, 1024);
-    }
+            ###               ###
+            ###  Server loop  ###
+            ###               ###
+            #$self->serverLoop($self->{serverListener}, $self->{serverSelector}, 1024);
+        };
+    } catch {
+        $self->{log}->error("Caught a fatal exception: $_");
+        # Tell the users
+        my $host = $self->{host};
+        foreach(values($self->{clients}->{id}->%*)) {
+            my $mask = $_->{client}->getMask(1);
+            $_->{client}->write(":$self->{host} NOTICE $self->{host} :A fatal error occurred, causing the server to shutdown.");
+            $_->{client}->write(":$self->{host} NOTICE $self->{host} :Please contact the server administrator if you cannot reconnect within a few minutes.");
+            $_->{client}->write(":$self->{host} NOTICE $self->{host} :Server administrators: report this to https://bugs.cmpct.info/ if it persists.");
+        };
+    };
 }
 
 sub clientLoop {
@@ -143,10 +160,10 @@ sub clientLoop {
     my $bytes    = shift // 1024;
     my $tls      = shift // 0;
 
-    my @readable = $selector->readable(100);
+    my @readable = $selector->readable(0);
     foreach my $event (@readable) {
         # This is needed because of the way that IO::Epoll vs IO::Socket return handles (or fds)
-        $event = fileno($event) if(ref($event) eq 'IO::Socket::INET');
+        $event = fileno($event) if(ref($event) =~ /IO::Socket::(INET|SSL)/);
         $event = $event->[0]    if(ref($event) eq 'ARRAY');
         if($event == fileno($listener)) {
             # Accept a new client
@@ -167,7 +184,13 @@ sub clientLoop {
             $socket->{client}->{server} = $self->{host};
             if($self->{dns}) {
                 $socket->{sock}->write(":$self->{host} NOTICE * :*** Looking up your hostname...\r\n");
-                $socket->{client}->{query} = $socket->{client}->{resolve}->fire($socket->{client}->{ip});
+                $socket->{client}->{dns_time} = time();
+                # XXX: See bug 114
+                if(!$socket->{client}->{ip}) {
+                    $self->{log}->debug("BUG! Got a client without an IP.");
+                    return;
+                }
+                $socket->{client}->{query}    = $socket->{client}->{resolve}->fire($socket->{client}->{ip});
             } else {
                 # TODO: Could have a 'no DNS resolve enabled' message here.
                 # TODO: I think some servers do it?
@@ -219,7 +242,7 @@ sub serverLoop {
     my $bytes    = shift // 1024;
     my $tls      = shift // 0;
 
-    my @readable = $selector->readable(100);
+    my @readable = $selector->readable(0);
     foreach my $event (@readable) {
         # This is needed because of the way that IO::Epoll vs IO::Socket return handles (or fds)
         $event = fileno($event) if(ref($event) eq 'IO::Socket::INET');
@@ -310,9 +333,9 @@ sub getClientByUID {
 
 
 if(!caller) {
-    $SIG{PIPE} = sub {
-        print STDERR "SIGPIPE @_\n";
-    };
+    # The conditions causing a SIGPIPE are handled elsewhere (see write and read code)
+    # so make this a noop
+    $SIG{PIPE} = sub {};
     my $config = "/etc/cmpctircd/ircd.xml";
     my $motd   = "/etc/cmpctircd/ircd.motd";
     my $rules  = "/etc/cmpctircd/ircd.rules";

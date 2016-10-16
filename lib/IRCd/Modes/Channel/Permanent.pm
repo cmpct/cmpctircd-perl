@@ -1,19 +1,17 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use diagnostics;
 
-package IRCd::Modes::Channel::Topic;
+package IRCd::Modes::Channel::Permanent;
 
 sub new {
     my $class = shift;
     my $self  = {
-        'name'     => 'topic',
-        'provides' => 't',
-        'desc'     => 'Provides the +t (topic) mode for only allowing chanops to modify the topic.',
+        'name'     => 'permanent',
+        'provides' => 'P',
+        'desc'     => 'Provides the +P (permanence) mode for preventing channel destruction when the last user leaves.',
         'affects'  => {},
         'channel'  => shift,
-        'set'      => 0,
 
         # Can it be set on a user, or just a channel at large?
         'chanwide' => 1,
@@ -23,32 +21,39 @@ sub new {
     return $self;
 }
 
+# XXX: Need ircops for this, because this is an ircop-only MODE.
+# XXX: (although we could make that configurable)
+
 sub grant {
     my $self     = shift;
     my $client   = shift;
     my $config   = $client->{config};
     my $ircd     = $client->{ircd};
     my $modifier = shift // "+";
-    my $mode     = shift // "t";
-    my $args     = shift // "";
+    my $mode     = shift // "P";
+    my $args     = shift // $self->{limit};
     my $force    = shift // 0;
-    my $announce = shift // 1;
 
-    return 0 if($self->{set});
-    if(!$force and !$self->{channel}->{clients}->{$client->{nick}}) {
+    if(!$self->{channel}->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel");
-        return 0;
+        return;
     }
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
         $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator");
-        return 0;
+        return;
     }
+    # TODO: Only one arg of type integer
     my $mask = $client->getMask(1);
-    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args") if($announce);
-    $self->{set} = 1;
-    return 1;
+    if($self->{limit} eq $args) {
+        # Is the same as before, ignore.
+        return;
+    } else {
+        $self->{limit} = $args;
+    }
+    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args");
+    #$self->{affects}->{$client} = 1;
 }
 sub revoke {
     my $self     = shift;
@@ -56,31 +61,31 @@ sub revoke {
     my $config   = $client->{config};
     my $ircd     = $client->{ircd};
     my $modifier = shift // "-";
-    my $mode     = shift // "t";
-    my $args     = shift // "";
+    my $mode     = shift // "P";
+    my $args     = shift // $self->{limit};
     my $force    = shift // 0;
-    my $announce = shift // 1;
 
-    return 0 if(!$self->{set});
+    # TODO: No arg required
     if(!$self->{channel}->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel");
-        return 0;
+        return;
     }
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
         $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator");
-        return 0;
+        return;
     }
     my $mask = $client->getMask(1);
-    $self->{set} = 0;
-    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args") if($announce);
-    return 1;
+    # TODO: Should we check that their arg matches the current mode?
+    # I don't think so.
+    $self->{limit} = 0;
+    $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args");
 }
 
 sub get {
     my $self = shift;
-    return $self->{set};
+    return $self->{limit};
 }
 
 sub has {

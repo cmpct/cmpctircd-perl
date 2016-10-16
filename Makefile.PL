@@ -11,7 +11,8 @@ perl_version    '5.020';
 
 all_from 'lib/IRCd/Client.pm';
 requires 'IO::Socket::SSL';
-requires 'IO::Epoll';
+recommends 'IO::Epoll';
+recommends 'IO::KQueue';
 requires 'XML::Simple';
 requires 'Term::ANSIColor';
 requires 'Net::DNS';
@@ -19,6 +20,7 @@ requires 'Datetime';
 requires 'Path::Tiny';
 requires 'Getopt::Long';
 requires 'Module::Install';
+requires 'Try::Tiny';
 requires 'String::Scanf';
 requires 'Tie::Refhash';
 

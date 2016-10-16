@@ -170,9 +170,27 @@ sub sendWelcome {
     }
 
     # Set initial modes
-    foreach (values($ircd->{config}->{usermodes}->%*)) {
-        my $mode = $_->{name};
-        $self->{modes}->{$mode}->grant($self, "+", $mode, $_->{param} // undef, 0, 1);
+    # anonymous function to set, is independent of the XML hash logic
+    my $setter = sub {
+        my $self  = shift;
+        my $name  = shift;
+        my $param = shift;
+        if(ref($param) eq 'HASH') {
+            $param = "";
+        }
+        # we need to pass the client, otherwise the mode setting won't have a user to ref to
+        $self->{modes}->{$name}->grant($self, "+", $name, $param // undef, 1, 1);
+    };
+    # Set initial modes
+    foreach my $userModes (values($ircd->{config}->{usermodes}->%*)) {
+        # XXX: if there's only one mode, XML::Simple doesn't make 'name' the key (workaround)
+        if($userModes->{name}) {
+            $setter->($self, $userModes->{name}, $userModes->{param});
+        } else {
+            foreach(keys($userModes->%*)) {
+                $setter->($self, $_, $userModes->{$_}->{param});
+            }
+        }
     }
     $self->{modes}->{z}->grant() if ($self->{tls});
 }
@@ -242,13 +260,15 @@ sub checkResolve {
     my $sock = $self->{socket}->{sock};
     my $answer = 0;
 
+    return if($self->{host} eq $self->{ip});
+    return if($self->{registered});
     if($answer = $self->{resolve}->read($self->{query}) and $answer ne 'ERROR') {
         # We got an answer to our query!
         $self->{log}->debug("[$self->{nick}] Got an answer to our DNS query for [$self->{ip}]: $answer");
         $self->{host} = $answer;
         $self->write(":$ircd->{host} NOTICE * :*** Found your hostname");
         $self->sendWelcome() if($self->{ident} and $self->{nick} and !$self->{registered});
-    } elsif($self->{query} eq 'ERROR') {
+    } elsif(((time() - $self->{dns_time}) > $self->{ircd}->{config}->{dnstimeout}) or ($self->{query} eq 'ERROR')) {
         $self->{log}->debug("[$self->{nick}] Query for [$self->{ip}] failed");
         $self->{host} = $self->{ip};
         $self->write(":$ircd->{host} NOTICE * :*** Could not resolve your hostname: Domain name not found; using your IP address ($self->{ip}) instead.");

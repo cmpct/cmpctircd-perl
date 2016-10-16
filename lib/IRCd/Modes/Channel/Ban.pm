@@ -41,7 +41,7 @@ sub grant {
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
         $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator");
-        return;
+        return 0;
     }
     my $mask = $client->getMask(1);
     my($nick, $user, $host) = ('*', '*', '*');
@@ -78,6 +78,7 @@ sub grant {
         'time'   => time(),
     );
     $self->{bans}->{$nick . '!' . $user . '@' . $host} = $ban;
+    return 1;
 }
 sub revoke {
     my $self     = shift;
@@ -94,7 +95,7 @@ sub revoke {
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
         $client->{log}->info("[$self->{channel}->{name}] No permission for client (nick: $client->{nick})!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator");
-        return;
+        return 0;
     }
     my($nick, $user, $host) = ('*', '*', '*');
     my $mask = $client->getMask(1);
@@ -104,6 +105,7 @@ sub revoke {
         $self->{channel}->sendToRoom($client, ":$mask MODE $self->{channel}->{name} $modifier$mode $args") if $announce;
         delete $self->{bans}->{$banMask};
     }
+    return 1;
 }
 sub has {
     my $self   = shift;
@@ -120,16 +122,17 @@ sub list {
 }
 
 sub level {
+    # TODO: -1 => ban?
     # 0 => normal
     # 1 => voice
     # 2 => halfop
     # 3 => op
     # 4 => admin
     # 5 => owner
-    return 3;
+    return 0;
 }
 sub symbol {
-    return '@';
+    return '';
 }
 
 1;
