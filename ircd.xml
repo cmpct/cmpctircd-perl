@@ -69,10 +69,9 @@
     </advanced>
 
     <opers>
-        <!-- Supported hash values: http://search.cpan.org/~mshelor/Digest-SHA-5.96/lib/Digest/SHA.pm#EXPORTABLE_FUNCTIONS -->
-        <!-- Supported hash values: sha1, sha256, sha512, and the ones inbetween. -->
+        <!-- https://wiki.cmpct.info/w/IRCd:Documentation/IRCops -->
+        <!-- See the wiki for descriptions of these parameters -->
         <!-- Pick your own password! Default is 'password' for the 'sam' user. -->
-        <!-- Set tls='1' if you want tls-only opers. -->
-        <oper name='sam' password='5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8' hash='sha256'/>
+        <oper name='sam' password='5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8' hash='sha256' tls='0' host='*@*'/>
     </opers>
 </config>
