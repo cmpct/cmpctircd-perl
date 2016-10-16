@@ -109,7 +109,7 @@ sub setup {
     $self->{pingtimeout} = $self->{config}->{pingtimeout};
     $self->{maxtargets}  = $self->{config}->{maxtargets};
     $self->{create_time} = DateTime->now;
-    $self->{log}->info("Starting cmpctircd");
+    $self->{log}->info("Starting cmpctircd-" . $self->{version});
     $self->{log}->info("==> Host: $self->{host}");
     $self->{log}->info("==> Listening on: $self->{ip}:$self->{port}");
     if($self->{config}->{tls}) {
