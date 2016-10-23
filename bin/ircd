@@ -33,6 +33,7 @@ sub new {
 
         # ircd internals used across the codebase
         'channels'  => {},
+        'sid'       => undef,
         'host'      => undef,
         'network'   => undef,
         'desc'      => undef,
@@ -99,6 +100,7 @@ sub setup {
         name     => {},
     };
     $self->{module}      = $self->{config}->{module};
+    $self->{sid}         = $self->{config}->{sid};
     $self->{host}        = $self->{config}->{host};
     $self->{network}     = $self->{config}->{network};
     $self->{desc}        = $self->{config}->{desc};

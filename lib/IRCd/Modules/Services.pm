@@ -72,7 +72,7 @@ sub evt_sjoin {
         # :001 SJOIN 1473257992 #services :@001YIMH01
         $srv = $ircd->{servers}->{sid}->{$_};
         next if(!$srv->{socket}->{sock});
-        $srv->write(":042 SJOIN " . time() . " $chan->{name} :\@$client->{nick}");
+        $srv->write(":$ircd->{sid} SJOIN " . time() . " $chan->{name} :\@$client->{nick}");
     }
 
     return 1;

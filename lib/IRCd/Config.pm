@@ -18,6 +18,7 @@ sub new {
         'ircd'     => shift,
         'filename' => shift,
         # <ircd>
+        'sid'      => undef,
         'host'     => undef,
         'network'  => undef,
         'desc'     => undef,
@@ -49,6 +50,7 @@ sub parse {
     $self->{port}           = $xmlRef->{'server'}->{'port'};
     $self->{tls}            = $xmlRef->{'server'}->{'tls'};
     $self->{tlsport}        = $xmlRef->{'server'}->{'tlsport'};
+    $self->{sid}            = $xmlRef->{'ircd'}->{'sid'};
     $self->{host}           = $xmlRef->{'ircd'}->{'host'};
     $self->{network}        = $xmlRef->{'ircd'}->{'network'};
     $self->{desc}           = $xmlRef->{'ircd'}->{'desc'};
@@ -70,6 +72,7 @@ sub getSockProvider {
     my $self     = shift;
     my $listener = shift;
     my $ircd     = $self->{ircd};
+
     # Honour their preference until we can't
     my $OS = $^O;
     return IRCd::Sockets::Epoll->new($listener, $ircd->{log})  if($self->{socketprovider} eq "epoll"  and $OS eq 'linux');

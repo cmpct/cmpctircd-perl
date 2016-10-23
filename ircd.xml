@@ -1,5 +1,6 @@
 <config>
     <ircd>
+        <sid>099</sid>
         <host>irc.cmpct.info</host>
         <network>cmpct</network>
         <desc>the perl irc server</desc>
