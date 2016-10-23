@@ -112,7 +112,7 @@ sub uid {
         $pServiceStamp, $pUmodes,   $pVirtHost,  $pCloakedHost, $pIP)
     = @splitPacket;
 
-    my @gecos   = split(":", $msg, 2);
+    my @gecos   = split(":", $msg, 3);
     my $pGECOS  = $gecos[2];
 
     my $clientObject = IRCd::Client->new(
