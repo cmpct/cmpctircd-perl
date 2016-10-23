@@ -38,7 +38,7 @@ sub new {
         'desc'      => undef,
         'ip'        => undef,
         'port'      => undef,
-        'version'   => '0.2.3-dev',
+        'version'   => '0.2.3',
 
         # advanced config options
         'pingtimeout' => undef,
