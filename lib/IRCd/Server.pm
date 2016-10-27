@@ -74,7 +74,7 @@ sub sync {
     foreach(keys($self->{ircd}->{clients}->{nick}->%*)) {
         $self->syncUser($_);
     }
-    $self->write(":042 EOS");
+    $self->write(":$ircd->{sid} EOS");
     # TODO: sync-on-join/quit/etc
     # TODO: sjoin
     # TODO: and join
@@ -101,7 +101,7 @@ sub syncUser {
     my $sIP        = $client->{ip};
     my $sGECOS     = $client->{realname};
     # TODO: $self->{sid}
-    $self->write(":042 UID $sNick $sHop $sTime $sUser $sHost $sUID $sServiceStamp $sUmodes $sVirtHost $sCloakHost $sIP $sGECOS");
+    $self->write(":$ircd->{sid} UID $sNick $sHop $sTime $sUser $sHost $sUID $sServiceStamp $sUmodes $sVirtHost $sCloakHost $sIP $sGECOS");
 }
 
 sub checkTimeout {}

@@ -65,9 +65,9 @@ sub protoctl {
     # (capability negotiation)
     return if($server->{sentcaps});
     $server->write("PROTOCTL NOQUIT NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 TKLEXT TKLEXT2 NICKIP ESVID");
-    $server->write("PROTOCTL CHANMODES=beI,kLf,l,psmntirzMQNRTOVKDdGPZSCc NICKCHARS= SID=$ircd->{sid} MLOCK TS=1470591491 EXTSWHOIS");
+    $server->write("PROTOCTL CHANMODES=b,,l,ntm NICKCHARS= SID=$ircd->{sid} MLOCK TS=1470591491 EXTSWHOIS");
     $server->write("SERVER $ircd->{host} 1 :U4000-Fhin6OoEM-$ircd->{sid} $ircd->{desc}");
-    $server->write("NETINFO 0 " . time() . " 4000 MD5:2978762380c4474b73dd6c51aed84815 0 0 0 :cmpct");
+    $server->write("NETINFO 0 " . time() . " 4000 MD5:2978762380c4474b73dd6c51aed84815 0 0 0 :$ircd->{network}");
     $server->{sentcaps} = 1;
 
     # Sync
