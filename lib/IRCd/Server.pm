@@ -100,7 +100,6 @@ sub syncUser {
     my $sCloakHost = $client->{cloak} // $client->{host};
     my $sIP        = $client->{ip};
     my $sGECOS     = $client->{realname};
-    # TODO: $self->{sid}
     $self->write(":$ircd->{sid} UID $sNick $sHop $sTime $sUser $sHost $sUID $sServiceStamp $sUmodes $sVirtHost $sCloakHost $sIP $sGECOS");
 }
 

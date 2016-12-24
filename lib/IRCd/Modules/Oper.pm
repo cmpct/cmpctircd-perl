@@ -32,7 +32,7 @@ sub pkt_oper {
     my ($c_name, $c_password, $c_hash, $c_type, $c_tls, $c_host);
     my $got_match  = 0;
 
-    # XXX: Workaround for XML::Simple modifying behaviour basted on number of elements (one oper || many)
+    # XXX: Workaround for XML::Simple modifying behaviour based on number of elements (one oper || many)
     if(!$opers->{$u_name}) {
         $opers->{$u_name} = $ircd->{config}->{opers}->{oper};
     }
@@ -82,11 +82,10 @@ sub pkt_oper {
         $ircd->{log}->info("User [$client->{nick}] unsuccessfully opered for [$u_name] [type: $c_type]");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOOPERHOST . " $client->{nick} :Invalid oper credentials");
         return -1;
-    } else {
-        $ircd->{log}->info("User [$client->{nick}] successfully opered as [$u_name] [type: $c_type]");
     }
 
     # User is now an oper
+    $ircd->{log}->info("User [$client->{nick}] successfully opered as [$u_name] [type: $c_type]");
     # Set the appropriate modes
     $client->{modes}->{o}->grant('+', 'o', undef, 1, 1);
     # Tell them
@@ -135,8 +134,8 @@ sub pkt_satopic {
 
 sub init {
     my $self = shift;
-    $self->{module}->register_cmd("OPER",   \&pkt_oper,   $self);
-    $self->{module}->register_cmd("SAMODE", \&pkt_samode, $self);
+    $self->{module}->register_cmd("OPER",    \&pkt_oper,    $self);
+    $self->{module}->register_cmd("SAMODE",  \&pkt_samode,  $self);
     $self->{module}->register_cmd("SATOPIC", \&pkt_satopic, $self);
 }
 

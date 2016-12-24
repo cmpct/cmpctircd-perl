@@ -43,7 +43,6 @@ sub new {
         $self->{privilege}->{$level} = $self->{modes}->{$_}->symbol() if($level ne "" and $symbol ne "");
     }
     $self->{topic} = IRCd::Channel::Topic->new("", $self);
-
     return $self;
 }
 

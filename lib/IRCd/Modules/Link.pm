@@ -65,6 +65,7 @@ sub evt_sjoin {
     my $ircd   = $self->{ircd};
     my $srv;
 
+    # Send when a channel is created (channel_create_done)
     # https://www.unrealircd.org/files/docs/technical/serverprotocol.html#S5_1
     $ircd->{log}->info("$client->{nick} finished joining $chan->{name}");
     foreach(keys($ircd->{servers}->{sid}->%*)) {
