@@ -78,6 +78,39 @@ sub evt_sjoin {
 
 }
 
+sub pkt_mode {
+    my $self   = $_[0]->[0];
+    my $srv    = $_[1]->[0];
+    my $msg    = $_[1]->[1];
+    my $ircd   = $self->{ircd};
+    my $client;
+
+    if(ref($srv) eq 'IRCd::Client') {
+        # No users (clients) allowed! Servers only.
+        # Could also check by looking at if ->{server} eq ->{ircd}->{host}
+        return -1;
+    }
+
+    my @splitPacket = split(' ', $msg);
+    my $srcUser     = $splitPacket[0];
+    my $subjectUID  = $splitPacket[4];
+
+    # XXX: Having structured args to things would really help mess like this...
+    my $subjectClient = $ircd->getClientByUID($subjectUID);
+    # Strip the ":" out of ":ChanServ ..." so we can look up the client object
+    $srcUser          =~ s/://;
+    $client           = $srv->{clients}->{nick}->{lc($srcUser)};
+    # Replace all UIDs with nicks in the final message
+    $msg              =~ s/$subjectUID/$subjectClient->{nick}/;
+    # Strip out the ":ChanServ " because a normal MODE from a client won't have the src
+    $msg              =~ s/$client->{nick} //;
+
+    # Force the mode change!
+    IRCd::Client::Packets::mode($client, $msg, 1);
+    return 1;
+}
+
+
 sub evt_join {
     my $self   = $_[0]->[0];
     my $client = $_[1]->[0];
@@ -123,6 +156,8 @@ sub evt_nickchange {
 sub init {
     my $self = shift;
     $self->{module}->register_cmd("SJOIN", \&pkt_sjoin, $self);
+    $self->{module}->register_cmd("MODE",  \&pkt_mode,  $self);
+
     $self->{module}->register_event("channel_create_done", \&evt_sjoin, $self);
     $self->{module}->register_event("channel_join_done", \&evt_join, $self);
 
