@@ -33,7 +33,7 @@ sub grant {
     my $announce = shift // 1;
     my $targetClient = undef;
 
-    if(!$self->{channel}->{clients}->{$client->{nick}}) {
+    if(!$force and !$self->{channel}->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{channel}->{name}] Client (nick: $client->{nick}) not in the room!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel}->{name} :You're not on that channel");
         return 0;
@@ -67,7 +67,7 @@ sub revoke {
     my $announce = shift // 1;
     my $targetClient = undef;
 
-    if(!$self->{channel}->{clients}->{$client->{nick}}) {
+    if(!$force and !$self->{channel}->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{channel}->{name}] Client (nick: $client->{nick}) not in the room!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel");
         return 0;
