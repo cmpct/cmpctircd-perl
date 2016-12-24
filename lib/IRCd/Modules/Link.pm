@@ -5,12 +5,12 @@ no warnings "experimental::postderef"; # for older perls (<5.24)
 use feature 'postderef';
 use IRCd::Constants;
 
-package IRCd::Modules::Services;
+package IRCd::Modules::Link;
 
 sub new {
     my ($class, %args) = @_;
     my $self  = {
-        'name'   => 'IRCd::Modules::Services',
+        'name'   => 'IRCd::Modules::Link',
         'ircd'   => $args{'ircd'}   // shift,
         'module' => $args{'module'} // shift,
     };
@@ -98,12 +98,35 @@ sub evt_join {
     return 1;
 }
 
+sub evt_nickchange {
+    my $self   = $_[0]->[0];
+    my $client = $_[1]->[0];
+    my $old    = $_[1]->[1];
+    my $ircd   = $self->{ircd};
+    my $srv;
+
+    # Triggered by nick_change_done
+    $ircd->{log}->info("Announcing to servers a nick change from $old to $client->{nick}");
+    foreach(keys($ircd->{servers}->{sid}->%*)) {
+        $srv = $ircd->{servers}->{sid}->{$_};
+        next if(!$srv->{socket}->{sock});
+
+        #[2016-12-24 02:27:24] -> :001D29201 NICK p 1482546460
+        #[2016-12-24 02:27:24] m_nick(): nickname change from `sam': p
+        $srv->write(":$client->{uid} NICK $client->{nick} :" . time());
+    }
+
+    return 1;
+}
+
 
 sub init {
     my $self = shift;
     $self->{module}->register_cmd("SJOIN", \&pkt_sjoin, $self);
     $self->{module}->register_event("channel_create_done", \&evt_sjoin, $self);
     $self->{module}->register_event("channel_join_done", \&evt_join, $self);
+
+    $self->{module}->register_event("nick_change_done", \&evt_nickchange, $self);
 }
 
 1;

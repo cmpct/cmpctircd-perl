@@ -50,11 +50,20 @@ sub nick {
         }
     }
     delete $ircd->{clients}->{nick}->{lc($client->{nick})} if $client->{nick} ne "";
+
+    my $oldNick = $client->{nick};
+    my $newNick = $splitPacket[1];
+
     $client->{nick} = $splitPacket[1];
     $client->write(":$mask NICK :$client->{nick}");
-    $client->{log}->debug("NICK: $client->{nick}");
-
     $ircd->{clients}->{nick}->{lc($client->{nick})} = $client;
+
+    if($oldNick ne '') {
+        # oldNick not being blank => was a change, not initial NICK
+        $ircd->{module}->fire_event("nick_change_done", $client, $oldNick);
+    }
+
+    $client->{log}->debug("NICK: $client->{nick}");
     $client->sendWelcome() if($client->{ident} and !$client->{registered} and $client->{host});
 }
 sub user {
