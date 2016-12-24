@@ -76,6 +76,7 @@ sub initModes {
             }
         }
     }
+    $ircd->{module}->fire_event("channel_create_done", $client, $self);
 }
 
 sub addClient {

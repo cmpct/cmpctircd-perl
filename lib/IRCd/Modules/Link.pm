@@ -76,6 +76,25 @@ sub evt_sjoin {
         $srv->write(":$ircd->{sid} SJOIN " . time() . " $chan->{name} :\@$client->{nick}");
     }
 
+}
+
+sub evt_join {
+    my $self   = $_[0]->[0];
+    my $client = $_[1]->[0];
+    my $chan   = $_[1]->[1];
+    my $ircd   = $self->{ircd};
+    my $srv;
+
+    # Triggered by channel_join_done
+    # https://www.unrealircd.org/files/docs/technical/serverprotocol.html#S5_2
+    $ircd->{log}->info("$client->{nick} finished joining $chan->{name}");
+    foreach(keys($ircd->{servers}->{sid}->%*)) {
+        $srv = $ircd->{servers}->{sid}->{$_};
+        next if(!$srv->{socket}->{sock});
+        my $mask = $client->getMask(1);
+        $srv->write(":$client->{nick} C $chan->{name}");
+    }
+
     return 1;
 }
 
@@ -83,7 +102,8 @@ sub evt_sjoin {
 sub init {
     my $self = shift;
     $self->{module}->register_cmd("SJOIN", \&pkt_sjoin, $self);
-    $self->{module}->register_event("channel_join_done", \&evt_sjoin, $self);
+    $self->{module}->register_event("channel_create_done", \&evt_sjoin, $self);
+    $self->{module}->register_event("channel_join_done", \&evt_join, $self);
 }
 
 1;
