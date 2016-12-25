@@ -74,6 +74,9 @@ sub sync {
     foreach(keys($self->{ircd}->{clients}->{nick}->%*)) {
         $self->syncUser($_);
     }
+    foreach(keys($self->{ircd}->{channels}->%*)) {
+		$self->syncChan($_);
+	}
     # TODO: sync channel
     $self->write(":$ircd->{sid} EOS");
     # TODO: sync-on-join/quit/etc
@@ -102,6 +105,27 @@ sub syncUser {
     my $sIP        = $client->{ip};
     my $sGECOS     = $client->{realname};
     $self->write(":$ircd->{sid} UID $sNick $sHop $sTime $sUser $sHost $sUID $sServiceStamp $sUmodes $sVirtHost $sCloakHost $sIP $sGECOS");
+}
+
+sub syncChan {
+    my $self   = shift;
+    my $config = $self->{config};
+    my $ircd   = $self->{ircd};
+    my $chan   = shift;
+    my $chan_obj = $self->{ircd}->{channels}->{$chan};
+
+    # XXX: need channel create/mod times
+    my $time            = time();
+    my @presentUsers    = ();
+    my $privilegeString = "";
+
+    # :001 SJOIN 1482619970 #services :@00102VE01
+    foreach(values($chan_obj->{clients}->%*)) {
+        my $uid        = $_->{uid};
+        my $userSymbol = $chan_obj->{privilege}->{$chan_obj->getStatus($_)} // "";
+        $privilegeString .= "$userSymbol$uid ";
+    }
+    $self->write(":$ircd->{sid} SJOIN $time $chan :$privilegeString");
 }
 
 sub checkTimeout {}

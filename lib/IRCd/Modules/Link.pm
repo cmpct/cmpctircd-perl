@@ -94,9 +94,11 @@ sub pkt_mode {
     my @splitPacket = split(' ', $msg);
     my $srcUser     = $splitPacket[0];
     my $subjectUID  = $splitPacket[4];
+    return if(!$subjectUID);
 
     # XXX: Having structured args to things would really help mess like this...
     my $subjectClient = $ircd->getClientByUID($subjectUID);
+    return if(!$subjectClient);
     # Strip the ":" out of ":ChanServ ..." so we can look up the client object
     $srcUser          =~ s/://;
     $client           = $srv->{clients}->{nick}->{lc($srcUser)};
