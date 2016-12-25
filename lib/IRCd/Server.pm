@@ -75,8 +75,8 @@ sub sync {
         $self->syncUser($_);
     }
     foreach(keys($self->{ircd}->{channels}->%*)) {
-		$self->syncChan($_);
-	}
+        $self->syncChan($_);
+    }
     # TODO: sync channel
     $self->write(":$ircd->{sid} EOS");
     # TODO: sync-on-join/quit/etc
