@@ -131,7 +131,7 @@ sub syncChan {
 sub checkTimeout {}
 sub disconnect {
     my $self = shift;
-    $self->{log}->error("Server shutting down?");
+    $self->{log}->error("Server ($self->{name}:$self->{sid}) is shutting down?");
     $self->{ircd}->{serverSelector}->del($self->{socket}->{sock});
     $self->{socket}->{sock}->close();
 }
