@@ -39,7 +39,7 @@ sub new {
         'desc'      => undef,
         'ip'        => undef,
         'port'      => undef,
-        'version'   => '0.3.0',
+        'version'   => '0.3.0-dev',
 
         # advanced config options
         'pingtimeout' => undef,
@@ -111,11 +111,16 @@ sub setup {
     $self->{pingtimeout} = $self->{config}->{pingtimeout};
     $self->{maxtargets}  = $self->{config}->{maxtargets};
     $self->{create_time} = DateTime->now;
-    $self->{log}->info("Starting cmpctircd");
+    $self->{log}->info("Starting cmpctircd-" . $self->{version});
     $self->{log}->info("==> Host: $self->{host}");
     $self->{log}->info("==> Listening on: $self->{ip}:$self->{port}");
     if($self->{config}->{tls}) {
         $self->{log}->info("==> Listening on: $self->{ip}:$self->{config}->{tlsport} (TLS)");
+    }
+    if($self->{version} =~ qw/dev/) {
+        $self->{log}->warn("You are running a development version of cmpctircd.");
+        $self->{log}->warn("If you are having problems, consider reverting to a stable version.");
+        $self->{log}->warn("Please report any bugs or feedback to the developers via the bugtracker at https://bugs.cmpct.info/");
     }
 }
 
