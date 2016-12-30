@@ -9,10 +9,8 @@ sub new {
     my ($class, %args) = @_;
     my $self  = {
         'name'   => 'IRCd::Modules::Version',
-
         'ircd'   => $args{'ircd'}   // shift,
         'module' => $args{'module'} // shift,
-        #'count'  => $args{'count'}  // 0,
     };
     bless $self, $class;
     $self->{module}->register_module($self);
@@ -24,9 +22,6 @@ sub pkt_version {
     my $self   = $_[0]->[0];
     my $client = $_[1]->[0];
     my $msg    = $_[2]->[0];
-    # Demonstrate state
-    #$self->{count}++;
-    #$client->write(":$client->{ircd}->{host} NOTICE $client->{nick} :The command VERSION has been called $self->{count} times.");
 
     # Print git HEAD if we can
     if(-e '/usr/bin/git') {

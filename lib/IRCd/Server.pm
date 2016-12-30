@@ -70,16 +70,15 @@ sub sync {
     my $config = $self->{config};
     my $ircd   = $self->{ircd};
 
-    # This method provides for the initial server burst
+    # This method provides for the initial server burst of users and channels
     foreach(keys($self->{ircd}->{clients}->{nick}->%*)) {
         $self->syncUser($_);
     }
     foreach(keys($self->{ircd}->{channels}->%*)) {
         $self->syncChan($_);
     }
-    # TODO: sync channel
+
     $self->write(":$ircd->{sid} EOS");
-    # TODO: sync-on-join/quit/etc
     # TODO: sjoin
     # TODO: and join
 }

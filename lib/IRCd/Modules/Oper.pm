@@ -10,7 +10,6 @@ sub new {
     my ($class, %args) = @_;
     my $self  = {
         'name'   => 'IRCd::Modules::Oper',
-
         'ircd'   => $args{'ircd'}   // shift,
         'module' => $args{'module'} // shift,
     };
