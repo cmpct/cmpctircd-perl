@@ -23,7 +23,6 @@ sub new {
         'sentcaps'       => $args{sentcaps}       // 0,
         'name'           => $args{name}           // "unidentified",
         'sid'            => $args{sid}            // 0,
-        # sid?
     };
     $self->{log} = $self->{ircd}->{log};
     bless $self, $class;

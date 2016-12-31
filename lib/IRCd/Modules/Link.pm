@@ -174,8 +174,8 @@ sub evt_nickchange {
         $srv = $ircd->{servers}->{sid}->{$_};
         next if(!$srv->{socket}->{sock});
 
-        #[2016-12-24 02:27:24] -> :001D29201 NICK p 1482546460
-        #[2016-12-24 02:27:24] m_nick(): nickname change from `sam': p
+        # [2016-12-24 02:27:24] -> :001D29201 NICK p 1482546460
+        # [2016-12-24 02:27:24] m_nick(): nickname change from `sam': p
         $srv->write(":$client->{uid} NICK $client->{nick} :" . time());
     }
 
@@ -189,6 +189,8 @@ sub init {
     $self->{module}->register_cmd("MODE",  \&pkt_mode,  $self);
 
     $self->{module}->register_event("channel_create_done", \&evt_sjoin, $self);
+    # XXX: stub, may not need implementation - svc may handle this itself
+    #$self->{module}->register_event("channel_destroy_done", \&x, $self);
     $self->{module}->register_event("channel_join_done", \&evt_join, $self);
     $self->{module}->register_event("channel_part_done", \&evt_part, $self);
 
