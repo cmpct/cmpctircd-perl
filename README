@@ -5,11 +5,8 @@
 <p>For now, it is still under heavy development. It will be clear when it is production ready. 
 <a href="https://bugs.cmpct.info/">Bugzilla</a> is a good indicator of progress.</p>
 <p>Checkout <em>master</em>, edit <code>ircd.xml</code>, and run <code>bin/ircd --config ircd.xml --motd ircd.motd --rules ircd.rules</code> to test.
-Windows is untested as of yet, but it should run with <code>select</code> as the socket provider  (<code>&lt;sockets:provider&gt;</code>). <code>epoll</code> is
-recommended on Linux.</p>
-<p>Use parameter <code>--loglevel $LEVEL</code> where $LEVEL is one of: DEBUG, WARN, INFO, ERROR to control the logging level.</p>
-<p>TLS certs and keys should be 'tls_cert.pem' and 'tls_key.pem' respectively. Install with <code>./Makefile.PL; make; sudo make
-install</code>.</p>
+Windows/others should use <code>select</code> as the socket provider  (<code>&lt;sockets:provider&gt;</code>). <code>epoll</code> is recommended on Linux, with <code>kqueue</code> for *BSD.</p>
+<p>Use parameter <code>--loglevel $LEVEL</code> where <code>$LEVEL</code> is one of: <code>DEBUG, WARN, INFO, ERROR</code> to control the logging level. TLS certs and keys should be 'tls_cert.pem' and 'tls_key.pem' respectively. Install with <code>./Makefile.PL; make; (sudo) make install</code>.</p>
 <h2>Dependencies</h2>
 <ul>
 <li>Net::DNS (libnet-dns-perl, only if <code>&lt;advanced:dns&gt;</code> is enabled)</li>
@@ -27,6 +24,12 @@ install</code>.</p>
 <li>Tie::Refhash (within core on Debian)</li>
 <li><code>perl &gt;= 5.20</code> for <code>postderef</code></li>
 </ul>
+<h2>Branches</h2>
+<p><em>You can use Bugzilla to glean information about the direction of a series.</em></p>
+<ul>
+<li>master: stable development, <a href="https://bugs.cmpct.info/buglist.cgi?f1=target_milestone&amp;f2=target_milestone&amp;j_top=AND_G&amp;list_id=770&amp;o1=lessthan&amp;o2=greaterthaneq&amp;order=bug_status%20DESC%2Cchangeddate%20DESC%2Cpriority%2Cassigned_to%2Cbug_id&amp;product=cmpctircd&amp;query_format=advanced&amp;resolution=---&amp;v1=0.3.0&amp;v2=0.2.0">0.2.x</a> series (bugfixes, small new features)</li>
+<li>next: next major version, <a href="https://bugs.cmpct.info/buglist.cgi?f1=target_milestone&amp;f2=target_milestone&amp;f3=target_milestone&amp;j_top=AND_G&amp;list_id=771&amp;o1=lessthan&amp;o2=greaterthaneq&amp;product=cmpctircd&amp;query_format=advanced&amp;resolution=---&amp;v1=0.4.0&amp;v2=0.3.0">0.3.x</a> series (link work, etc)</li>
+</ul>
 <h2>Contact</h2>
 <p>Email me at sam@cmpct.info if you wish to contribute or you have questions.
-An IRC server will be created once <em>cmpctircd</em> is ready to self-host -- <strong>soon</strong>.</p>
+An IRC server will be created once <em>cmpctircd</em> is ready to self-host - <strong>soon</strong>.</p>
