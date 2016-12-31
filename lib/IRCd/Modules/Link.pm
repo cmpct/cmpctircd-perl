@@ -126,8 +126,12 @@ sub evt_join {
     foreach(keys($ircd->{servers}->{sid}->%*)) {
         $srv = $ircd->{servers}->{sid}->{$_};
         next if(!$srv->{socket}->{sock});
-        my $mask = $client->getMask(1);
-        $srv->write(":$client->{nick} C $chan->{name}");
+        my $uid = $client->{uid};
+        $srv->write(":$uid C $chan->{name}");
+    }
+
+    return 1;
+}
 
 sub evt_part {
     my $self   = $_[0]->[0];
