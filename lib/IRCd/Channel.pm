@@ -141,8 +141,11 @@ sub quit {
         $client->{log}->info("[$self->{name}] Removed (QUIT) a client (nick: $client->{nick}) from channel");
         $self->stripModes($client, 0);
         $self->sendToRoom($client, ":$mask QUIT :$msg", 0, 1);
+
+        # Fire event before we leave just in case we want to do anything
+        # XXX: rename? perhaps not _done in that case?
+        $ircd->{module}->fire_event("channel_part_done", $client, $self);
         delete $self->{clients}->{lc($client->{nick})};
-        return;
     }
 
 }
@@ -158,14 +161,22 @@ sub part {
         $self->sendToRoom($client, ":$mask PART $self->{name} :$msg", 1, 1);
         $self->stripModes($client, 0) if(!$forCloak);
         delete $self->{clients}->{lc($client->{nick})};
+
+        $ircd->{module}->fire_event("channel_part_done", $client, $self, $msg);
     } else {
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel");
     }
+
     my $chanSize = keys($self->{clients}->%*);
     if($chanSize == 0 and !$forCloak) {
         # Don't destroy the room if we're leaving for a 'changing host' message
         # It'll result in a crash because of the ->addClient on a dead Channel object
         $client->{log}->info("[$self->{name}] Deleting the room");
+
+        # We have to fire the event before destroying the channel in case we want to do anything to it
+        # (however unlikely...)
+        # XXX: rename? (is _done appropriate?)
+        $ircd->{module}->fire_event("channel_destroy_done", $client, $self);
         delete $ircd->{channels}->{$self->{name}};
     }
 }

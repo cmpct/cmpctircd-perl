@@ -128,6 +128,30 @@ sub evt_join {
         next if(!$srv->{socket}->{sock});
         my $mask = $client->getMask(1);
         $srv->write(":$client->{nick} C $chan->{name}");
+
+sub evt_part {
+    my $self   = $_[0]->[0];
+    my $client = $_[1]->[0];
+    my $chan   = $_[1]->[1];
+    my $ircd   = $self->{ircd};
+    my $partReason = $_[1]->[2];
+    my $srv;
+
+    # Triggered by channel_part_done
+    # https://www.unrealircd.org/files/docs/technical/serverprotocol.html#S5_3
+    $ircd->{log}->info("$client->{nick} finished leaving $chan->{name}");
+    foreach(keys($ircd->{servers}->{sid}->%*)) {
+        $srv = $ircd->{servers}->{sid}->{$_};
+        next if(!$srv->{socket}->{sock});
+        my $uid = $client->{uid};
+        my $partString = ":$uid D $chan->{name}";
+
+        # Append the part reason to the part string if it's not empty
+        # :source D #channel[ :reason]
+        if(length($partReason) > 0) {
+            $partString .= " $partReason";
+        }
+        $srv->write($partString);
     }
 
     return 1;
@@ -162,6 +186,7 @@ sub init {
 
     $self->{module}->register_event("channel_create_done", \&evt_sjoin, $self);
     $self->{module}->register_event("channel_join_done", \&evt_join, $self);
+    $self->{module}->register_event("channel_part_done", \&evt_part, $self);
 
     $self->{module}->register_event("nick_change_done", \&evt_nickchange, $self);
 }
