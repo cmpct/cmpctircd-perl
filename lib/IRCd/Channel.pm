@@ -119,7 +119,12 @@ sub addClient {
         $client->write(":$ircd->{host} "  . IRCd::Constants::RPL_NAMREPLY      . " $client->{nick} = $self->{name} :$userSymbol$_->{nick}");
     }
     $client->write(":$ircd->{host} "  . IRCd::Constants::RPL_ENDOFNAMES    . " $client->{nick} $self->{name} :End of /NAMES list.");
-    $client->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :" . $self->{topic}->get() . "\r\n") if($self->{topic}->get() ne "");
+    if($self->{topic}->get() ne "") {
+        my $topicMask = $self->{topic}->metadata()->{who};
+        my $topicTime = $self->{topic}->metadata()->{time};
+        $client->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPIC         . " $client->{nick} $self->{name} :" . $self->{topic}->get());
+        $client->write(":$ircd->{host} "  . IRCd::Constants::RPL_TOPICWHOTIME  . " $client->{nick} $self->{name} $topicMask $topicTime");
+    }
 
     my $modes = $self->getModeStrings("+");
     if($modes->{args}) {
