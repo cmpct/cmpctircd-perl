@@ -86,9 +86,9 @@ sub pkt_mode {
     my $client;
 
     if(ref($srv) eq 'IRCd::Client') {
-        # No users (clients) allowed! Servers only.
-        # Could also check by looking at if ->{server} eq ->{ircd}->{host}
-        return -1;
+        # This is a server handler but...
+        # ...MODE is a normal user command so let's not kill the command
+        return 1;
     }
 
     my @splitPacket = split(' ', $msg);

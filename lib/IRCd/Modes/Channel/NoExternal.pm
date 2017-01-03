@@ -62,7 +62,7 @@ sub revoke {
     my $announce = shift // 1;
 
     return 0 if(!$self->{set});
-    if(!$force and $self->{channel}->{clients}->{$client->{nick}}) {
+    if(!$force and !$self->{channel}->{clients}->{$client->{nick}}) {
         $client->{log}->info("[$self->{channel}->{name}] Client (nick: $client->{nick}) not in the room!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel");
         return 0;
