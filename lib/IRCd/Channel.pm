@@ -152,7 +152,11 @@ sub quit {
         $ircd->{module}->fire_event("channel_part_done", $client, $self);
         delete $self->{clients}->{lc($client->{nick})};
     }
-
+    if($self->size() == 0) {
+        # Don't destroy the room if we're leaving for a 'changing host' message
+        # It'll result in a crash because of the ->addClient on a dead Channel object
+        $self->destroy($client);
+    }
 }
 sub part {
     my $self   = shift;
@@ -172,17 +176,10 @@ sub part {
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{name} :You're not on that channel");
     }
 
-    my $chanSize = keys($self->{clients}->%*);
-    if($chanSize == 0 and !$forCloak) {
+    if($self->size() == 0 and !$forCloak) {
         # Don't destroy the room if we're leaving for a 'changing host' message
         # It'll result in a crash because of the ->addClient on a dead Channel object
-        $client->{log}->info("[$self->{name}] Deleting the room");
-
-        # We have to fire the event before destroying the channel in case we want to do anything to it
-        # (however unlikely...)
-        # XXX: rename? (is _done appropriate?)
-        $ircd->{module}->fire_event("channel_destroy_done", $client, $self);
-        delete $ircd->{channels}->{$self->{name}};
+        $self->destroy($client);
     }
 }
 
@@ -301,6 +298,18 @@ sub getModeStrings {
 ###        ###
 ###  Misc  ###
 ###        ###
+sub destroy {
+    my $self   = shift;
+    my $client = shift;
+    my $ircd   = $client->{ircd} // $self->{ircd};
+
+    $client->{log}->info("[$self->{name}] Deleting the room");
+    # We have to fire the event before destroying the channel in case we want to do anything to it
+    # XXX: rename? (is _done appropriate?)
+    $ircd->{module}->fire_event("channel_destroy_done", $client, $self);
+    delete $ircd->{channels}->{$self->{name}};
+
+}
 sub size {
     my $self = shift;
     return keys($self->{clients}->%*);
