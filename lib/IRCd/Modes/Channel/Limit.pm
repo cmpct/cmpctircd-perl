@@ -35,12 +35,12 @@ sub grant {
     my $announce = shift // 1;
 
     if(!$force and !$self->{channel}->{clients}->{$client->{nick}}) {
-        $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
+        $client->{log}->info("[$self->{channel}->{name}] Client (nick: $client->{nick}) not in the room!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel");
         return 0;
     }
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
-        $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
+        $client->{log}->info("[$self->{channel}->{name}] No permission for client (nick: $client->{nick})!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator");
         return 0;
     }
@@ -68,14 +68,13 @@ sub revoke {
 
     # TODO: No arg required
     if(!$force and $self->{channel}->{clients}->{$client->{nick}}) {
-        $client->{log}->info("[$self->{channel}] Client (nick: $client->{nick}) not in the room!");
+        $client->{log}->info("[$self->{channel}->{name}] Client (nick: $client->{nick}) not in the room!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_NOTONCHANNEL . " $client->{nick} $self->{channel} :You're not on that channel");
         return 0;
     }
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
-        $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
-        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be 
-a channel operator");
+        $client->{log}->info("[$self->{channel}->{name}] No permission for client (nick: $client->{nick})!");
+        $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{name} :You must be a channel operator");
         return 0;
     }
     my $mask = $client->getMask(1);

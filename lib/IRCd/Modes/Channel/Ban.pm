@@ -39,7 +39,7 @@ sub grant {
     my $targetClient = undef;
 
     if(!$force and $self->{channel}->getStatus($client) < $self->level()) {
-        $client->{log}->info("[$self->{channel}] No permission for client (nick: $client->{nick})!");
+        $client->{log}->info("[$self->{channel}->{name}] No permission for client (nick: $client->{nick})!");
         $client->write(":$ircd->{host} " . IRCd::Constants::ERR_CHANOPRIVSNEEDED . " $client->{nick} $self->{channel} :You must be a channel operator");
         return 0;
     }
