@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use diagnostics;
+#use diagnostics;
 
 package IRCd::Constants;
 # https://www.alien.net.au/irc/irc2numerics.html
@@ -32,6 +32,9 @@ use constant {
     RPL_WHOISCHANNELS => 319,
 
     RPL_ENDOFWHO      => 315,
+    RPL_LISTSTART     => 321,
+    RPL_LIST          => 322,
+    RPL_LISTEND       => 323,
     RPL_CHANNELMODEIS => 324,
     RPL_CREATIONTIME  => 329,
     RPL_NOTOPIC       => 331,
