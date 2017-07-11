@@ -3,7 +3,7 @@ cmpctircd
 
 About
 -----
-The aim of this project is to provide a stable, fast, and *modern* ircd.
+The aim of this project was to provide a stable, fast, and *modern* ircd.
 
 Status
 -----
