@@ -7,9 +7,13 @@ The aim of this project is to provide a stable, fast, and *modern* ircd.
 
 Status
 -----
-For now, it is still under heavy development. It will be clear when it is production ready. 
-[Bugzilla](https://bugs.cmpct.info/) is a good indicator of progress.
+** This project has been deprecated in favour of [cmpctircd.NET](https://git.cmpct.info/cmpctircd.NET.git). **
 
+** No further development will take place on this project by sam et al.; contact sam if you wish to take over. **
+** Anyone wishing to take on the project would be supported by the cmpct collective. **
+
+Testing
+-----
 Checkout *master*, edit `ircd.xml`, and run `bin/ircd --config ircd.xml --motd ircd.motd --rules ircd.rules` to test.
 Windows/others should use `select` as the socket provider  (`<sockets:provider>`). `epoll` is recommended on Linux, with `kqueue` for *BSD.
 
@@ -42,4 +46,3 @@ Branches
 Contact
 -------
 Email me at sam@cmpct.info if you wish to contribute or you have questions.
-An IRC server will be created once *cmpctircd* is ready to self-host - **soon**.

@@ -2,8 +2,10 @@
 <h2>About</h2>
 <p>The aim of this project is to provide a stable, fast, and <em>modern</em> ircd.</p>
 <h2>Status</h2>
-<p>For now, it is still under heavy development. It will be clear when it is production ready. 
-<a href="https://bugs.cmpct.info/">Bugzilla</a> is a good indicator of progress.</p>
+<p><strong> This project has been deprecated in favour of <a href="https://git.cmpct.info/cmpctircd.NET.git">cmpctircd.NET</a>. </strong></p>
+<p><strong> No further development will take place on this project by sam et al.; contact sam if you wish to take over. </strong>
+<strong> Anyone wishing to take on the project would be supported by the cmpct collective. </strong></p>
+<h2>Testing</h2>
 <p>Checkout <em>master</em>, edit <code>ircd.xml</code>, and run <code>bin/ircd --config ircd.xml --motd ircd.motd --rules ircd.rules</code> to test.
 Windows/others should use <code>select</code> as the socket provider  (<code>&lt;sockets:provider&gt;</code>). <code>epoll</code> is recommended on Linux, with <code>kqueue</code> for *BSD.</p>
 <p>Use parameter <code>--loglevel $LEVEL</code> where <code>$LEVEL</code> is one of: <code>DEBUG, WARN, INFO, ERROR</code> to control the logging level. TLS certs and keys should be 'tls_cert.pem' and 'tls_key.pem' respectively. Install with <code>./Makefile.PL; make; (sudo) make install</code>.</p>
@@ -31,5 +33,4 @@ Windows/others should use <code>select</code> as the socket provider  (<code>&lt
 <li>next: next major version, <a href="https://bugs.cmpct.info/buglist.cgi?f1=target_milestone&amp;f2=target_milestone&amp;f3=target_milestone&amp;j_top=AND_G&amp;list_id=771&amp;o1=lessthan&amp;o2=greaterthaneq&amp;product=cmpctircd&amp;query_format=advanced&amp;resolution=---&amp;v1=0.4.0&amp;v2=0.3.0">0.3.x</a> series (link work, etc)</li>
 </ul>
 <h2>Contact</h2>
-<p>Email me at sam@cmpct.info if you wish to contribute or you have questions.
-An IRC server will be created once <em>cmpctircd</em> is ready to self-host - <strong>soon</strong>.</p>
+<p>Email me at sam@cmpct.info if you wish to contribute or you have questions.</p>
