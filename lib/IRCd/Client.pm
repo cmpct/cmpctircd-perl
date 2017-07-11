@@ -127,6 +127,7 @@ sub parse {
             'PING'  => 1,
             'WHOIS' => 1,
             'WHO'   => 1,
+            'MODE'  => 1, # ZNC sends MODE +i when I reattach (bz #135)
             'NAMES' => 1,
             'AWAY'  => 1,
         );
