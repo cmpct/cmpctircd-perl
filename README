@@ -1,10 +1,10 @@
 <h1>cmpctircd</h1>
 <h2>About</h2>
-<p>The aim of this project is to provide a stable, fast, and <em>modern</em> ircd.</p>
+<p>The aim of this project was to provide a stable, fast, and <em>modern</em> ircd.</p>
 <h2>Status</h2>
-<p><strong> This project has been deprecated in favour of <a href="https://git.cmpct.info/cmpctircd.NET.git">cmpctircd.NET</a>. </strong></p>
-<p><strong> No further development will take place on this project by sam et al.; contact sam if you wish to take over. </strong>
-<strong> Anyone wishing to take on the project would be supported by the cmpct collective. </strong></p>
+<p><strong>This project has been deprecated in favour of <a href="https://git.cmpct.info/cmpctircd.NET.git">cmpctircd.NET</a>.</strong></p>
+<p><strong>No further development will take place on this project by sam et al.; contact sam if you wish to take over.</strong>
+<strong>Anyone wishing to take on the project would be supported by the cmpct collective.</strong></p>
 <h2>Testing</h2>
 <p>Checkout <em>master</em>, edit <code>ircd.xml</code>, and run <code>bin/ircd --config ircd.xml --motd ircd.motd --rules ircd.rules</code> to test.
 Windows/others should use <code>select</code> as the socket provider  (<code>&lt;sockets:provider&gt;</code>). <code>epoll</code> is recommended on Linux, with <code>kqueue</code> for *BSD.</p>
@@ -20,7 +20,7 @@ Windows/others should use <code>select</code> as the socket provider  (<code>&lt
 <li>Path::Tiny (libpath-tiny-perl)</li>
 <li>Module::Install (libmodule-install-perl)</li>
 <li>Try::Tiny (libtry-tiny-perl)</li>
-<li>String::Scanf (install with CPAN)</li>
+<li>String::Scanf (libstring-scanf-perl)</li>
 <li>Term::ANSIColor (within core on Debian)</li>
 <li>Getopt::Long (within core on Debian)</li>
 <li>Tie::Refhash (within core on Debian)</li>
