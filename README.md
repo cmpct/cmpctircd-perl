@@ -7,10 +7,10 @@ The aim of this project was to provide a stable, fast, and *modern* ircd.
 
 Status
 -----
-** This project has been deprecated in favour of [cmpctircd.NET](https://git.cmpct.info/cmpctircd.NET.git). **
+**This project has been deprecated in favour of [cmpctircd.NET](https://git.cmpct.info/cmpctircd.NET.git).**
 
-** No further development will take place on this project by sam et al.; contact sam if you wish to take over. **
-** Anyone wishing to take on the project would be supported by the cmpct collective. **
+**No further development will take place on this project by sam et al.; contact sam if you wish to take over.**
+**Anyone wishing to take on the project would be supported by the cmpct collective.**
 
 Testing
 -----
@@ -30,7 +30,7 @@ Dependencies
 * Path::Tiny (libpath-tiny-perl)
 * Module::Install (libmodule-install-perl)
 * Try::Tiny (libtry-tiny-perl)
-* String::Scanf (install with CPAN)
+* String::Scanf (libstring-scanf-perl)
 * Term::ANSIColor (within core on Debian)
 * Getopt::Long (within core on Debian)
 * Tie::Refhash (within core on Debian)
